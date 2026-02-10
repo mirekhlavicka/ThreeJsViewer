@@ -40,7 +40,10 @@ function setup() {
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
     scene.add(hemiLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 2.5);
+    //const envLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft white light
+    //scene.add(envLight);
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
     dirLight.position.set(0.5, -3.5, 1.5);
     camera.add(dirLight);
     dirLight.target.position.set(0, 0, -1);
@@ -82,12 +85,25 @@ function loadScene() {
         loader.load(modelData.path, (geometry) => {
             geometry.computeVertexNormals();
 
-            const material = new THREE.MeshStandardMaterial({
+            let m = {
                 color: modelData.color ?? 0xffffff,
+
+                flatShading: false,
+                vertexColors: false,
+
+                roughness: 0.3,
+                metalness: 0.2,
+
                 polygonOffset: !!modelData.wire,
                 polygonOffsetFactor: modelData.wire ? 1 : 0,
                 polygonOffsetUnits: modelData.wire ? 1 : 0
-            });
+            };
+
+            if (modelData.setupMaterial) {
+                modelData.setupMaterial(m);
+            }
+            const material = new THREE.MeshStandardMaterial(m);
+
 
             const mesh = new THREE.Mesh(geometry, material);
             mesh.userData = modelData; // Store config in mesh
@@ -108,6 +124,11 @@ function loadScene() {
             loadedMeshes.push(mesh);
 
             if (loadedMeshes.length === config.models.length) {
+                autoPositionGrid();
+                controls.reset();
+                if (config.setup) {
+                    config.setup(camera);
+                }
                 progressContainer.style.display = 'none';
             }
         }, (xhr) => {
@@ -118,28 +139,51 @@ function loadScene() {
         });
     });
 
-    const titleElement = document.getElementById('sceneTitle');
+    const titleElement = document.getElementById('sceneButton');
     if (titleElement) {
-        titleElement.innerText = config.name;
-    }
+        titleElement.innerText = config.name + " ";
+    }    
+}
 
-    grid.position.z = config.gridZ ?? -1.0; // Place it slightly behind/under models
+function autoPositionGrid() {
+    if (loadedMeshes.length === 0) return;
+
+    grid.rotation.y = 0;
+
+    // 1. Create an empty bounding box
+    const combinedBox = new THREE.Box3();
+
+    // 2. Expand it to include every loaded mesh
+    loadedMeshes.forEach(mesh => {
+        // We use setFromObject to account for the mesh's position/scale
+        const meshBox = new THREE.Box3().setFromObject(mesh);
+        combinedBox.union(meshBox);
+    });
+
+    // 3. Get the minimum Z value
+    const minZ = combinedBox.min.z;
+
+    // 4. Move the grid slightly below that (e.g., 0.05 units) 
+    // to prevent the model from "touching" the grid lines
+    if (grid) {
+        grid.position.z = minZ - 0.05;
+    }
 }
 
 function animate(time) {
     requestAnimationFrame(animate);
     controls.update();
     
-    // Only animate if models are ready
+    // Only render and animate if models are ready
     if (loadedMeshes.length === config.models.length) {
         const t = time * 0.002;
 
         if (autoRotate) {
             loadedPivots.forEach(pivot => {
-                pivot.rotation.z += config.autoRotateSpeed ?? 0.01;
+                pivot.rotation.z += 0.01;
             });
             if (grid) {
-                grid.rotation.y += config.autoRotateSpeed ?? 0.01;
+                grid.rotation.y += 0.01;
             }
         }
 
@@ -148,9 +192,8 @@ function animate(time) {
                 mesh.userData.animate(mesh, t);
             }
         });
+        renderer.render(scene, camera);
     }
-
-    renderer.render(scene, camera);
 }
 
 // --- UI & Event Listeners ---
@@ -168,6 +211,13 @@ sceneConfigurations.forEach((cfg, index) => {
 
 document.getElementById('autoRotateSwitch').addEventListener('change', (e) => {
     autoRotate = e.target.checked;
+});
+
+document.getElementById('btnResetCamera').addEventListener('click', (e) => {
+    controls.reset();
+    if (config.setup) {
+        config.setup(camera);
+    }
 });
 
 window.addEventListener('resize', () => {
