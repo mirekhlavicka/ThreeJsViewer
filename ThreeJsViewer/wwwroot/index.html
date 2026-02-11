@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PLY 3D Viewer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet" >
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <style>
         body {
@@ -35,29 +36,76 @@
             width: 50%;
             display: none;
         }
+
+        /* Rotate the chevron 180 degrees when the panel is collapsed */
+        #btnCollapse.collapsed i {
+            display: inline-block;
+            transform: rotate(180deg);
+        }
+
+        /* Smooth transition for the rotation */
+        #btnCollapse i {
+            transition: transform 0.3s ease;
+        }
+
+        /* Optional: Subtle hover effect for the header icons */
+        .ui-panel .btn-outline-light:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
     </style>
 </head>
 <body>
 
-    <div class="ui-panel" style="position: absolute; top: 20px; left: 20px; z-index: 1000;">
-        <div class="card bg-dark bg-opacity-75 text-white p-3 border-secondary">
-            <div class="dropdown mt-0">
-                <button class="btn btn-secondary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown" id="sceneButton">
-                    Change Scene
-                </button>
-                <ul class="dropdown-menu dropdown-menu-dark" id="sceneList">
-                </ul>
+    <div class="ui-panel" style="position: absolute; top: 20px; left: 20px; z-index: 1000; width: 350px;">
+        <div class="card bg-dark bg-opacity-75 text-white border-secondary">
+
+            <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
+                <div class="dropdown">
+                    <button class="btn btn-secondary dropdown-toggle btn-sm" type="button" data-bs-toggle="dropdown" id="sceneButton">
+                        Scene
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-dark" id="sceneList"></ul>
+                </div>
+
+                <div class="d-flex align-items-center gap-1">
+                    <button class="btn btn-outline-light btn-sm border-0" id="btnResetCamera" title="Reset Camera">
+                        <i class="bi bi-camera-video"></i>
+                    </button>
+
+                    <button class="btn btn-outline-light btn-sm border-0" id="btnPause" title="Pause/Resume Animation">
+                        <i class="bi bi-pause-fill" id="pauseIcon"></i>
+                    </button>
+
+                    <button class="btn btn-sm text-secondary ms-1 p-0" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#panelControls"
+                            aria-expanded="true" id="btnCollapse">
+                        <i class="bi bi-chevron-up" id="collapseIcon"></i>
+                    </button>
+                </div>
             </div>
 
-            <hr class="border-secondary">
+            <div class="collapse show" id="panelControls">
+                <div class="card-body p-3">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="autoRotateSwitch">
+                        <label class="form-check-label small" for="autoRotateSwitch">Auto-Rotate</label>
+                    </div>
 
-            <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" id="autoRotateSwitch">
-                <label class="form-check-label" for="autoRotateSwitch">Auto-Rotate</label>
-            </div>
-            <hr class="border-secondary">
-            <div>
-                <button class="btn btn-primary btn-sm" type="button" id="btnResetCamera">Reset camera</button>
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="vertexColorsSwitch">
+                        <label class="form-check-label small" for="vertexColorsSwitch">Vertex Colors</label>
+                    </div>
+
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="showWireSwitch">
+                        <label class="form-check-label small" for="showWireSwitch">Show Wireframe</label>
+                    </div>
+
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" id="flatShadingSwitch">
+                        <label class="form-check-label small" for="flatShadingSwitch">Flat shading</label>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -79,7 +127,7 @@
         }
     </script>
 
-    <script type="module" src="js/app.js?v=1.01"></script>
+    <script type="module" src="js/app.js?v=1.02"></script>
 
 </body>
 </html>

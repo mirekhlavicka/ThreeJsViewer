@@ -1,20 +1,26 @@
 import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-import { sceneConfigurations } from './config.js?v=1.01';
+import { sceneConfigurations } from './config.js?v=1.02';
 
 // --- State Variables ---
 let controls, renderer, scene, camera, grid;
+
 let autoRotate = false;
+let useVertexColors = false;
+let useflatShading = false;
+let showWire = false;
+let isPaused = false;
+
 const loadedPivots = []; 
 const loadedMeshes = []; 
 const loader = new PLYLoader();
 
+const clock = new THREE.Clock();
+let animationTime = 0; // Our custom "accumulated" time
+
 // URL Parameter Logic
-const urlParams = new URLSearchParams(window.location.search);
-const modelIndex = parseInt(urlParams.get('model')) || 1;
-const initialIndex = (modelIndex >= 0 && modelIndex < sceneConfigurations.length) ? modelIndex : 1;
-let config = sceneConfigurations[initialIndex];
+let config = sceneConfigurations[Math.min(Math.max(parseInt(new URLSearchParams(window.location.search).get('model')) || 0, 0), sceneConfigurations.length - 1)];
 
 function setup() {
     scene = new THREE.Scene();
@@ -23,7 +29,7 @@ function setup() {
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
     camera.up.set(0, 0, 1);
-    camera.position.set(-3, 0 , 2);
+    camera.position.set(-3, 0 , 1.5);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -40,18 +46,15 @@ function setup() {
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
     scene.add(hemiLight);
 
-    //const envLight = new THREE.AmbientLight(0xffffff, 0.5); // Soft white light
-    //scene.add(envLight);
-
     const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    dirLight.position.set(0.5, -3.5, 1.5);
+    dirLight.position.set(1, 1, 1);
     camera.add(dirLight);
     dirLight.target.position.set(0, 0, -1);
     camera.add(dirLight.target);
     scene.add(camera);
 
     // Add a grid to the "floor" (XZ plane)
-    grid = new THREE.GridHelper(5, 10, 0x444444, 0x222222);
+    grid = new THREE.GridHelper(4, 12, 0x444444, 0x222222);
     grid.rotation.x = Math.PI / 2; // If your "up" is Z, or leave as is if "up" is Y    
 
     scene.add(grid);
@@ -86,17 +89,17 @@ function loadScene() {
             geometry.computeVertexNormals();
 
             let m = {
-                color: modelData.color ?? 0xffffff,
+                color: useVertexColors ? 0xffffff  : modelData.color ?? 0xffffff,
 
-                flatShading: false,
-                vertexColors: false,
+                flatShading: useflatShading,
+                vertexColors: useVertexColors,
 
                 roughness: 0.3,
                 metalness: 0.2,
 
-                polygonOffset: !!modelData.wire,
-                polygonOffsetFactor: modelData.wire ? 1 : 0,
-                polygonOffsetUnits: modelData.wire ? 1 : 0
+                polygonOffset: showWire,
+                polygonOffsetFactor: showWire ? 1 : 0,
+                polygonOffsetUnits: showWire ? 1 : 0
             };
 
             if (modelData.setupMaterial) {
@@ -104,14 +107,13 @@ function loadScene() {
             }
             const material = new THREE.MeshStandardMaterial(m);
 
-
             const mesh = new THREE.Mesh(geometry, material);
             mesh.userData = modelData; // Store config in mesh
 
-            if (modelData.wire) {
+            if (showWire) {
                 const wireframe = new THREE.LineSegments(
                     new THREE.WireframeGeometry(geometry),
-                    new THREE.LineBasicMaterial({ color: 0x505050, transparent: true, opacity: 0.15 })
+                    new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 })
                 );
                 mesh.add(wireframe);
             }
@@ -129,6 +131,7 @@ function loadScene() {
                 if (config.setup) {
                     config.setup(camera);
                 }
+                animationTime = 0;
                 progressContainer.style.display = 'none';
             }
         }, (xhr) => {
@@ -139,10 +142,8 @@ function loadScene() {
         });
     });
 
-    const titleElement = document.getElementById('sceneButton');
-    if (titleElement) {
-        titleElement.innerText = config.name + " ";
-    }    
+    document.getElementById('sceneButton').innerText = config.name + " ";
+    document.title = config.name;
 }
 
 function autoPositionGrid() {
@@ -166,17 +167,31 @@ function autoPositionGrid() {
     // 4. Move the grid slightly below that (e.g., 0.05 units) 
     // to prevent the model from "touching" the grid lines
     if (grid) {
-        grid.position.z = minZ - 0.05;
+        grid.position.z = minZ - 0.02;
     }
 }
 
-function animate(time) {
+function animate() {
     requestAnimationFrame(animate);
     controls.update();
+
+    // Get the time passed since the last frame
+    const delta = clock.getDelta();
     
     // Only render and animate if models are ready
-    if (loadedMeshes.length === config.models.length) {
-        const t = time * 0.002;
+    if (loadedMeshes.length !== config.models.length) {
+        return;
+    }
+
+    // ONLY increase our custom time if we are not paused
+    if (!isPaused) {
+        // 0.002 is your speed multiplier
+        animationTime += delta;
+    }
+
+    if (!isPaused) {
+        //const t = time * 0.002;
+        const t = animationTime * 1.5; // Adjust 1.5 to match your preferred speed
 
         if (autoRotate) {
             loadedPivots.forEach(pivot => {
@@ -191,9 +206,10 @@ function animate(time) {
             if (mesh.userData.animate) {
                 mesh.userData.animate(mesh, t);
             }
-        });
-        renderer.render(scene, camera);
+        });        
     }
+
+    renderer.render(scene, camera);
 }
 
 // --- UI & Event Listeners ---
@@ -204,6 +220,12 @@ sceneConfigurations.forEach((cfg, index) => {
     li.onclick = (e) => {
         e.preventDefault();
         config = sceneConfigurations[index];
+
+        // 2. Update the URL without reloading the page
+        const url = new URL(window.location);
+        url.searchParams.set('model', index);
+        window.history.pushState({}, '', url);
+
         loadScene();
     }
     sceneList.appendChild(li);
@@ -211,6 +233,36 @@ sceneConfigurations.forEach((cfg, index) => {
 
 document.getElementById('autoRotateSwitch').addEventListener('change', (e) => {
     autoRotate = e.target.checked;
+});
+
+document.getElementById('vertexColorsSwitch').addEventListener('change', (e) => {
+    useVertexColors = e.target.checked;
+
+    loadedMeshes.forEach(mesh => {
+        mesh.material.vertexColors = useVertexColors;
+
+        mesh.material.needsUpdate = true;
+
+        if (useVertexColors) {
+            mesh.material.color.set(0xffffff);
+        } else {
+            mesh.material.color.set(mesh.userData.color ?? 0xffffff);
+        }
+    });
+});
+
+document.getElementById('flatShadingSwitch').addEventListener('change', (e) => {
+    useflatShading = e.target.checked;
+
+    loadedMeshes.forEach(mesh => {
+        mesh.material.flatShading = useflatShading;
+        mesh.material.needsUpdate = true;
+    });
+});
+
+document.getElementById('showWireSwitch').addEventListener('change', (e) => {
+    showWire = e.target.checked;
+    loadScene();
 });
 
 document.getElementById('btnResetCamera').addEventListener('click', (e) => {
@@ -227,7 +279,23 @@ window.addEventListener('resize', () => {
     controls.handleResize();
 });
 
+document.getElementById('btnPause').addEventListener('click', (e) => {
+    isPaused = !isPaused;
+
+    const btnPause = e.currentTarget;
+    const pauseIcon = btnPause.querySelector('#pauseIcon');
+
+    // Swap Icons
+    if (isPaused) {
+        pauseIcon.classList.replace('bi-pause-fill', 'bi-play-fill');
+        btnPause.classList.replace('btn-outline-light', 'btn-success'); // Turn green when paused?
+    } else {
+        pauseIcon.classList.replace('bi-play-fill', 'bi-pause-fill');
+        btnPause.classList.replace('btn-success', 'btn-outline-light');
+    }
+});
+
 // Start
 setup();
 loadScene();
-animate(0);
+animate();
