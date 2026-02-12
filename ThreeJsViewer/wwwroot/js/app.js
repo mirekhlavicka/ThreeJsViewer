@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-import { sceneConfigurations } from './config.js?v=1.02';
+import { sceneConfigurations } from './config.js?v=1.03';
 
 // --- State Variables ---
 let controls, renderer, scene, camera, grid;
@@ -9,6 +9,7 @@ let controls, renderer, scene, camera, grid;
 let autoRotate = false;
 let useVertexColors = false;
 let useflatShading = false;
+let doubleSide = false;
 let showWire = false;
 let isPaused = false;
 
@@ -60,7 +61,7 @@ function setup() {
     scene.add(grid);
 }
 
-function loadScene() {
+function loadScene(reset = true) {
     // 1. Cleanup existing
     loadedPivots.forEach(pivot => {
         pivot.traverse(node => {
@@ -99,7 +100,9 @@ function loadScene() {
 
                 polygonOffset: showWire,
                 polygonOffsetFactor: showWire ? 1 : 0,
-                polygonOffsetUnits: showWire ? 1 : 0
+                polygonOffsetUnits: showWire ? 1 : 0,
+
+                side: doubleSide ? THREE.DoubleSide : THREE.FrontSide,
             };
 
             if (modelData.setupMaterial) {
@@ -127,12 +130,17 @@ function loadScene() {
 
             if (loadedMeshes.length === config.models.length) {
                 autoPositionGrid();
-                controls.reset();
-                if (config.setup) {
-                    config.setup(camera);
+                if (reset) {
+                    controls.reset();
+                    if (config.setup) {
+                        config.setup(camera);
+                    }
+                    animationTime = 0;
+                } else if (isPaused) {
+                    animateMeshes();
                 }
-                animationTime = 0;
-                progressContainer.style.display = 'none';
+
+                setTimeout(() => progressContainer.style.display = 'none', 500);
             }
         }, (xhr) => {
             percentArray[i] = (xhr.loaded / xhr.total) * 100;
@@ -166,9 +174,7 @@ function autoPositionGrid() {
 
     // 4. Move the grid slightly below that (e.g., 0.05 units) 
     // to prevent the model from "touching" the grid lines
-    if (grid) {
-        grid.position.z = minZ - 0.02;
-    }
+    grid.position.z = minZ - 0.02;
 }
 
 function animate() {
@@ -190,26 +196,26 @@ function animate() {
     }
 
     if (!isPaused) {
-        //const t = time * 0.002;
-        const t = animationTime * 1.5; // Adjust 1.5 to match your preferred speed
-
         if (autoRotate) {
             loadedPivots.forEach(pivot => {
                 pivot.rotation.z += 0.01;
             });
-            if (grid) {
-                grid.rotation.y += 0.01;
-            }
+            grid.rotation.y += 0.01;
         }
 
-        loadedMeshes.forEach(mesh => {
-            if (mesh.userData.animate) {
-                mesh.userData.animate(mesh, t);
-            }
-        });        
+        animateMeshes();
     }
 
     renderer.render(scene, camera);
+}
+
+function animateMeshes() {
+    const t = animationTime * 1.5; // Adjust 1.5 to match your preferred speed
+    loadedMeshes.forEach(mesh => {
+        if (mesh.userData.animate) {
+            mesh.userData.animate(mesh, t);
+        }
+    });        
 }
 
 // --- UI & Event Listeners ---
@@ -260,15 +266,69 @@ document.getElementById('flatShadingSwitch').addEventListener('change', (e) => {
     });
 });
 
+document.getElementById('doubleSideSwitch').addEventListener('change', (e) => {
+    doubleSide = e.target.checked;
+    loadedMeshes.forEach(mesh => {
+        mesh.material.side = doubleSide ? THREE.DoubleSide : THREE.FrontSide;
+        mesh.material.needsUpdate = true; 
+    });
+});
+
 document.getElementById('showWireSwitch').addEventListener('change', (e) => {
     showWire = e.target.checked;
-    loadScene();
+    loadScene(false);
 });
+
+document.getElementById('showGridSwitch').addEventListener('change', (e) => {
+    grid.visible = e.target.checked;
+});
+
 
 document.getElementById('btnResetCamera').addEventListener('click', (e) => {
     controls.reset();
     if (config.setup) {
         config.setup(camera);
+    }
+    loadedPivots.forEach(pivot => {
+        pivot.rotation.z = 0;
+    });
+    grid.rotation.y = 0;
+});
+
+document.getElementById('btnPause').addEventListener('click', (e) => {
+    isPaused = !isPaused;
+
+    const btnPause = e.currentTarget;
+    const pauseIcon = btnPause.querySelector('#pauseIcon');
+    const stepControls = document.getElementById('stepControls');    
+
+    if (isPaused) {
+        stepControls.classList.remove('d-none');
+        pauseIcon.classList.replace('bi-pause-fill', 'bi-play-fill');
+        btnPause.classList.replace('btn-outline-light', 'btn-success');
+
+    } else {
+        stepControls.classList.add('d-none');
+        pauseIcon.classList.replace('bi-play-fill', 'bi-pause-fill');
+        btnPause.classList.replace('btn-success', 'btn-outline-light');
+    }
+});
+
+const stepSize = 0.025; // Change this to make the "jump" larger or smaller
+
+// Step Forward Logic
+document.getElementById('btnStepForward').addEventListener('click', () => {
+    if (isPaused) {
+        animationTime += stepSize;
+        animateMeshes();
+    }
+});
+
+// Step Backward Logic
+document.getElementById('btnStepBack').addEventListener('click', () => {
+    if (isPaused) {
+        animationTime -= stepSize;
+        animateMeshes();
     }
 });
 
@@ -279,19 +339,21 @@ window.addEventListener('resize', () => {
     controls.handleResize();
 });
 
-document.getElementById('btnPause').addEventListener('click', (e) => {
-    isPaused = !isPaused;
-
-    const btnPause = e.currentTarget;
-    const pauseIcon = btnPause.querySelector('#pauseIcon');
-
-    // Swap Icons
-    if (isPaused) {
-        pauseIcon.classList.replace('bi-pause-fill', 'bi-play-fill');
-        btnPause.classList.replace('btn-outline-light', 'btn-success'); // Turn green when paused?
-    } else {
-        pauseIcon.classList.replace('bi-play-fill', 'bi-pause-fill');
-        btnPause.classList.replace('btn-success', 'btn-outline-light');
+window.addEventListener('keydown', (e) => {
+    switch (e.code) {
+        case 'Space':
+            e.preventDefault(); // Stop page from scrolling
+            document.getElementById('btnPause').click();
+            break;
+        case 'KeyR':
+            document.getElementById('btnResetCamera').click();
+            break;
+        case 'ArrowRight':
+            if (isPaused) document.getElementById('btnStepForward').click();
+            break;
+        case 'ArrowLeft':
+            if (isPaused) document.getElementById('btnStepBack').click();
+            break;
     }
 });
 

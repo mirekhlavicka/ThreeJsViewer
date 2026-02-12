@@ -9,8 +9,11 @@
                 path: 'assets/Labrador and cat - heart.ply',
                 color: 0xff69b4, // Hot Pink
                 animate: (m, t) => {
-                    m.position.y = - 0.5 * (1.0 + Math.sin(1 * t));
-                    m.rotation.y = Math.PI * (1.0 + Math.sin(1 * t));
+                    let v = 2 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
+                    v = sinSmooth(v, 0, 1.6);
+                    m.position.y = -0.75 * v;
+                    m.rotation.y = ( 2 * Math.PI) * v / 1.6;
                 }
             },
             {
@@ -32,10 +35,9 @@
                     let v = 2 * triangle01(t, 10);
                     v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
                     v = sinSmooth(v, 0, 1.6);
-
                     m.position.x = -v;
-
                     v = Math.max(v - 0.2, 0);
+                    v = sinSmooth(v, 0, 1.4);
                     m.rotation.z = (Math.PI / 2) * v / 1.4;
                 }
             },
@@ -46,10 +48,9 @@
                     let v = 2 * triangle01(t, 10);
                     v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
                     v = sinSmooth(v, 0, 1.6);
-
                     m.position.x = v;
-
                     v = Math.max(v - 0.2, 0);
+                    v = sinSmooth(v, 0, 1.4);
                     m.rotation.z = -(Math.PI / 2) * v / 1.4;
                 }
             }
@@ -57,35 +58,35 @@
     },
 
     {
-        name: "Open heart 1",
+        name: "Gold heart",
         setup: (camera) => {
             camera.position.set(0, 3, 1);
         },
         models: [
             {
                 path: 'assets/heart/Open heart in1.ply',
-                color: 0xff69b4,
+                //color: 0xff69b4,
+                color: 0xffd700,
+                setupMaterial: goldMaterial,
                 animate: (m, t) => {
                     let v = 2 * triangle01(t, 10);
                     v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
                     v = sinSmooth(v, 0, 1.6);
-
                     m.position.x = -v;
-
                     v = Math.max(v - 0.2, 0);
                     m.rotation.z = (Math.PI / 2) * v / 1.4;
                 }
             },
             {
                 path: 'assets/heart/Open heart out1.ply',
-                color: 0xff69b4,
+                //color: 0xff69b4,
+                color: 0xffd700,
+                setupMaterial: goldMaterial,
                 animate: (m, t) => {
                     let v = 2 * triangle01(t, 10);
                     v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
                     v = sinSmooth(v, 0, 1.6);
-
                     m.position.x = v;
-
                     v = Math.max(v - 0.2, 0);
                     m.rotation.z = -(Math.PI / 2) * v / 1.4;
                 }
@@ -106,26 +107,14 @@
                     let v = 2 * triangle01(t, 10);
                     v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
                     v = sinSmooth(v, 0, 1.6);
-
                     m.position.z = v;
-
                     v = Math.max(v - 0.2, 0);
                     m.rotation.x = (Math.PI / 2) * v / 1.4;
                 }
             },
             {
                 path: 'assets/heart/BikeInHeart1.ply',
-                color: 0xff69b4/*,
-                animate: (m, t) => {
-                    let v = 2 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
-                    v = sinSmooth(v, 0, 1.6);
-
-                    m.position.z = -v;
-
-                    v = Math.max(v - 0.2, 0);
-                    m.rotation.x = -(Math.PI / 2) * v / 1.4;
-                }*/
+                color: 0xff69b4
             }
         ]
     },
@@ -142,7 +131,6 @@
                     let v = 1.8 * triangle01(t, 10);
                     v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
                     v = sinSmooth(v, 0, 1.4);
-
                     m.position.y = -v;
                     v = Math.max(v - 0.2, 0);
                     m.rotation.z = (Math.PI / 2) * v / 1.2;
@@ -155,7 +143,6 @@
                     let v = 1.8 * triangle01(t, 10);
                     v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
                     v = sinSmooth(v, 0, 1.4);
-
                     m.position.y = v;
                     v = Math.max(v - 0.2, 0);
                     m.rotation.z = -(Math.PI / 2) * v / 1.2;
@@ -163,37 +150,6 @@
             }
         ]
     },
-
-    //{
-    //    name: "Shrek layers colors",
-    //    models: [
-    //        {
-    //            path: 'assets/ShrekSDFIn.ply',
-    //            animate: (m, t) => {
-    //                let v = anim1(t);
-    //                m.position.y = -v;
-    //                m.rotation.z = v;
-    //            },
-    //            setupMaterial: m => {
-    //                m.color = 0xffffff;
-    //                m.vertexColors = true;
-    //            }
-    //        },
-    //        {
-    //            path: 'assets/ShrekSDFOut.ply',
-    //            animate: (m, t) => {
-    //                let v = anim1(t);
-    //                m.position.y = v;
-    //                m.rotation.z = -v;
-    //            },
-    //            setupMaterial: m => {
-    //                m.color = 0xffffff;
-    //                m.vertexColors = true;
-    //            }
-    //        }
-    //    ]
-    //},
-
 
     {
         name: "Pear container",
@@ -220,22 +176,12 @@
             {
                 path: 'assets/StarBall1.ply',
                 color: 0xffd700,
-                setupMaterial: m => {
-                    m.metalness = 0.7;
-                    m.roughness = 0.3;
-                    m.emissive = 0xffa500;
-                    m.emissiveIntensity = 0.1;
-                }
+                setupMaterial: goldMaterial
             },
             {
                 path: 'assets/StarBall.ply',
                 color: 0xffd700,
-                setupMaterial: m => {
-                    m.metalness = 0.7;
-                    m.roughness = 0.3;
-                    m.emissive = 0xffa500;
-                    m.emissiveIntensity = 0.1;
-                },
+                setupMaterial: goldMaterial,
                 animate: (m, t) => {
 
                     let v = 1.8 * triangle01(t, 10);
@@ -248,16 +194,60 @@
                 }
             }
         ]
+    },
+
+    {
+        name: "Bunny mold",
+        setup: (camera) => {
+            camera.position.set(3, 0, 1.5);
+        },
+        models: [
+            {
+                path: 'assets/mold/BunnyOut.ply',
+                //color: 0xB0C400,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+                    m.position.y = 1.5 * v;
+                    v = Math.max(v - 0.2, 0);
+                    m.rotation.z = (Math.PI / 2) * v / 1.2;
+                }
+            },
+            {
+                path: 'assets/mold/BunnyIn.ply',
+                //color: 0xB0C400,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+                    m.position.y = - 1.5 * v;
+                    v = Math.max(v - 0.2, 0);
+                    m.rotation.z = -(Math.PI / 2) * v / 1.2;
+                }
+            },
+            {
+                path: 'assets/mold/Bunny.ply',
+                color: 0xB28A6B,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+
+                    v = 0.25 + 0.75 * v / 1.4;
+
+                    m.scale.set(v, v, v);
+
+                    m.position.z = - (1 - v) / 2 - 0.1;
+                    /*v = Math.max(v - 0.2, 0);
+                    m.rotation.z = -(Math.PI / 2) * v / 1.2;*/
+                }
+            }
+
+        ]
     }
 
-
 ];
-
-function anim1(t) {
-    let v = Math.min(Math.max(2 * Math.sin(t / 2), 0), 1.25);
-    v *= v;
-    return v;
-}
 
 function triangle01(t, period = 1) {
     let x = t / period;
@@ -269,4 +259,11 @@ function sinSmooth(y, y0, y1) {
     y = -Math.PI / 2 + Math.PI * (y - y0) / (y1 - y0);
 
     return y0 + (y1 - y0) * (Math.sin(y) + 1) / 2;
+}
+
+function goldMaterial(m) {
+    m.metalness = 0.7;
+    m.roughness = 0.3;
+    m.emissive = 0xffa500;
+    m.emissiveIntensity = 0.1;
 }

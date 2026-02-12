@@ -56,7 +56,7 @@
 </head>
 <body>
 
-    <div class="ui-panel" style="position: absolute; top: 20px; left: 20px; z-index: 1000; width: 350px;">
+    <div class="ui-panel" style="position: absolute; top: 20px; left: 20px; z-index: 1000; width: 390px;">
         <div class="card bg-dark bg-opacity-75 text-white border-secondary">
 
             <div class="card-header border-secondary d-flex align-items-center justify-content-between py-2 px-3">
@@ -68,11 +68,20 @@
                 </div>
 
                 <div class="d-flex align-items-center gap-1">
-                    <button class="btn btn-outline-light btn-sm border-0" id="btnResetCamera" title="Reset Camera">
+                    <button class="btn btn-outline-light btn-sm border-0" id="btnResetCamera" title="Reset Camera (R key)">
                         <i class="bi bi-camera-video"></i>
                     </button>
 
-                    <button class="btn btn-outline-light btn-sm border-0" id="btnPause" title="Pause/Resume Animation">
+                    <div id="stepControls" class="d-none d-flex gap-1">
+                        <button class="btn btn-outline-info btn-sm border-0" id="btnStepBack" title="Step Back (left arrow key)">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <button class="btn btn-outline-info btn-sm border-0" id="btnStepForward" title="Step Forward  (right arrow key)">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <button class="btn btn-outline-light btn-sm border-0" id="btnPause" title="Pause/Resume Animation (space key)">
                         <i class="bi bi-pause-fill" id="pauseIcon"></i>
                     </button>
 
@@ -101,10 +110,21 @@
                         <label class="form-check-label small" for="showWireSwitch">Show Wireframe</label>
                     </div>
 
-                    <div class="form-check form-switch mb-0">
+                    <div class="form-check form-switch mb-2">
                         <input class="form-check-input" type="checkbox" id="flatShadingSwitch">
-                        <label class="form-check-label small" for="flatShadingSwitch">Flat shading</label>
+                        <label class="form-check-label small" for="flatShadingSwitch">Flat Shading</label>
                     </div>
+
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="doubleSideSwitch">
+                        <label class="form-check-label small" for="doubleSideSwitch">Double Sided</label>
+                    </div>
+
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" id="showGridSwitch" checked>
+                        <label class="form-check-label small" for="showGridSwitch">Show Grid</label>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -127,7 +147,7 @@
         }
     </script>
 
-    <script type="module" src="js/app.js?v=1.02"></script>
+    <script type="module" src="js/app.js?v=1.03"></script>
 
 </body>
 </html>
