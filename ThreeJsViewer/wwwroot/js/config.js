@@ -245,7 +245,55 @@
             }
 
         ]
+    },
+
+    {
+        name: "Earth mold",
+        setup: (camera) => {
+            camera.position.set(3, 0, 1.5);
+        },
+        models: [
+            {
+                path: 'assets/mold/EarthOut.ply',
+                color: 0x8CB1DE,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+                    m.position.y = 1.5 * v;
+                    v = Math.max(v - 0.2, 0);
+                    m.rotation.z = (Math.PI / 2) * v / 1.2;
+                }
+            },
+            {
+                path: 'assets/mold/EarthIn.ply',
+                color: 0x8CB1DE,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+                    m.position.y = - 1.5 * v;
+                    v = Math.max(v - 0.2, 0);
+                    m.rotation.z = -(Math.PI / 2) * v / 1.2;
+                }
+            },
+            {
+                path: 'assets/mold/Earth.ply',
+                color: 0xDADD63,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+                    v = Math.max(v - 0.2, 0);
+                    v = sinSmooth(v, 0, 1.4);
+                    m.rotation.z = (2 * Math.PI ) * v / 1.2;
+
+                }
+            }
+
+        ]
     }
+
 
 ];
 
