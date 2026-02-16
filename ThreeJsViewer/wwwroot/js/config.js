@@ -1,4 +1,182 @@
 ﻿export const sceneConfigurations = [
+
+    {
+        name: "Pear container",
+        models: [
+            {
+                path: 'assets/Pear - bottom.ply',
+                color: 0xC9CC3F
+            },
+            {
+                path: 'assets/Pear - top.ply',
+                color: 0xC9CC3F,
+                animate: (m, t) => {
+                    let v = 0.5 * (1.0 + Math.sin(0.5 * t));
+                    m.position.z = v;
+                    m.rotation.x = v;
+                }
+            }
+        ]
+    },
+
+    {
+        name: "Shrek layers",
+        models: [
+            {
+                path: 'assets/ShrekSDFIn.ply',
+                color: 0xB0C400,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+                    m.position.y = -v;
+                    v = Math.max(v - 0.2, 0);
+                    m.rotation.z = (Math.PI / 2) * v / 1.2;
+                }
+            },
+            {
+                path: 'assets/ShrekSDFOut.ply',
+                color: 0xB0C400,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+                    m.position.y = v;
+                    v = Math.max(v - 0.2, 0);
+                    m.rotation.z = -(Math.PI / 2) * v / 1.2;
+                }
+            }
+        ]
+    },
+
+    {
+        name: "Star ball",
+        models: [
+            {
+                path: 'assets/StarBall1.ply',
+                color: 0xffd700,
+                setupMaterial: goldMaterial
+            },
+            {
+                path: 'assets/StarBall.ply',
+                color: 0xffd700,
+                setupMaterial: goldMaterial,
+                animate: (m, t) => {
+
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+
+                    m.position.z = v;
+                    v = Math.max(v - 0.2, 0);
+                    m.rotation.y = (Math.PI / 2) * v / 1.2;
+                }
+            }
+        ]
+    },
+
+    {
+        name: "Bunny mold",
+        setup: (camera) => {
+            camera.position.set(3, 0, 1.5);
+        },
+        models: [
+            {
+                path: 'assets/mold/BunnyOut.ply',
+                //color: 0xB0C400,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+                    m.position.y = 1.5 * v;
+                    v = Math.max(v - 0.2, 0);
+                    m.rotation.z = (Math.PI / 2) * v / 1.2;
+                }
+            },
+            {
+                path: 'assets/mold/BunnyIn.ply',
+                //color: 0xB0C400,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+                    m.position.y = - 1.5 * v;
+                    v = Math.max(v - 0.2, 0);
+                    m.rotation.z = -(Math.PI / 2) * v / 1.2;
+                }
+            },
+            {
+                path: 'assets/mold/Bunny.ply',
+                color: 0xB28A6B,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+
+                    v = 0.25 + 0.75 * v / 1.4;
+
+                    m.scale.set(v, v, v);
+
+                    m.position.z = - (1 - v) / 2 - 0.1;
+                    /*v = Math.max(v - 0.2, 0);
+                    m.rotation.z = -(Math.PI / 2) * v / 1.2;*/
+                }
+            }
+
+        ]
+    },
+
+    {
+        name: "Earth mold",
+        setup: (camera) => {
+            camera.position.set(3, 0, 1.5);
+        },
+        models: [
+            {
+                path: 'assets/mold/EarthOut.ply',
+                color: 0x8CB1DE,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+                    m.position.y = 1.5 * v;
+
+                    v = Math.max(v - 0.2, 0);
+                    v = sinSmooth(v, 0, 1.2);
+                    m.rotation.z = (Math.PI / 2) * v / 1.2;
+                    m.position.x = -0.5 * v;
+                }
+            },
+            {
+                path: 'assets/mold/EarthIn.ply',
+                color: 0x8CB1DE,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+                    m.position.y = - 1.5 * v;
+
+                    v = Math.max(v - 0.2, 0);
+                    v = sinSmooth(v, 0, 1.2);
+                    m.rotation.z = -(Math.PI / 2) * v / 1.2;
+                    m.position.x = -0.5 * v;
+                }
+            },
+            {
+                path: 'assets/mold/Earth.ply',
+                color: 0xDADD63,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.4 + Math.min(Math.max(v, 0.4), 1.6);
+                    v = sinSmooth(v, 0, 1.2);
+                    m.rotation.z = (2 * Math.PI ) * v / 1.2;
+
+                }
+            }
+
+        ]
+    },
+
     {
         name: "Dog & cat Valentine's day",
         setup: (camera) => {
@@ -13,7 +191,7 @@
                     v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
                     v = sinSmooth(v, 0, 1.6);
                     m.position.y = -0.75 * v;
-                    m.rotation.y = ( 2 * Math.PI) * v / 1.6;
+                    m.rotation.y = (2 * Math.PI) * v / 1.6;
                 }
             },
             {
@@ -117,184 +295,7 @@
                 color: 0xff69b4
             }
         ]
-    },
-
-
-
-    {
-        name: "Shrek layers",
-        models: [
-            {
-                path: 'assets/ShrekSDFIn.ply',
-                color: 0xB0C400,
-                animate: (m, t) => {
-                    let v = 1.8 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                    v = sinSmooth(v, 0, 1.4);
-                    m.position.y = -v;
-                    v = Math.max(v - 0.2, 0);
-                    m.rotation.z = (Math.PI / 2) * v / 1.2;
-                }
-            },
-            {
-                path: 'assets/ShrekSDFOut.ply',
-                color: 0xB0C400,
-                animate: (m, t) => {
-                    let v = 1.8 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                    v = sinSmooth(v, 0, 1.4);
-                    m.position.y = v;
-                    v = Math.max(v - 0.2, 0);
-                    m.rotation.z = -(Math.PI / 2) * v / 1.2;
-                }
-            }
-        ]
-    },
-
-    {
-        name: "Pear container",
-        models: [
-            {
-                path: 'assets/Pear - bottom.ply',
-                color: 0xC9CC3F
-            },
-            {
-                path: 'assets/Pear - top.ply',
-                color: 0xC9CC3F,
-                animate: (m, t) => {
-                    let v = 0.5 * (1.0 + Math.sin(0.5 * t));
-                    m.position.z = v;
-                    m.rotation.x = v;
-                }
-            }
-        ]
-    },
-
-    {
-        name: "Star ball",
-        models: [
-            {
-                path: 'assets/StarBall1.ply',
-                color: 0xffd700,
-                setupMaterial: goldMaterial
-            },
-            {
-                path: 'assets/StarBall.ply',
-                color: 0xffd700,
-                setupMaterial: goldMaterial,
-                animate: (m, t) => {
-
-                    let v = 1.8 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                    v = sinSmooth(v, 0, 1.4);
-
-                    m.position.z = v;
-                    v = Math.max(v - 0.2, 0);
-                    m.rotation.y = (Math.PI / 2) * v / 1.2;
-                }
-            }
-        ]
-    },
-
-    {
-        name: "Bunny mold",
-        setup: (camera) => {
-            camera.position.set(3, 0, 1.5);
-        },
-        models: [
-            {
-                path: 'assets/mold/BunnyOut.ply',
-                //color: 0xB0C400,
-                animate: (m, t) => {
-                    let v = 1.8 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                    v = sinSmooth(v, 0, 1.4);
-                    m.position.y = 1.5 * v;
-                    v = Math.max(v - 0.2, 0);
-                    m.rotation.z = (Math.PI / 2) * v / 1.2;
-                }
-            },
-            {
-                path: 'assets/mold/BunnyIn.ply',
-                //color: 0xB0C400,
-                animate: (m, t) => {
-                    let v = 1.8 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                    v = sinSmooth(v, 0, 1.4);
-                    m.position.y = - 1.5 * v;
-                    v = Math.max(v - 0.2, 0);
-                    m.rotation.z = -(Math.PI / 2) * v / 1.2;
-                }
-            },
-            {
-                path: 'assets/mold/Bunny.ply',
-                color: 0xB28A6B,
-                animate: (m, t) => {
-                    let v = 1.8 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                    v = sinSmooth(v, 0, 1.4);
-
-                    v = 0.25 + 0.75 * v / 1.4;
-
-                    m.scale.set(v, v, v);
-
-                    m.position.z = - (1 - v) / 2 - 0.1;
-                    /*v = Math.max(v - 0.2, 0);
-                    m.rotation.z = -(Math.PI / 2) * v / 1.2;*/
-                }
-            }
-
-        ]
-    },
-
-    {
-        name: "Earth mold",
-        setup: (camera) => {
-            camera.position.set(3, 0, 1.5);
-        },
-        models: [
-            {
-                path: 'assets/mold/EarthOut.ply',
-                color: 0x8CB1DE,
-                animate: (m, t) => {
-                    let v = 1.8 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                    v = sinSmooth(v, 0, 1.4);
-                    m.position.y = 1.5 * v;
-                    v = Math.max(v - 0.2, 0);
-                    m.rotation.z = (Math.PI / 2) * v / 1.2;
-                }
-            },
-            {
-                path: 'assets/mold/EarthIn.ply',
-                color: 0x8CB1DE,
-                animate: (m, t) => {
-                    let v = 1.8 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                    v = sinSmooth(v, 0, 1.4);
-                    m.position.y = - 1.5 * v;
-                    v = Math.max(v - 0.2, 0);
-                    m.rotation.z = -(Math.PI / 2) * v / 1.2;
-                }
-            },
-            {
-                path: 'assets/mold/Earth.ply',
-                color: 0xDADD63,
-                animate: (m, t) => {
-                    let v = 1.8 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                    v = sinSmooth(v, 0, 1.4);
-                    v = Math.max(v - 0.2, 0);
-                    v = sinSmooth(v, 0, 1.4);
-                    m.rotation.z = (2 * Math.PI ) * v / 1.2;
-
-                }
-            }
-
-        ]
     }
-
-
 ];
 
 function triangle01(t, period = 1) {

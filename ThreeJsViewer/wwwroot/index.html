@@ -76,7 +76,7 @@
                         <button class="btn btn-outline-info btn-sm border-0" id="btnStepBack" title="Step Back (left arrow key)">
                             <i class="bi bi-chevron-left"></i>
                         </button>
-                        <button class="btn btn-outline-info btn-sm border-0" id="btnStepForward" title="Step Forward  (right arrow key)">
+                        <button class="btn btn-outline-info btn-sm border-0" id="btnStepForward" title="Step Forward (right arrow key)">
                             <i class="bi bi-chevron-right"></i>
                         </button>
                     </div>
@@ -95,36 +95,51 @@
 
             <div class="collapse show" id="panelControls">
                 <div class="card-body p-3">
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="autoRotateSwitch">
-                        <label class="form-check-label small" for="autoRotateSwitch">Auto-Rotate</label>
-                    </div>
+                    <div class="row gx-3">
+                        <div class="col-6 border-end border-secondary">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="showGridSwitch" checked>
+                                <label class="form-check-label small" for="showGridSwitch">Show Grid</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="showWireSwitch">
+                                <label class="form-check-label small" for="showWireSwitch">Wireframe</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="autoRotateSwitch">
+                                <label class="form-check-label small" for="autoRotateSwitch">Auto-Rotate</label>
+                            </div>
 
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="vertexColorsSwitch">
-                        <label class="form-check-label small" for="vertexColorsSwitch">Vertex Colors</label>
-                    </div>
+                            <label for="rotateSpeedRange" class="form-label small mb-1">Rot Speed: <span id="rotSpeedVal">0.01</span></label>
+                            <input type="range" class="form-range" min="-0.1" max="0.05" step="0.005" value="0.01" id="rotateSpeedRange">
 
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="showWireSwitch">
-                        <label class="form-check-label small" for="showWireSwitch">Show Wireframe</label>
-                    </div>
+                            <label for="animSpeedRange" class="form-label small mb-1">Anim Speed: <span id="animSpeedVal">1.5</span></label>
+                            <input type="range" class="form-range" min="0.1" max="5" step="0.1" value="1.5" id="animSpeedRange">
 
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="flatShadingSwitch">
-                        <label class="form-check-label small" for="flatShadingSwitch">Flat Shading</label>
-                    </div>
+                        </div>
 
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="doubleSideSwitch">
-                        <label class="form-check-label small" for="doubleSideSwitch">Double Sided</label>
-                    </div>
+                        <div class="col-6">
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="flatShadingSwitch">
+                                <label class="form-check-label small" for="flatShadingSwitch">Flat Shading</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input" type="checkbox" id="doubleSideSwitch">
+                                <label class="form-check-label small" for="doubleSideSwitch">Double Sided</label>
+                            </div>
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="vertexColorsSwitch">
+                                <label class="form-check-label small" for="vertexColorsSwitch">Vertex Colors</label>
+                            </div>
 
-                    <div class="form-check form-switch mb-0">
-                        <input class="form-check-input" type="checkbox" id="showGridSwitch" checked>
-                        <label class="form-check-label small" for="showGridSwitch">Show Grid</label>
-                    </div>
+                            <label for="roughnessRange" class="form-label small mb-1">Roughness: <span id="roughnessVal">0.3</span></label>
+                            <input type="range" class="form-range" min="0" max="1" step="0.025" value="0.3" id="roughnessRange">
 
+                            <label for="metalnessRange" class="form-label small mb-1">Metalness: <span id="metalnessVal">0.2</span></label>
+                            <input type="range" class="form-range" min="0" max="1" step="0.025" value="0.2" id="metalnessRange">
+
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -147,7 +162,7 @@
         }
     </script>
 
-    <script type="module" src="js/app.js?v=1.04"></script>
+    <script type="module" src="js/app.js?v=1.05"></script>
 
 </body>
 </html>

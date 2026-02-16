@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-import { sceneConfigurations } from './config.js?v=1.04';
+import { sceneConfigurations } from './config.js?v=1.05';
 
 // --- State Variables ---
 let controls, renderer, scene, camera, grid;
@@ -12,6 +12,11 @@ let useflatShading = false;
 let doubleSide = false;
 let showWire = false;
 let isPaused = false;
+
+let animationSpeed = 1.5;
+let autoRotateSpeed = 0.01;
+let materialRoughness = 0.3;
+let materialMetalness = 0.2;
 
 const loadedPivots = []; 
 const loadedMeshes = []; 
@@ -95,8 +100,8 @@ function loadScene(reset = true) {
                 flatShading: useflatShading,
                 vertexColors: useVertexColors,
 
-                roughness: 0.3,
-                metalness: 0.2,
+                roughness: materialRoughness,
+                metalness: materialMetalness,
 
                 polygonOffset: showWire,
                 polygonOffsetFactor: showWire ? 1 : 0,
@@ -192,15 +197,15 @@ function animate() {
     // ONLY increase our custom time if we are not paused
     if (!isPaused) {
         // 0.002 is your speed multiplier
-        animationTime += delta;
+        animationTime += delta * animationSpeed;
     }
 
     if (!isPaused) {
         if (autoRotate) {
             loadedPivots.forEach(pivot => {
-                pivot.rotation.z += 0.01;
+                pivot.rotation.z += autoRotateSpeed;
             });
-            grid.rotation.y += 0.01;
+            grid.rotation.y += autoRotateSpeed;
         }
 
         animateMeshes();
@@ -210,10 +215,9 @@ function animate() {
 }
 
 function animateMeshes() {
-    const t = animationTime * 1.5; // Adjust 1.5 to match your preferred speed
     loadedMeshes.forEach(mesh => {
         if (mesh.userData.animate) {
-            mesh.userData.animate(mesh, t);
+            mesh.userData.animate(mesh, animationTime);
         }
     });        
 }
@@ -331,6 +335,53 @@ document.getElementById('btnStepBack').addEventListener('click', () => {
         animateMeshes();
     }
 });
+
+
+// Animation Speed Slider
+const animRange = document.getElementById('animSpeedRange');
+const animValLabel = document.getElementById('animSpeedVal');
+
+animRange.addEventListener('input', (e) => {
+    animationSpeed = parseFloat(e.target.value);
+    animValLabel.innerText = animationSpeed.toFixed(1);
+});
+
+// Auto-Rotation Speed Slider
+const rotRange = document.getElementById('rotateSpeedRange');
+const rotValLabel = document.getElementById('rotSpeedVal');
+
+rotRange.addEventListener('input', (e) => {
+    autoRotateSpeed = parseFloat(e.target.value);
+    rotValLabel.innerText = autoRotateSpeed.toFixed(3);
+});
+
+// Roughness Slider
+const roughnessRange = document.getElementById('roughnessRange');
+const roughnessValLabel = document.getElementById('roughnessVal');
+
+roughnessRange.addEventListener('input', (e) => {
+    materialRoughness = parseFloat(e.target.value);
+    roughnessValLabel.innerText = materialRoughness.toFixed(2);
+
+    loadedMeshes.forEach(mesh => {
+        mesh.material.roughness = materialRoughness;
+    });
+});
+
+// Metalness Slider
+const metalnessRange = document.getElementById('metalnessRange');
+const metalnessValLabel = document.getElementById('metalnessVal');
+
+metalnessRange.addEventListener('input', (e) => {
+    materialMetalness = parseFloat(e.target.value);
+    metalnessValLabel.innerText = materialMetalness.toFixed(2);
+
+    loadedMeshes.forEach(mesh => {
+        mesh.material.metalness = materialMetalness;
+    });
+});
+
+
 
 window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
