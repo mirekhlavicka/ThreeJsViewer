@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-import { sceneConfigurations } from './config.js?v=1.05';
+import { sceneConfigurations } from './config.js?v=1.06';
 
 // --- State Variables ---
 let controls, renderer, scene, camera, grid;
@@ -93,6 +93,10 @@ function loadScene(reset = true) {
     config.models.forEach((modelData, i) => {
         loader.load(modelData.path, (geometry) => {
             geometry.computeVertexNormals();
+
+            if (modelData.prepareGeometry) {
+                modelData.prepareGeometry(geometry);
+            }
 
             let m = {
                 color: useVertexColors ? 0xffffff  : modelData.color ?? 0xffffff,
@@ -249,14 +253,17 @@ document.getElementById('vertexColorsSwitch').addEventListener('change', (e) => 
     useVertexColors = e.target.checked;
 
     loadedMeshes.forEach(mesh => {
-        mesh.material.vertexColors = useVertexColors;
 
-        mesh.material.needsUpdate = true;
+        if (!mesh.userData.setupMaterial) {
 
-        if (useVertexColors) {
-            mesh.material.color.set(0xffffff);
-        } else {
-            mesh.material.color.set(mesh.userData.color ?? 0xffffff);
+            mesh.material.vertexColors = useVertexColors;
+            if (useVertexColors) {
+                mesh.material.color.set(0xffffff);
+            } else {
+                mesh.material.color.set(mesh.userData.color ?? 0xffffff);
+            }
+
+            mesh.material.needsUpdate = true;
         }
     });
 });
