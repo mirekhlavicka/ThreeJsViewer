@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-import { sceneConfigurations } from './config.js?v=1.06';
+import { sceneConfigurations } from './config.js?v=1.07';
 
 // --- State Variables ---
 let controls, renderer, scene, camera, grid;
@@ -13,7 +13,7 @@ let doubleSide = false;
 let showWire = false;
 let isPaused = false;
 
-let animationSpeed = 1.5;
+let animationSpeed = 1.2;
 let autoRotateSpeed = 0.01;
 let materialRoughness = 0.3;
 let materialMetalness = 0.2;
@@ -30,7 +30,7 @@ let config = sceneConfigurations[Math.min(Math.max(parseInt(new URLSearchParams(
 
 function setup() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a1a);
+    scene.background = new THREE.Color(0x4a4a4a);
     scene.fog = new THREE.FogExp2(0x1a1a1a, 0.002);
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -60,7 +60,7 @@ function setup() {
     scene.add(camera);
 
     // Add a grid to the "floor" (XZ plane)
-    grid = new THREE.GridHelper(4, 12, 0x444444, 0x222222);
+    grid = new THREE.GridHelper(4, 12, 0x444444, 0x555555);
     grid.rotation.x = Math.PI / 2; // If your "up" is Z, or leave as is if "up" is Y    
 
     scene.add(grid);
@@ -98,26 +98,42 @@ function loadScene(reset = true) {
                 modelData.prepareGeometry(geometry);
             }
 
-            let m = {
-                color: useVertexColors ? 0xffffff  : modelData.color ?? 0xffffff,
+            let material = null;
+            if (modelData.glass) {
+                material = new THREE.MeshPhysicalMaterial({
+                    thickness: 0.5,        // Depth of the glass
+                    roughness: 0.0,        // Perfectly smooth
+                    transmission: 1.0,     // 100% of light passes through
+                    ior: 1.5,             // Index of Refraction (1.5 is standard for glass)
+                    opacity: 1,           // Keep this at 1; transmission handles transparency
+                    transparent: true,    // Must be true for transmission to work
+                    envMapIntensity: 1.5,
+                    color: useVertexColors ? 0xffffff : modelData.color ?? 0xffffff
+                });
 
-                flatShading: useflatShading,
-                vertexColors: useVertexColors,
+            } else {
 
-                roughness: materialRoughness,
-                metalness: materialMetalness,
+                let m = {
+                    color: useVertexColors ? 0xffffff : modelData.color ?? 0xffffff,
 
-                polygonOffset: showWire,
-                polygonOffsetFactor: showWire ? 1 : 0,
-                polygonOffsetUnits: showWire ? 1 : 0,
+                    flatShading: useflatShading,
+                    vertexColors: useVertexColors,
 
-                side: doubleSide ? THREE.DoubleSide : THREE.FrontSide,
-            };
+                    roughness: materialRoughness,
+                    metalness: materialMetalness,
 
-            if (modelData.setupMaterial) {
-                modelData.setupMaterial(m);
+                    polygonOffset: showWire,
+                    polygonOffsetFactor: showWire ? 1 : 0,
+                    polygonOffsetUnits: showWire ? 1 : 0,
+
+                    side: doubleSide ? THREE.DoubleSide : THREE.FrontSide,
+                };
+
+                if (modelData.setupMaterial) {
+                    modelData.setupMaterial(m);
+                }
+                material = new THREE.MeshStandardMaterial(m);
             }
-            const material = new THREE.MeshStandardMaterial(m);
 
             const mesh = new THREE.Mesh(geometry, material);
             mesh.userData = modelData; // Store config in mesh
@@ -133,6 +149,10 @@ function loadScene(reset = true) {
             const pivot = new THREE.Group();
             pivot.add(mesh);
             scene.add(pivot);
+
+            if (modelData.prepareMesh) {
+                modelData.prepareMesh(mesh);
+            }
 
             loadedPivots.push(pivot);
             loadedMeshes.push(mesh);
@@ -359,7 +379,7 @@ const rotValLabel = document.getElementById('rotSpeedVal');
 
 rotRange.addEventListener('input', (e) => {
     autoRotateSpeed = parseFloat(e.target.value);
-    rotValLabel.innerText = autoRotateSpeed.toFixed(3);
+    rotValLabel.innerText = autoRotateSpeed.toFixed(4);
 });
 
 // Roughness Slider

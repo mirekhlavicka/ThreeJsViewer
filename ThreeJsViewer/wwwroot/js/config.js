@@ -78,13 +78,14 @@ export const sceneConfigurations = [
     },
 
     {
-        name: "Bunny mold",
+        name: "Bunny in bunny",
         setup: (camera) => {
             camera.position.set(3, 0, 1.5);
         },
         models: [
             {
                 path: 'assets/mold/BunnyOut.ply',
+                glass: true,
                 //color: 0xB0C400,
                 animate: (m, t) => {
                     let v = 1.8 * triangle01(t, 10);
@@ -97,6 +98,7 @@ export const sceneConfigurations = [
             },
             {
                 path: 'assets/mold/BunnyIn.ply',
+                glass: true,
                 //color: 0xB0C400,
                 animate: (m, t) => {
                     let v = 1.8 * triangle01(t, 10);
@@ -395,6 +397,68 @@ export const sceneConfigurations = [
                 path: 'assets/heart/BikeInHeart1.ply',
                 color: 0xff69b4
             }
+        ]
+    },
+
+    {
+        name: "PO in horse",
+        setup: (camera) => {
+            camera.position.set(1, -3, 1.25);
+        },
+        models: [
+            {
+                path: 'assets/horse/horse2.ply',
+                glass: true,
+                color: 0xC79F70,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+                    m.position.x = 1.0 * v;
+
+                    v = 1.8 * triangle01(t, 10);
+                    v = -0.4 + Math.min(Math.max(v, 0.4), 1.6);
+                    v = sinSmooth(v, 0, 1.2);
+                    m.rotation.z = (Math.PI / 2) * v / 1.2;
+                }
+            },
+            {
+                path: 'assets/horse/horse1.ply',
+                color: 0xD5D2AC,
+                //glass: true,
+                //color: 0xC4A484,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
+                    v = sinSmooth(v, 0, 1.4);
+                    m.position.x = - 1.0 * v;
+
+                    v = 1.8 * triangle01(t, 10);
+                    v = -0.4 + Math.min(Math.max(v, 0.4), 1.6);
+                    v = sinSmooth(v, 0, 1.2);
+                    m.rotation.z = -(Math.PI / 2) * v / 1.2;                    
+                }
+            },
+            {
+                path: 'assets/horse/po.ply',
+                prepareMesh: m => {
+                    m.rotation.x = Math.PI / 2;
+                    m.scale.set(0.19, 0.19, 0.19);
+                },
+                color: 0xB87A1B,
+                animate: (m, t) => {
+                    let v = 1.8 * triangle01(t, 10);
+                    v = -0.4 + Math.min(Math.max(v, 0.4), 1.6);
+                    v = sinSmooth(v, 0, 1.2);
+
+                    m.rotation.y = (4.2* Math.PI ) * v / 1.2;                    
+
+                    m.position.x = v / 2;
+                    m.position.y = -1.8 * v - 0.1;
+                    m.position.z = 0.08 + 0.8 * v;
+                }
+            }
+
         ]
     }
 ];
