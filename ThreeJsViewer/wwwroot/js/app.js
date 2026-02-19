@@ -4,7 +4,7 @@ import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 import { sceneConfigurations } from './config.js?v=1.07';
 
 // --- State Variables ---
-let controls, renderer, scene, camera, grid;
+let controls, renderer, scene, camera, grid, pivot;
 
 let autoRotate = false;
 let useVertexColors = false;
@@ -17,12 +17,11 @@ let animationSpeed = 1.2;
 let autoRotateSpeed = 0.01;
 let materialRoughness = 0.3;
 let materialMetalness = 0.2;
-
-const loadedPivots = []; 
+    
 const loadedMeshes = []; 
 const loader = new PLYLoader();
 
-const clock = new THREE.Clock();
+const timer = new THREE.Timer();
 let animationTime = 0; // Our custom "accumulated" time
 
 // URL Parameter Logic
@@ -62,23 +61,22 @@ function setup() {
     // Add a grid to the "floor" (XZ plane)
     grid = new THREE.GridHelper(4, 12, 0x444444, 0x555555);
     grid.rotation.x = Math.PI / 2; // If your "up" is Z, or leave as is if "up" is Y    
-
-    scene.add(grid);
 }
 
 function loadScene(reset = true) {
     // 1. Cleanup existing
-    loadedPivots.forEach(pivot => {
+    if (pivot) {
         pivot.traverse(node => {
+            if (node === grid) return;
+
             if (node.isMesh || node.isLineSegments) {
                 node.geometry.dispose();
                 node.material.dispose();
             }
         });
         scene.remove(pivot);
-    });
-    loadedPivots.length = 0;
-    loadedMeshes.length = 0;
+        loadedMeshes.length = 0;
+    }
 
     // 2. Reset Progress UI
     const progressBar = document.getElementById('progress-bar');
@@ -89,14 +87,19 @@ function loadScene(reset = true) {
 
     let percentArray = new Array(config.models.length).fill(0);
 
+    pivot = new THREE.Group();
+    pivot.add(grid);
+    scene.add(pivot);
+
     // 3. Load Models
     config.models.forEach((modelData, i) => {
         loader.load(modelData.path, (geometry) => {
-            geometry.computeVertexNormals();
 
             if (modelData.prepareGeometry) {
                 modelData.prepareGeometry(geometry);
             }
+
+            geometry.computeVertexNormals();
 
             let material = null;
             if (modelData.glass) {
@@ -146,15 +149,12 @@ function loadScene(reset = true) {
                 mesh.add(wireframe);
             }
 
-            const pivot = new THREE.Group();
             pivot.add(mesh);
-            scene.add(pivot);
 
             if (modelData.prepareMesh) {
                 modelData.prepareMesh(mesh);
             }
 
-            loadedPivots.push(pivot);
             loadedMeshes.push(mesh);
 
             if (loadedMeshes.length === config.models.length) {
@@ -211,8 +211,9 @@ function animate() {
     controls.update();
 
     // Get the time passed since the last frame
-    const delta = clock.getDelta();
-    
+    timer.update();
+    const delta = timer.getDelta();
+
     // Only render and animate if models are ready
     if (loadedMeshes.length !== config.models.length) {
         return;
@@ -226,10 +227,7 @@ function animate() {
 
     if (!isPaused) {
         if (autoRotate) {
-            loadedPivots.forEach(pivot => {
-                pivot.rotation.z += autoRotateSpeed;
-            });
-            grid.rotation.y += autoRotateSpeed;
+            pivot.rotation.z += autoRotateSpeed;
         }
 
         animateMeshes();
@@ -320,10 +318,7 @@ document.getElementById('btnResetCamera').addEventListener('click', (e) => {
     if (config.setup) {
         config.setup(camera);
     }
-    loadedPivots.forEach(pivot => {
-        pivot.rotation.z = 0;
-    });
-    grid.rotation.y = 0;
+    pivot.rotation.z = 0;
 });
 
 document.getElementById('btnPause').addEventListener('click', (e) => {
