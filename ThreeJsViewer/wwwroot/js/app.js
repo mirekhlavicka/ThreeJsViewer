@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-import { sceneConfigurations } from './config.js?v=1.07';
+import { sceneConfigurations } from './config.js?v=1.09';
 
 // --- State Variables ---
 let controls, renderer, scene, camera, grid, pivot;
@@ -29,7 +29,7 @@ let config = sceneConfigurations[Math.min(Math.max(parseInt(new URLSearchParams(
 
 function setup() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x4a4a4a);
+    scene.background = new THREE.Color(0x3a3a3a);
     scene.fog = new THREE.FogExp2(0x1a1a1a, 0.002);
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -59,7 +59,7 @@ function setup() {
     scene.add(camera);
 
     // Add a grid to the "floor" (XZ plane)
-    grid = new THREE.GridHelper(4, 12, 0x444444, 0x555555);
+    grid = new THREE.GridHelper(4, 12, 0x555555, 0x444444);
     grid.rotation.x = Math.PI / 2; // If your "up" is Z, or leave as is if "up" is Y    
 }
 
@@ -179,8 +179,13 @@ function loadScene(reset = true) {
         });
     });
 
-    document.getElementById('sceneButton').innerText = config.name + " ";
-    document.title = config.name;
+    let title = config.name;
+    if (title.includes('/')){
+        title = title.split('/')[1];
+    }
+
+    document.getElementById('sceneButton').innerText = title + " ";
+    document.title = title;
 }
 
 function autoPositionGrid() {
@@ -245,23 +250,73 @@ function animateMeshes() {
 }
 
 // --- UI & Event Listeners ---
+
 const sceneList = document.getElementById('sceneList');
+
+// 1. Group scenes by their prefix (folder)
+const groups = {};
 sceneConfigurations.forEach((cfg, index) => {
+    if (cfg.name.includes('/')) {
+        const [parent, child] = cfg.name.split('/');
+        if (!groups[parent]) groups[parent] = [];
+        groups[parent].push({ name: child, index: index });
+    } else {
+        // Use a special key for top-level items
+        if (!groups["_root"]) groups["_root"] = [];
+        groups["_root"].push({ name: cfg.name, index: index });
+    }
+});
+
+// 2. Helper to create a scene link
+function createLink(name, index) {
     const li = document.createElement('li');
-    li.innerHTML = `<a class="dropdown-item" href="#">${cfg.name}</a>`;
+    li.innerHTML = `<a class="dropdown-item" href="#">${name}</a>`;
     li.onclick = (e) => {
         e.preventDefault();
         config = sceneConfigurations[index];
 
-        // 2. Update the URL without reloading the page
         const url = new URL(window.location);
         url.searchParams.set('model', index);
         window.history.pushState({}, '', url);
 
         loadScene();
-    }
-    sceneList.appendChild(li);
+    };
+    return li;
+}
+
+// 3. Render submenus FIRST
+Object.keys(groups).forEach(groupName => {
+    if (groupName === "_root") return;
+
+    const dropdownLi = document.createElement('li');
+    dropdownLi.className = 'dropdown-submenu dropend';
+
+    dropdownLi.innerHTML = `
+        <a class="dropdown-item dropdown-toggle" href="#">${groupName}</a>
+        <ul class="dropdown-menu dropdown-menu-dark"></ul>
+    `;
+
+    const subUl = dropdownLi.querySelector('ul');
+    groups[groupName].forEach(item => {
+        subUl.appendChild(createLink(item.name, item.index));
+    });
+
+    sceneList.appendChild(dropdownLi);
 });
+
+// 4. Add a divider if we have both submenus and root items
+if (Object.keys(groups).length > 1 && groups["_root"]) {
+    const divider = document.createElement('li');
+    divider.innerHTML = '<hr class="dropdown-divider">';
+    sceneList.appendChild(divider);
+}
+
+// 5. Render root items LAST
+if (groups["_root"]) {
+    groups["_root"].forEach(item => {
+        sceneList.appendChild(createLink(item.name, item.index));
+    });
+}
 
 document.getElementById('autoRotateSwitch').addEventListener('change', (e) => {
     autoRotate = e.target.checked;

@@ -12,6 +12,15 @@ export function sinSmooth(y, y0, y1) {
     return y0 + (y1 - y0) * (Math.sin(y) + 1) / 2;
 }
 
+export function smoothAnim(t, period = 1, t0 = 0, t1 = 1) {
+    const v0 = triangle01(t0, period);
+    const v1 = triangle01(t1, period);
+    let v = triangle01(t, period);
+
+    v = (-v0 + Math.min(Math.max(v, v0), v1)) / (v1 - v0);
+    return sinSmooth(v, 0, 1);
+}
+
 export function goldMaterial(m) {
     m.metalness = 0.7;
     m.roughness = 0.3;
@@ -19,7 +28,7 @@ export function goldMaterial(m) {
     m.emissiveIntensity = 0.1;
 }
 
-export function globeColors(geometry) {
+export function globeColors(geometry, egg) {
     const pos = geometry.attributes.position;
     const count = pos.count;
     const colors = new Float32Array(count * 3);
@@ -30,7 +39,19 @@ export function globeColors(geometry) {
     const radii = new Float32Array(count);
 
     for (let i = 0; i < count; i++) {
-        const r = Math.sqrt(pos.getX(i) ** 2 + pos.getY(i) ** 2 + pos.getZ(i) ** 2);
+
+        let x = pos.getX(i);
+        let y = pos.getY(i);
+        let z = pos.getZ(i);
+
+        if (egg) {
+            let s1 = 1.2;
+      	    let s2 = 1.7;      
+      	    let s = s1 + (s2 - s1) * (z + 1) / 2;
+            x *= s; y *= s;
+        }
+
+        const r = Math.sqrt(x ** 2 + y ** 2 + z ** 2);
         radii[i] = r;
         if (r < minR) minR = r;
         if (r > maxR) maxR = r;

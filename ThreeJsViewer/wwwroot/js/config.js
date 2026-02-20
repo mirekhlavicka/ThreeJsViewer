@@ -1,7 +1,9 @@
 ﻿import * as THREE from 'three';
-import { triangle01, sinSmooth, goldMaterial } from './utils.js';
-import { catMoldScene } from './scenes/catMold.js';
-import { earthMold2Scene, earthMold4Scene } from './scenes/earthMold.js';
+import { triangle01, sinSmooth, goldMaterial } from './utils.js?v=1.01';
+
+import { catMoldScene } from './scenes/catMold.js?v=1.01';
+import { earthMold2Scene, earthMold4Scene, eggEarthMold2Scene, eggEarthMold2Scene1, eggEarthMold4Scene } from './scenes/earthMold.js?v=1.01';
+import { dogCatScene, openHeartScene, goldHeartScene, bikeHeartScene } from './scenes/heart.js?v=1.01';
 
 export const sceneConfigurations = [
 
@@ -134,126 +136,6 @@ export const sceneConfigurations = [
     },
 
     {
-        name: "Dog & cat Valentine's day",
-        setup: (camera) => {
-            camera.position.set(0, -3, 2);
-        },
-        models: [
-            {
-                path: 'assets/Labrador and cat - heart.ply',
-                color: 0xff69b4, // Hot Pink
-                animate: (m, t) => {
-                    let v = 2 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
-                    v = sinSmooth(v, 0, 1.6);
-                    m.position.y = -0.75 * v;
-                    m.rotation.y = (2 * Math.PI) * v / 1.6;
-                }
-            },
-            {
-                path: 'assets/Labrador and cat.ply'
-            }
-        ]
-    },
-
-    {
-        name: "Open heart",
-        setup: (camera) => {
-            camera.position.set(0, 3, 1);
-        },
-        models: [
-            {
-                path: 'assets/heart/Open heart in.ply',
-                color: 0xff69b4,
-                animate: (m, t) => {
-                    let v = 2 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
-                    v = sinSmooth(v, 0, 1.6);
-                    m.position.x = -v;
-                    v = Math.max(v - 0.2, 0);
-                    v = sinSmooth(v, 0, 1.4);
-                    m.rotation.z = (Math.PI / 2) * v / 1.4;
-                }
-            },
-            {
-                path: 'assets/heart/Open heart out.ply',
-                color: 0xff69b4,
-                animate: (m, t) => {
-                    let v = 2 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
-                    v = sinSmooth(v, 0, 1.6);
-                    m.position.x = v;
-                    v = Math.max(v - 0.2, 0);
-                    v = sinSmooth(v, 0, 1.4);
-                    m.rotation.z = -(Math.PI / 2) * v / 1.4;
-                }
-            }
-        ]
-    },
-
-    {
-        name: "Gold heart",
-        setup: (camera) => {
-            camera.position.set(0, 3, 1);
-        },
-        models: [
-            {
-                path: 'assets/heart/Open heart in1.ply',
-                //color: 0xff69b4,
-                color: 0xffd700,
-                setupMaterial: goldMaterial,
-                animate: (m, t) => {
-                    let v = 2 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
-                    v = sinSmooth(v, 0, 1.6);
-                    m.position.x = -v;
-                    v = Math.max(v - 0.2, 0);
-                    m.rotation.z = (Math.PI / 2) * v / 1.4;
-                }
-            },
-            {
-                path: 'assets/heart/Open heart out1.ply',
-                //color: 0xff69b4,
-                color: 0xffd700,
-                setupMaterial: goldMaterial,
-                animate: (m, t) => {
-                    let v = 2 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
-                    v = sinSmooth(v, 0, 1.6);
-                    m.position.x = v;
-                    v = Math.max(v - 0.2, 0);
-                    m.rotation.z = -(Math.PI / 2) * v / 1.4;
-                }
-            }
-        ]
-    },
-
-    {
-        name: "Bike in heart",
-        setup: (camera) => {
-            camera.position.set(-2, -1, 3);
-        },
-        models: [
-            {
-                path: 'assets/heart/BikeInHeart.ply',
-                color: 0xff69b4,
-                animate: (m, t) => {
-                    let v = 2 * triangle01(t, 10);
-                    v = -0.2 + Math.min(Math.max(v, 0.2), 1.8);
-                    v = sinSmooth(v, 0, 1.6);
-                    m.position.z = v;
-                    v = Math.max(v - 0.2, 0);
-                    m.rotation.x = (Math.PI / 2) * v / 1.4;
-                }
-            },
-            {
-                path: 'assets/heart/BikeInHeart1.ply',
-                color: 0xff69b4
-            }
-        ]
-    },
-
-    {
         name: "PO in horse",
         setup: (camera) => {
             camera.position.set(1, -3, 1.25);
@@ -321,8 +203,15 @@ export const sceneConfigurations = [
     },
 
     earthMold2Scene,
-
+    eggEarthMold2Scene,
+    eggEarthMold2Scene1,
     earthMold4Scene,
+    eggEarthMold4Scene,
+
+    dogCatScene,
+    openHeartScene,
+    goldHeartScene,
+    bikeHeartScene,
 
     catMoldScene
 ];

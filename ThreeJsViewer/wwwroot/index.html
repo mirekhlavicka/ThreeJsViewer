@@ -53,6 +53,31 @@
         .ui-panel .btn-outline-light:hover {
             background-color: rgba(255, 255, 255, 0.1);
         }
+
+        .dropdown-submenu {
+            position: relative;
+        }
+
+            .dropdown-submenu .dropdown-menu {
+                top: 0;
+                left: 100%; /* Position it to the right of the parent */
+                margin-top: -1px;
+            }
+
+            /* Show submenu on hover */
+            .dropdown-submenu:hover > .dropdown-menu {
+                display: block;
+            }
+
+            /* Optional: rotate the arrow slightly or add a custom arrow */
+            .dropdown-submenu > .dropdown-toggle::after {
+                border-top: 0.3em solid transparent;
+                border-left: 0.3em solid;
+                border-bottom: 0.3em solid transparent;
+                float: right;
+                margin-top: 0.5em;
+            }
+
     </style>
 </head>
 <body>
@@ -163,7 +188,7 @@
         }
     </script>
 
-    <script type="module" src="js/app.js?v=1.07"></script>
+    <script type="module" src="js/app.js?v=1.09"></script>
 
 </body>
 </html>
