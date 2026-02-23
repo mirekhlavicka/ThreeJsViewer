@@ -54,31 +54,68 @@
             background-color: rgba(255, 255, 255, 0.1);
         }
 
-        .dropdown-submenu {
-            position: relative;
+        /* --- Menu & Submenu Logic --- */
+
+        /* 1. Hide submenus by default */
+        .dropdown-submenu .dropdown-menu {
+            display: none;
         }
 
-            .dropdown-submenu .dropdown-menu {
-                top: 0;
-                left: 100%; /* Position it to the right of the parent */
-                margin-top: -1px;
-            }
+        /* 2. Standardize the Category (Parent) Link */
+        .dropdown-submenu > .dropdown-toggle {
+            display: block;
+            width: 100%;
+        }
 
-            /* Show submenu on hover */
-            .dropdown-submenu:hover > .dropdown-menu {
-                display: block;
-            }
-
-            /* Optional: rotate the arrow slightly or add a custom arrow */
+            /* 3. The Arrow (Chevron) */
             .dropdown-submenu > .dropdown-toggle::after {
+                display: inline-block;
+                float: right; /* Keeps arrow on the right edge */
+                margin-top: 0.7em; /* Vertical alignment */
+                vertical-align: middle;
+                content: "";
+                /* Create a right-pointing triangle */
                 border-top: 0.3em solid transparent;
-                border-left: 0.3em solid;
                 border-bottom: 0.3em solid transparent;
-                float: right;
-                margin-top: 0.5em;
+                border-left: 0.3em solid;
+                /* Smooth rotation transition */
+                transition: transform 0.2s ease-in-out;
             }
 
-    </style>
+        /* 4. Rotate the arrow 90deg (pointing down) when the menu is open */
+        .dropdown-submenu.show-mobile > .dropdown-toggle::after {
+            transform: rotate(90deg);
+        }
+
+        /* 5. Unified toggle class for Mobile (Vertical stacking) */
+        .dropdown-submenu.show-mobile > .dropdown-menu {
+            display: block;
+            position: static;
+            width: 100%;
+            border: none;
+            padding-left: 1.5rem; /* Indent sub-items */
+            background-color: rgba(255, 255, 255, 0.05); /* Slight tint for hierarchy */
+        }
+
+        /* 6. Active State for selected scenes */
+        .dropdown-item.active {
+            background-color: #0d6efd !important;
+            color: white !important;
+        }
+
+        /* 7. Desktop override: Fly-out to the right on large screens */
+        @media (min-width: 768px) {
+            .dropdown-submenu.show-mobile > .dropdown-menu {
+                position: absolute;
+                left: 100%;
+                top: 0;
+                width: auto;
+                padding-left: 0;
+                background-color: #343a40; /* Match Bootstrap dark menu */
+                border: 1px solid rgba(255,255,255,0.15);
+                box-shadow: 4px 4px 10px rgba(0,0,0,0.5); /* Shadow for depth on desktop */
+            }
+        }    </style>
 </head>
 <body>
 
@@ -188,7 +225,7 @@
         }
     </script>
 
-    <script type="module" src="js/app.js?v=1.09"></script>
+    <script type="module" src="js/app.js?v=1.10"></script>
 
 </body>
 </html>

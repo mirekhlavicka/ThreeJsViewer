@@ -1,8 +1,8 @@
 ﻿import * as THREE from 'three';
-import { triangle01, sinSmooth, goldMaterial } from './utils.js?v=1.01';
+import { triangle01, sinSmooth, goldMaterial } from './utils.js?v=1.10';
 
 import { catMoldScene } from './scenes/catMold.js?v=1.01';
-import { earthMold2Scene, earthMold4Scene, eggEarthMold2Scene, eggEarthMold2Scene1, eggEarthMold4Scene } from './scenes/earthMold.js?v=1.01';
+import { createEarthMold2Scene, createEarthMold4Scene } from './scenes/earthMold.js?v=1.01';
 import { dogCatScene, openHeartScene, goldHeartScene, bikeHeartScene } from './scenes/heart.js?v=1.01';
 
 export const sceneConfigurations = [
@@ -202,11 +202,13 @@ export const sceneConfigurations = [
         ]
     },
 
-    earthMold2Scene,
-    eggEarthMold2Scene,
-    eggEarthMold2Scene1,
-    earthMold4Scene,
-    eggEarthMold4Scene,
+    createEarthMold2Scene("Earth mold 2 a", "earth", "earthIn", "earthOut"),
+    createEarthMold2Scene("Earth mold 2 b", "earth", "earthOut1", "earthIn1"),
+    createEarthMold2Scene("Egg Earth mold 2 a", "eggearth/m", "eggearth/m1", "eggearth/m2", true),
+    createEarthMold2Scene("Egg Earth mold 2 b", "eggearth/m", "eggearth/ma", "eggearth/mb", true),
+
+    createEarthMold4Scene("Earth mold 4", "earth", "earth00", "earth01", "earth10", "earth11"),
+    createEarthMold4Scene("Egg Earth mold 4", "eggearth/m", "eggearth/m00", "eggearth/m01", "eggearth/m10", "eggearth/m11", true),
 
     dogCatScene,
     openHeartScene,

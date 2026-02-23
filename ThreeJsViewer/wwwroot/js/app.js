@@ -1,9 +1,11 @@
 import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-import { sceneConfigurations } from './config.js?v=1.09';
+import { sceneConfigurations } from './config.js?v=1.10';
 
 // --- State Variables ---
+let config;
+
 let controls, renderer, scene, camera, grid, pivot;
 
 let autoRotate = false;
@@ -25,7 +27,6 @@ const timer = new THREE.Timer();
 let animationTime = 0; // Our custom "accumulated" time
 
 // URL Parameter Logic
-let config = sceneConfigurations[Math.min(Math.max(parseInt(new URLSearchParams(window.location.search).get('model')) || 0, 0), sceneConfigurations.length - 1)];
 
 function setup() {
     scene = new THREE.Scene();
@@ -270,18 +271,44 @@ sceneConfigurations.forEach((cfg, index) => {
 // 2. Helper to create a scene link
 function createLink(name, index) {
     const li = document.createElement('li');
-    li.innerHTML = `<a class="dropdown-item" href="#">${name}</a>`;
+    // Add a data-index to make it easy to find later
+    li.innerHTML = `<a class="dropdown-item" href="#" data-index="${index}">${name}</a>`;
+
     li.onclick = (e) => {
         e.preventDefault();
-        config = sceneConfigurations[index];
+        e.stopPropagation();
 
-        const url = new URL(window.location);
-        url.searchParams.set('model', index);
-        window.history.pushState({}, '', url);
-
-        loadScene();
+        // Use the common loader logic
+        selectScene(index);
     };
     return li;
+}
+
+// Separate the "selection" logic so you can call it on page load
+function selectScene(index) {
+    // 1. UI: Update Active Class
+    document.querySelectorAll('#sceneList .dropdown-item').forEach(el => {
+        // Match by our data-index
+        if (el.getAttribute('data-index') == index) {
+            el.classList.add('active');
+            // If it's inside a submenu, expand that submenu so user sees where they are
+            const parentSub = el.closest('.dropdown-submenu');
+            if (parentSub) parentSub.classList.add('show-mobile');
+        } else {
+            el.classList.remove('active');
+        }
+    });
+
+    // 2. Data: Update config
+    config = sceneConfigurations[index];
+
+    // 3. URL: Update history
+    const url = new URL(window.location);
+    url.searchParams.set('model', index);
+    window.history.pushState({}, '', url);
+
+    // 4. Engine: Load
+    loadScene();
 }
 
 // 3. Render submenus FIRST
@@ -291,16 +318,37 @@ Object.keys(groups).forEach(groupName => {
     const dropdownLi = document.createElement('li');
     dropdownLi.className = 'dropdown-submenu dropend';
 
-    dropdownLi.innerHTML = `
-        <a class="dropdown-item dropdown-toggle" href="#">${groupName}</a>
-        <ul class="dropdown-menu dropdown-menu-dark"></ul>
-    `;
+    // Create the parent link
+    const parentLink = document.createElement('a');
+    parentLink.className = 'dropdown-item dropdown-toggle';
+    parentLink.href = '#';
+    parentLink.innerText = groupName;
 
-    const subUl = dropdownLi.querySelector('ul');
+    // Handle the tap/click to toggle submenu
+    parentLink.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation(); // Keep the main Bootstrap menu open
+
+        // Find all other open submenus in the same menu and close them
+        const parentMenu = dropdownLi.parentElement;
+        parentMenu.querySelectorAll('.dropdown-submenu.show-mobile').forEach(openSub => {
+            if (openSub !== dropdownLi) {
+                openSub.classList.remove('show-mobile');
+            }
+        });
+
+        dropdownLi.classList.toggle('show-mobile');
+    };
+
+    const subUl = document.createElement('ul');
+    subUl.className = 'dropdown-menu dropdown-menu-dark';
+
     groups[groupName].forEach(item => {
         subUl.appendChild(createLink(item.name, item.index));
     });
 
+    dropdownLi.appendChild(parentLink);
+    dropdownLi.appendChild(subUl);
     sceneList.appendChild(dropdownLi);
 });
 
@@ -487,5 +535,8 @@ window.addEventListener('keydown', (e) => {
 
 // Start
 setup();
-loadScene();
+
+const initialModel = new URLSearchParams(window.location.search).get('model') || 0; // Default to first scene
+selectScene(initialModel);
+
 animate();

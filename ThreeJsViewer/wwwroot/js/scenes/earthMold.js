@@ -1,77 +1,36 @@
-﻿import { triangle01, sinSmooth, smoothAnim, globeColors } from '../utils.js';
+﻿import { smoothAnim } from '../utils.js';
+import * as THREE from 'three';
 
-export const earthMold2Scene = {
-    name: "Earth/Earth mold two parts",
-    setup: (camera) => {
-        camera.position.set(3, 0, 1.5);
-    },
-    models: [
-        {
-            path: 'assets/mold/EarthIn.ply',
-            color: 0x8CB1DE,
-            animate: (m, t) => {
-                m.position.y = -2.0 * smoothAnim(t, 10, 0.5, 4.5);
-                let v = smoothAnim(t, 10, 1, 4.5);
-                m.rotation.z = -(Math.PI / 2) * v;
-                m.position.x = -0.5 * v;
-            }
-        },
-        {
-            path: 'assets/mold/EarthOut.ply',
-            color: 0x8CB1DE,
-            animate: (m, t) => {
-                m.position.y = 2.0 * smoothAnim(t, 10, 0.5, 4.5);
-                let v = smoothAnim(t, 10, 1, 4.5);
-                m.rotation.z = (Math.PI / 2) * v;
-                m.position.x = -0.5 * v;
-            }
-        },
-        {
-            path: 'assets/mold/Earth.ply',
-            color: 0xDADD63,
-            animate: (m, t) => {
-                let v = smoothAnim(t, 10, 1, 4.5);
-                m.rotation.z = (2 * Math.PI) * v;
-            },
-            setupMaterial: m => {
-                m.color = 0xffffff;
-                m.vertexColors = true;
-            },
-            prepareGeometry: globeColors
-        }
-    ]
-};
-
-function createeggEarthMold2Scene(version) {
+export function createEarthMold2Scene(name, f, f1, f2, egg = false) {
     return {
-        name: "Earth/Egg  mold two parts " + version,
+        name: "Earth/" + name,
         setup: (camera) => {
             camera.position.set(3, 0, 1.5);
         },
         models: [
             {
-                path: `assets/mold/eggearth/m${version == 1 ? "a" : "1"}.ply`,
+                path: `assets/mold/${f1}.ply`,
                 color: 0xFFEFC1,
                 animate: (m, t) => {
                     m.position.y = -2.0 * smoothAnim(t, 10, 0.5, 4.5);
-                    let v = smoothAnim(t, 10, 1, 4.5);
+                    let v = smoothAnim(t, 10, 1.5, 4.5);
                     m.rotation.z = -(Math.PI / 2) * v ;
-                    m.position.x = -0.5 * v;
+                    m.position.x = -0.6 * v;
                 }
             },
             {
-                path: `assets/mold/eggearth/m${version == 1 ? "b" : "2"}.ply`,
+                path: `assets/mold/${f2}.ply`,
                 color: 0xFFEFC1,
                 animate: (m, t) => {
                     m.position.y = 2.0 * smoothAnim(t, 10, 0.5, 4.5);
                     let v = smoothAnim(t, 10, 1, 4.5);
                     m.rotation.z = (Math.PI / 2) * v ;
-                    m.position.x = -0.5 * v;
+                    m.position.x = -0.6 * v;
                 }
             },
             {
-                path: 'assets/mold/eggearth/m.ply',
-                color: 0xDADD63,
+                path: `assets/mold/${f}.ply`,
+                //color: 0xDADD63,
                 animate: (m, t) => {
                     let v = smoothAnim(t, 10, 1, 4.5);
                     m.rotation.z = (2 * Math.PI) * v ;
@@ -80,201 +39,142 @@ function createeggEarthMold2Scene(version) {
                     m.color = 0xffffff;
                     m.vertexColors = true;
                 },
-                prepareGeometry: g => globeColors(g, true)
+                prepareGeometry: g => globeColors(g, egg)
+            }
+        ]
+    };
+}       
+
+export function createEarthMold4Scene(name, f, f1, f2, f3, f4, egg = false) {
+    return {
+        name: "Earth/" + name,
+        setup: (camera) => {
+            camera.position.set(3, 0, 1.5);
+        },
+        models: [
+            {
+                path: `assets/mold/${f1}.ply`,
+                color: 0xFFEFC1,
+                animate: (m, t) => {
+                    m.position.y = 2.0 * smoothAnim(t, 10, 0.5, 4.5);
+                    let v = smoothAnim(t, 10, 1.5, 4.5);
+                    m.rotation.z = (Math.PI / 2) * v;
+                    m.position.x = -0.6 * v;
+                    m.position.y += 0.6 * smoothAnim(t, 10, 2.5, 4.5);
+                }
+            },
+            {
+                path: `assets/mold/${f2}.ply`,
+                color: 0xFFEFC1,
+                animate: (m, t) => {
+                    m.position.y = -2.0 * smoothAnim(t, 10, 0.5, 4.5);
+                    let v = smoothAnim(t, 10, 1.5, 4.5);
+                    m.rotation.z = -(Math.PI / 2) * v;
+                    m.position.x = -0.6 * v;
+                    m.position.y -= 0.6 * smoothAnim(t, 10, 2.5, 4.5);                }
+            },
+            {
+                path: `assets/mold/${f3}.ply`,
+                color: 0xFFEFC1,
+                animate: (m, t) => {
+                    m.position.y = 2.0 * smoothAnim(t, 10, 0.5, 4.5);
+                    let v = smoothAnim(t, 10, 1.5, 4.5);
+                    m.rotation.z = (Math.PI / 2) * v;
+                    m.position.x = -0.6 * v;
+                }
+            },
+            {
+                path: `assets/mold/${f4}.ply`,
+                color: 0xFFEFC1,
+                animate: (m, t) => {
+                    m.position.y = -2.0 * smoothAnim(t, 10, 0.5, 4.5);
+                    let v = smoothAnim(t, 10, 1.5, 4.5);
+                    m.rotation.z = -(Math.PI / 2) * v;
+                    m.position.x = -0.6 * v;
+                }
+            },
+            {
+                path: `assets/mold/${f}.ply`,
+                //color: 0xDADD63,
+                animate: (m, t) => {
+                    let v = smoothAnim(t, 10, 1, 4.5);
+                    m.rotation.z = (2 * Math.PI) * v;
+
+                },
+                setupMaterial: m => {
+                    m.color = 0xffffff;
+                    m.vertexColors = true;
+                },
+                 prepareGeometry: g => globeColors(g, egg)
             }
 
         ]
     };
 }       
 
-export const eggEarthMold2Scene = createeggEarthMold2Scene(1);
-export const eggEarthMold2Scene1 = createeggEarthMold2Scene(2);
+function globeColors(geometry, egg) {
+    const pos = geometry.attributes.position;
+    const count = pos.count;
+    const colors = new Float32Array(count * 3);
 
+    // 1. Find the Min/Max radius to establish a scale
+    let minR = Infinity;
+    let maxR = -Infinity;
+    const radii = new Float32Array(count);
 
-export const earthMold4Scene = {
-    name: "Earth/Earth mold four parts",
-    setup: (camera) => {
-        camera.position.set(3, 0, 1.5);
-    },
-    models: [
-        {
-            path: 'assets/mold/earth00.ply',
-            //color: 0x8CB1DE,
-            animate: (m, t) => {
-                let v = 1.8 * triangle01(t, 10);
-                v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                v = sinSmooth(v, 0, 1.4);
-                m.position.y = 1.5 * v;
+    for (let i = 0; i < count; i++) {
 
-                v = Math.max(v - 0.2, 0);
-                v = sinSmooth(v, 0, 1.2);
-                m.rotation.z = (Math.PI / 2) * v / 1.2;
-                m.position.x = -0.5 * v;
+        let x = pos.getX(i);
+        let y = pos.getY(i);
+        let z = pos.getZ(i);
 
-                v = Math.max(v - 0.3, 0);
-                v = sinSmooth(v, 0, 0.9);
-                m.position.y += 0.6 * v;
-            }
-        },
-        {
-            path: 'assets/mold/earth01.ply',
-            //color: 0x8CB1DE,
-            animate: (m, t) => {
-                let v = 1.8 * triangle01(t, 10);
-                v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                v = sinSmooth(v, 0, 1.4);
-                m.position.y = - 1.5 * v;
-
-                v = Math.max(v - 0.2, 0);
-                v = sinSmooth(v, 0, 1.2);
-                m.rotation.z = -(Math.PI / 2) * v / 1.2;
-                m.position.x = -0.5 * v;
-
-                v = Math.max(v - 0.3, 0);
-                v = sinSmooth(v, 0, 0.9);
-                m.position.y -= 0.6 * v;
-            }
-        },
-        {
-            path: 'assets/mold/earth10.ply',
-            //color: 0x8CB1DE,
-            animate: (m, t) => {
-                let v = 1.8 * triangle01(t, 10);
-                v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                v = sinSmooth(v, 0, 1.4);
-                m.position.y = 1.5 * v;
-
-                v = Math.max(v - 0.2, 0);
-                v = sinSmooth(v, 0, 1.2);
-                m.rotation.z = (Math.PI / 2) * v / 1.2;
-                m.position.x = -0.5 * v;
-            }
-        },
-        {
-            path: 'assets/mold/earth11.ply',
-            //color: 0x8CB1DE,
-            animate: (m, t) => {
-                let v = 1.8 * triangle01(t, 10);
-                v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                v = sinSmooth(v, 0, 1.4);
-                m.position.y = - 1.5 * v;
-
-                v = Math.max(v - 0.2, 0);
-                v = sinSmooth(v, 0, 1.2);
-                m.rotation.z = -(Math.PI / 2) * v / 1.2;
-                m.position.x = -0.5 * v;
-            }
-        },
-        {
-            path: 'assets/mold/Earth.ply',
-            color: 0xDADD63,
-            animate: (m, t) => {
-                let v = 1.8 * triangle01(t, 10);
-                v = -0.4 + Math.min(Math.max(v, 0.4), 1.6);
-                v = sinSmooth(v, 0, 1.2);
-                m.rotation.z = (2 * Math.PI) * v / 1.2;
-
-            },
-            setupMaterial: m => {
-                m.color = 0xffffff;
-                m.vertexColors = true;
-            },
-            prepareGeometry: globeColors
+        if (egg) {
+            let s1 = 1.2;
+            let s2 = 1.7;
+            let s = s1 + (s2 - s1) * (z + 1) / 2;
+            x *= s; y *= s;
         }
 
-    ]
-};
+        const r = Math.sqrt(x ** 2 + y ** 2 + z ** 2);
+        radii[i] = r;
+        if (r < minR) minR = r;
+        if (r > maxR) maxR = r;
+    }
 
-export const eggEarthMold4Scene = {
-    name: "Earth/Egg mold four parts",
-    setup: (camera) => {
-        camera.position.set(3, 0, 1.5);
-    },
-    models: [
-        {
-            path: 'assets/mold/eggearth/m00.ply',
-            //color: 0x8CB1DE,
-            animate: (m, t) => {
-                let v = 1.8 * triangle01(t, 10);
-                v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                v = sinSmooth(v, 0, 1.4);
-                m.position.y = 1.5 * v;
+    // 2. Define our "Palette" points
+    const colorWaterDeep = new THREE.Color(0x050a30); // Dark Blue
+    const colorWaterShallow = new THREE.Color(0x005b96); // Light Blue
+    const colorSand = new THREE.Color(0xc2b280); // Sand
+    const colorGrass = new THREE.Color(0x228b22); // Forest Green
+    const colorMountain = new THREE.Color(0x4b3621); // Dark Brown
+    const colorSnow = new THREE.Color(0xffffff); // White
 
-                v = Math.max(v - 0.2, 0);
-                v = sinSmooth(v, 0, 1.2);
-                m.rotation.z = (Math.PI / 2) * v / 1.2;
-                m.position.x = -0.5 * v;
+    const tempColor = new THREE.Color();
 
-                v = Math.max(v - 0.3, 0);
-                v = sinSmooth(v, 0, 0.9);
-                m.position.y += 0.6 * v;
-            }
-        },
-        {
-            path: 'assets/mold/eggearth/m01.ply',
-            //color: 0x8CB1DE,
-            animate: (m, t) => {
-                let v = 1.8 * triangle01(t, 10);
-                v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                v = sinSmooth(v, 0, 1.4);
-                m.position.y = - 1.5 * v;
+    for (let i = 0; i < count; i++) {
+        // Normalize radius between 0 and 1
+        const h = (radii[i] - minR) / (maxR - minR);
 
-                v = Math.max(v - 0.2, 0);
-                v = sinSmooth(v, 0, 1.2);
-                m.rotation.z = -(Math.PI / 2) * v / 1.2;
-                m.position.x = -0.5 * v;
-
-                v = Math.max(v - 0.3, 0);
-                v = sinSmooth(v, 0, 0.9);
-                m.position.y -= 0.6 * v;
-            }
-        },
-        {
-            path: 'assets/mold/eggearth/m10.ply',
-            //color: 0x8CB1DE,
-            animate: (m, t) => {
-                let v = 1.8 * triangle01(t, 10);
-                v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                v = sinSmooth(v, 0, 1.4);
-                m.position.y = 1.5 * v;
-
-                v = Math.max(v - 0.2, 0);
-                v = sinSmooth(v, 0, 1.2);
-                m.rotation.z = (Math.PI / 2) * v / 1.2;
-                m.position.x = -0.5 * v;
-            }
-        },
-        {
-            path: 'assets/mold/eggearth/m11.ply',
-            //color: 0x8CB1DE,
-            animate: (m, t) => {
-                let v = 1.8 * triangle01(t, 10);
-                v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
-                v = sinSmooth(v, 0, 1.4);
-                m.position.y = - 1.5 * v;
-
-                v = Math.max(v - 0.2, 0);
-                v = sinSmooth(v, 0, 1.2);
-                m.rotation.z = -(Math.PI / 2) * v / 1.2;
-                m.position.x = -0.5 * v;
-            }
-        },
-        {
-            path: 'assets/mold/eggearth/m.ply',
-            color: 0xDADD63,
-            animate: (m, t) => {
-                let v = 1.8 * triangle01(t, 10);
-                v = -0.4 + Math.min(Math.max(v, 0.4), 1.6);
-                v = sinSmooth(v, 0, 1.2);
-                m.rotation.z = (2 * Math.PI) * v / 1.2;
-
-            },
-            setupMaterial: m => {
-                m.color = 0xffffff;
-                m.vertexColors = true;
-            },
-            prepareGeometry: g => globeColors(g, true)
+        if (h < 0.45) {
+            // Ocean gradient
+            tempColor.lerpColors(colorWaterDeep, colorWaterShallow, h / 0.45);
+        } else if (h < 0.50) {
+            // Coastline/Beach
+            tempColor.copy(colorSand);
+        } else if (h < 0.75) {
+            // Land gradient (Green to Brown)
+            const t = (h - 0.50) / 0.25;
+            tempColor.lerpColors(colorGrass, colorMountain, t);
+        } else {
+            // High Peaks (Brown to Snow)
+            const t = (h - 0.75) / 0.25;
+            tempColor.lerpColors(colorMountain, colorSnow, t);
         }
 
-    ]
-};
+        colors[i * 3] = tempColor.r;
+        colors[i * 3 + 1] = tempColor.g;
+        colors[i * 3 + 2] = tempColor.b;
+    }
+
+    geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+}
