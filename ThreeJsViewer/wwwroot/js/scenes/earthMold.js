@@ -57,9 +57,10 @@ export function createEarthMold4Scene(name, f, f1, f2, f3, f4, egg = false) {
                 color: 0xFFEFC1,
                 animate: (m, t) => {
                     m.position.y = 2.0 * smoothAnim(t, 10, 0.5, 4.5);
+                    m.position.x = 0.6 * smoothAnim(t, 10, 0.5, 1.5);
                     let v = smoothAnim(t, 10, 1.5, 4.5);
                     m.rotation.z = (Math.PI / 2) * v;
-                    m.position.x = -0.6 * v;
+                    //m.position.x = -0.6 * v;
                     m.position.y += 0.6 * smoothAnim(t, 10, 2.5, 4.5);
                 }
             },
@@ -68,10 +69,12 @@ export function createEarthMold4Scene(name, f, f1, f2, f3, f4, egg = false) {
                 color: 0xFFEFC1,
                 animate: (m, t) => {
                     m.position.y = -2.0 * smoothAnim(t, 10, 0.5, 4.5);
+                    m.position.x = 0.6 * smoothAnim(t, 10, 0.5, 1.5);
                     let v = smoothAnim(t, 10, 1.5, 4.5);
                     m.rotation.z = -(Math.PI / 2) * v;
-                    m.position.x = -0.6 * v;
-                    m.position.y -= 0.6 * smoothAnim(t, 10, 2.5, 4.5);                }
+                    //m.position.x = -0.6 * v;
+                    m.position.y -= 0.6 * smoothAnim(t, 10, 2.5, 4.5);                
+                }
             },
             {
                 path: `assets/mold/${f3}.ply`,
