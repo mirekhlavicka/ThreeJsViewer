@@ -5,6 +5,7 @@ import { sceneConfigurations } from './config.js?v=1.10';
 
 // --- State Variables ---
 let config;
+let selectedMesh = -1;
 
 let controls, renderer, scene, camera, grid, pivot;
 
@@ -103,22 +104,12 @@ function loadScene(reset = true) {
             geometry.computeVertexNormals();
 
             let material = null;
-            if (modelData.glass) {
-                material = new THREE.MeshPhysicalMaterial({
-                    thickness: 0.5,        // Depth of the glass
-                    roughness: 0.0,        // Perfectly smooth
-                    transmission: 1.0,     // 100% of light passes through
-                    ior: 1.5,             // Index of Refraction (1.5 is standard for glass)
-                    opacity: 1,           // Keep this at 1; transmission handles transparency
-                    transparent: true,    // Must be true for transmission to work
-                    envMapIntensity: 1.5,
-                    color: useVertexColors ? 0xffffff : modelData.color ?? 0xffffff
-                });
 
+            if (modelData.createMaterial) {
+                material = modelData.createMaterial(useVertexColors);
             } else {
-
                 let m = {
-                    color: useVertexColors ? 0xffffff : modelData.color ?? 0xffffff,
+                    color: useVertexColors ? 0xffffff : modelData.color ?? (config.color ?? 0xffffff),
 
                     flatShading: useflatShading,
                     vertexColors: useVertexColors,
@@ -166,6 +157,10 @@ function loadScene(reset = true) {
                         config.setup(camera);
                     }
                     animationTime = 0;
+
+                    document.getElementById('selectModel').classList.remove('d-none');
+                    document.getElementById('btnSelectNextModel').click();
+
                 } else if (isPaused) {
                     animateMeshes();
                 }
@@ -232,6 +227,9 @@ function autoPositionGrid() {
     grid.position.z = minZ - 0.02;
 }
 
+
+let blinkStartTime = 0;
+const blinkDuration = 2000; // Blink for 2 seconds
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
@@ -257,6 +255,29 @@ function animate() {
         }
 
         animateMeshes();
+    }
+
+
+    if (selectedMesh >= 0) {
+        const now = Date.now();
+
+        let blinkMesh = loadedMeshes[selectedMesh];
+
+        // Check if we should be blinking
+        if (blinkMesh && (now - blinkStartTime) < blinkDuration) {
+            const elapsed = now - blinkStartTime;
+
+            // Create a pulsing value between 0 and 1
+            // (Change 0.01 to make it faster or slower)
+            const pulse = Math.sin(elapsed * 0.01) * 0.5 + 0.5;
+
+            // Apply to the emissive property (makes it "glow")
+            // We use a light blue/cyan for the "info" look
+            blinkMesh.material.emissive.setRGB(0, pulse * 0.5, pulse);
+        } else if (blinkMesh) {
+            // Reset emissive to black when time is up or no mesh is selected
+            blinkMesh.material.emissive.setRGB(0, 0, 0);
+        }
     }
 
     renderer.render(scene, camera);
@@ -289,7 +310,7 @@ sceneConfigurations.forEach((cfg, index) => {
 });
 
 // 2. Helper to create a scene link
-function createLink(name, index) {
+function createLink(name, index, closesubmenu) {
     const li = document.createElement('li');
     // Add a data-index to make it easy to find later
     li.innerHTML = `<a class="dropdown-item" href="#" data-index="${index}">${name}</a>`;
@@ -297,6 +318,12 @@ function createLink(name, index) {
     li.onclick = (e) => {
         e.preventDefault();
         e.stopPropagation();
+
+        if (closesubmenu) {
+            document.querySelectorAll('.dropdown-submenu.show-mobile').forEach(openSub => {
+                openSub.classList.remove('show-mobile');
+            });
+        }
 
         // Use the common loader logic
         selectScene(index);
@@ -326,6 +353,9 @@ function selectScene(index) {
     const url = new URL(window.location);
     url.searchParams.set('model', index);
     window.history.pushState({}, '', url);
+
+    selectedMesh = -1;
+    document.getElementById('selectModel').classList.add('d-none');
 
     // 4. Engine: Load
     loadScene();
@@ -382,7 +412,7 @@ if (Object.keys(groups).length > 1 && groups["_root"]) {
 // 5. Render root items LAST
 if (groups["_root"]) {
     groups["_root"].forEach(item => {
-        sceneList.appendChild(createLink(item.name, item.index));
+        sceneList.appendChild(createLink(item.name, item.index, true));
     });
 }
 
@@ -479,6 +509,38 @@ document.getElementById('btnStepBack').addEventListener('click', () => {
         animationTime -= stepSize;
         animateMeshes();
     }
+});
+
+document.getElementById('btnSelectNextModel').addEventListener('click', () => {
+    if (selectedMesh >= 0) {
+        loadedMeshes[selectedMesh].material.emissive.setRGB(0, 0, 0);
+    }
+
+    selectedMesh++;
+    if (selectedMesh >= loadedMeshes.length) {
+        selectedMesh = 0;
+    }
+    document.getElementById('selectedModel').innerText = loadedMeshes[selectedMesh].userData.path.replace('assets/', '');
+    document.getElementById('hideSelected').checked = !loadedMeshes[selectedMesh].visible;
+    blinkStartTime = Date.now();
+});
+
+document.getElementById('btnSelectPrevModel').addEventListener('click', () => {
+    if (selectedMesh >= 0) {
+        loadedMeshes[selectedMesh].material.emissive.setRGB(0, 0, 0);
+    }
+
+    selectedMesh--;
+    if (selectedMesh < 0) {
+        selectedMesh = loadedMeshes.length - 1;
+    }
+    document.getElementById('selectedModel').innerText = loadedMeshes[selectedMesh].userData.path.replace('assets/', '');
+    document.getElementById('hideSelected').checked = !loadedMeshes[selectedMesh].visible;
+    blinkStartTime = Date.now();
+});
+
+document.getElementById('hideSelected').addEventListener('change', (e) => {
+    loadedMeshes[selectedMesh].visible = !e.target.checked;    
 });
 
 

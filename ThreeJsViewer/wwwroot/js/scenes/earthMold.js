@@ -4,18 +4,17 @@ import * as THREE from 'three';
 export function createEarthMold2Scene(name, f, f1, f2, egg = false) {
     return {
         name: "Earth/" + name,
+        color: 0xFFEFC1,
         setup: (camera) => {
             camera.position.set(3, 0, 1.5);
         },
         models: [
             {
                 path: `assets/mold/${f1}.ply`,
-                color: 0xFFEFC1,
                 animate: (m, t) => anim2(m, t, -1)
             },
             {
                 path: `assets/mold/${f2}.ply`,
-                color: 0xFFEFC1,
                 animate: (m, t) => anim2(m, t, 1)
             },
             {
@@ -34,28 +33,25 @@ export function createEarthMold2Scene(name, f, f1, f2, egg = false) {
 export function createEarthMold4Scene(name, f, f1, f2, f3, f4, egg = false) {
     return {
         name: "Earth/" + name,
+        color: 0xFFEFC1,
         setup: (camera) => {
             camera.position.set(3, 0, 1.5);
         },
         models: [
             {
                 path: `assets/mold/${f1}.ply`,
-                color: 0xFFEFC1,
                 animate: (m, t) => anim4front(m, t, 1)
             },
             {
                 path: `assets/mold/${f2}.ply`,
-                color: 0xFFEFC1,
                 animate: (m, t) => anim4front(m, t, -1)
             },
             {
                 path: `assets/mold/${f3}.ply`,
-                color: 0xFFEFC1,
                 animate: (m, t) => anim4back(m, t, 1)
             },
             {
                 path: `assets/mold/${f4}.ply`,
-                color: 0xFFEFC1,
                 animate: (m, t) => anim4back(m, t, -1)
             },
             {
@@ -88,9 +84,10 @@ function anim4front(m, t, sign = 1) {
 
 function anim4back(m, t, sign = 1) {
     m.position.y = sign * 2.0 * smoothAnim(t, 10, 0.5, 4.5);
+    m.position.x = -0.4 * smoothAnim(t, 10, 0.5, 1.5);
     let v = smoothAnim(t, 10, 1.5, 4.5);
     m.rotation.z = sign * (Math.PI / 4) * v;
-    m.position.x = -0.6 * v;
+    m.position.x -= 0.2 * v;
 }
 
 function globeColors(geometry, egg) {

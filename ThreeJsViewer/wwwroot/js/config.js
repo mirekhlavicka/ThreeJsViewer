@@ -90,8 +90,6 @@ export const sceneConfigurations = [
         models: [
             {
                 path: 'assets/mold/BunnyOut.ply',
-                glass: true,
-                //color: 0xB0C400,
                 animate: (m, t) => {
                     let v = 1.8 * triangle01(t, 10);
                     v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
@@ -104,7 +102,6 @@ export const sceneConfigurations = [
             {
                 path: 'assets/mold/BunnyIn.ply',
                 glass: true,
-                //color: 0xB0C400,
                 animate: (m, t) => {
                     let v = 1.8 * triangle01(t, 10);
                     v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
@@ -143,8 +140,7 @@ export const sceneConfigurations = [
         models: [
             {
                 path: 'assets/Horse/Horse2.ply',
-                glass: true,
-                color: 0xC79F70,
+                //color: 0xC79F70,
                 animate: (m, t) => {
                     let v = 1.8 * triangle01(t, 10);
                     v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
@@ -155,7 +151,17 @@ export const sceneConfigurations = [
                     v = -0.4 + Math.min(Math.max(v, 0.4), 1.6);
                     v = sinSmooth(v, 0, 1.2);
                     m.rotation.z = (Math.PI / 2) * v / 1.2;
-                }
+                },
+                createMaterial: (useVertexColors) => new THREE.MeshPhysicalMaterial({
+                    thickness: 0.5,        // Depth of the glass
+                    roughness: 0.0,        // Perfectly smooth
+                    transmission: 1.0,     // 100% of light passes through
+                    ior: 1.5,             // Index of Refraction (1.5 is standard for glass)
+                    opacity: 1,           // Keep this at 1; transmission handles transparency
+                    transparent: true,    // Must be true for transmission to work
+                    envMapIntensity: 1.5,
+                    color: useVertexColors ? 0xffffff : 0xC79F70
+                })
             },
             {
                 path: 'assets/Horse/Horse1.ply',
