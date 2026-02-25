@@ -175,7 +175,7 @@ export const sceneConfigurations = [
                 }
             },
             {
-                path: 'assets/horse/PO.ply',
+                path: 'assets/Horse/PO.ply',
                 prepareGeometry/*prepareMesh*/: geometry => {
                     /*m.rotation.x = Math.PI / 2;
                     m.scale.set(0.19, 0.19, 0.19);*/
