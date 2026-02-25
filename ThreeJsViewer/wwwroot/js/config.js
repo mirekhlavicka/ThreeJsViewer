@@ -142,7 +142,7 @@ export const sceneConfigurations = [
         },
         models: [
             {
-                path: 'assets/horse/horse2.ply',
+                path: 'assets/Horse/Horse2.ply',
                 glass: true,
                 color: 0xC79F70,
                 animate: (m, t) => {
@@ -158,7 +158,7 @@ export const sceneConfigurations = [
                 }
             },
             {
-                path: 'assets/horse/horse1.ply',
+                path: 'assets/Horse/Horse1.ply',
                 color: 0xD5D2AC,
                 //glass: true,
                 //color: 0xC4A484,
@@ -175,7 +175,7 @@ export const sceneConfigurations = [
                 }
             },
             {
-                path: 'assets/horse/po.ply',
+                path: 'assets/horse/PO.ply',
                 prepareGeometry/*prepareMesh*/: geometry => {
                     /*m.rotation.x = Math.PI / 2;
                     m.scale.set(0.19, 0.19, 0.19);*/

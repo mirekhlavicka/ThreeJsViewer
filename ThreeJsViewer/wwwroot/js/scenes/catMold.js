@@ -7,11 +7,11 @@ export const catMoldScene = {
     },
     models: [
         {
-            path: 'assets/cat/m.ply',
+            path: 'assets/Cat/m.ply',
             color: 0x904617
         },
         {
-            path: 'assets/cat/m1.ply',
+            path: 'assets/Cat/m1.ply',
             animate: (m, t) => {
                 let v = 1.8 * triangle01(t, 10);
                 v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
@@ -20,7 +20,7 @@ export const catMoldScene = {
             }
         },
         {
-            path: 'assets/cat/m2a.ply',
+            path: 'assets/Cat/m2a.ply',
             animate: (m, t) => {
                 let v = 1.8 * triangle01(t, 10);
                 v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
@@ -32,7 +32,7 @@ export const catMoldScene = {
             }
         },
         {
-            path: 'assets/cat/m2b.ply',
+            path: 'assets/Cat/m2b.ply',
             animate: (m, t) => {
                 let v = 1.8 * triangle01(t, 10);
                 v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
@@ -41,7 +41,7 @@ export const catMoldScene = {
             }
         },
         {
-            path: 'assets/cat/m3a.ply',
+            path: 'assets/Cat/m3a.ply',
             animate: (m, t) => {
                 let v = 1.8 * triangle01(t, 10);
                 v = -0.6 + Math.min(Math.max(v, 0.6), 1.6);
@@ -53,7 +53,7 @@ export const catMoldScene = {
             }
         },
         {
-            path: 'assets/cat/m3b.ply',
+            path: 'assets/Cat/m3b.ply',
             animate: (m, t) => {
                 let v = 1.8 * triangle01(t, 10);
                 v = -0.6 + Math.min(Math.max(v, 0.6), 1.6);
@@ -63,7 +63,7 @@ export const catMoldScene = {
             }
         },
         {
-            path: 'assets/cat/m4a.ply',
+            path: 'assets/Cat/m4a.ply',
             animate: (m, t) => {
                 let v = 1.8 * triangle01(t, 10);
                 v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
@@ -72,7 +72,7 @@ export const catMoldScene = {
             }
         },
         {
-            path: 'assets/cat/m4b.ply',
+            path: 'assets/Cat/m4b.ply',
             animate: (m, t) => {
                 let v = 1.8 * triangle01(t, 10);
                 v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
@@ -81,7 +81,7 @@ export const catMoldScene = {
             }
         },
         {
-            path: 'assets/cat/m5.ply',
+            path: 'assets/Cat/m5.ply',
             animate: (m, t) => {
                 let v = 1.8 * triangle01(t, 10);
                 v = -0.2 + Math.min(Math.max(v, 0.2), 1.6);
