@@ -11,30 +11,16 @@ export function createEarthMold2Scene(name, f, f1, f2, egg = false) {
             {
                 path: `assets/mold/${f1}.ply`,
                 color: 0xFFEFC1,
-                animate: (m, t) => {
-                    m.position.y = -2.0 * smoothAnim(t, 10, 0.5, 4.5);
-                    let v = smoothAnim(t, 10, 1.5, 4.5);
-                    m.rotation.z = -(Math.PI / 2) * v ;
-                    m.position.x = -0.6 * v;
-                }
+                animate: (m, t) => anim2(m, t, -1)
             },
             {
                 path: `assets/mold/${f2}.ply`,
                 color: 0xFFEFC1,
-                animate: (m, t) => {
-                    m.position.y = 2.0 * smoothAnim(t, 10, 0.5, 4.5);
-                    let v = smoothAnim(t, 10, 1, 4.5);
-                    m.rotation.z = (Math.PI / 2) * v ;
-                    m.position.x = -0.6 * v;
-                }
+                animate: (m, t) => anim2(m, t, 1)
             },
             {
                 path: `assets/mold/${f}.ply`,
-                //color: 0xDADD63,
-                animate: (m, t) => {
-                    let v = smoothAnim(t, 10, 1, 4.5);
-                    m.rotation.z = (2 * Math.PI) * v ;
-                },
+                animate: (m, t) => m.rotation.z = (2 * Math.PI) * smoothAnim(t, 10, 1, 4.5),
                 setupMaterial: m => {
                     m.color = 0xffffff;
                     m.vertexColors = true;
@@ -55,65 +41,57 @@ export function createEarthMold4Scene(name, f, f1, f2, f3, f4, egg = false) {
             {
                 path: `assets/mold/${f1}.ply`,
                 color: 0xFFEFC1,
-                animate: (m, t) => {
-                    m.position.y = 2.0 * smoothAnim(t, 10, 0.5, 4.5);
-                    m.position.x = 0.6 * smoothAnim(t, 10, 0.5, 1.5);
-                    let v = smoothAnim(t, 10, 1.5, 4.5);
-                    m.rotation.z = (Math.PI / 2) * v;
-                    //m.position.x = -0.6 * v;
-                    m.position.y += 0.6 * smoothAnim(t, 10, 2.5, 4.5);
-                }
+                animate: (m, t) => anim4front(m, t, 1)
             },
             {
                 path: `assets/mold/${f2}.ply`,
                 color: 0xFFEFC1,
-                animate: (m, t) => {
-                    m.position.y = -2.0 * smoothAnim(t, 10, 0.5, 4.5);
-                    m.position.x = 0.6 * smoothAnim(t, 10, 0.5, 1.5);
-                    let v = smoothAnim(t, 10, 1.5, 4.5);
-                    m.rotation.z = -(Math.PI / 2) * v;
-                    //m.position.x = -0.6 * v;
-                    m.position.y -= 0.6 * smoothAnim(t, 10, 2.5, 4.5);                
-                }
+                animate: (m, t) => anim4front(m, t, -1)
             },
             {
                 path: `assets/mold/${f3}.ply`,
                 color: 0xFFEFC1,
-                animate: (m, t) => {
-                    m.position.y = 2.0 * smoothAnim(t, 10, 0.5, 4.5);
-                    let v = smoothAnim(t, 10, 1.5, 4.5);
-                    m.rotation.z = (Math.PI / 2) * v;
-                    m.position.x = -0.6 * v;
-                }
+                animate: (m, t) => anim4back(m, t, 1)
             },
             {
                 path: `assets/mold/${f4}.ply`,
                 color: 0xFFEFC1,
-                animate: (m, t) => {
-                    m.position.y = -2.0 * smoothAnim(t, 10, 0.5, 4.5);
-                    let v = smoothAnim(t, 10, 1.5, 4.5);
-                    m.rotation.z = -(Math.PI / 2) * v;
-                    m.position.x = -0.6 * v;
-                }
+                animate: (m, t) => anim4back(m, t, -1)
             },
             {
                 path: `assets/mold/${f}.ply`,
-                //color: 0xDADD63,
-                animate: (m, t) => {
-                    let v = smoothAnim(t, 10, 1, 4.5);
-                    m.rotation.z = (2 * Math.PI) * v;
-
-                },
+                animate: (m, t) => m.rotation.z = (2 * Math.PI) * smoothAnim(t, 10, 1, 4.5),
                 setupMaterial: m => {
                     m.color = 0xffffff;
                     m.vertexColors = true;
                 },
-                 prepareGeometry: g => globeColors(g, egg)
+                prepareGeometry: g => globeColors(g, egg)
             }
-
         ]
     };
 }       
+
+function anim2(m, t, sign = 1) {
+    m.position.y = sign * 2.0 * smoothAnim(t, 10, 0.5, 4.5);
+    let v = smoothAnim(t, 10, 1.5, 4.5);
+    m.rotation.z = sign * (Math.PI / 2) * v;
+    m.position.x = -0.6 * v;
+}
+
+function anim4front(m, t, sign = 1) {
+    m.position.y = sign * 2.0 * smoothAnim(t, 10, 0.5, 4.5);
+    m.position.x = 0.4 * smoothAnim(t, 10, 0.5, 1.5);
+    let v = smoothAnim(t, 10, 1.5, 4.5);
+    m.rotation.z = sign * (Math.PI / 2) * v;
+    //m.position.y += sign * 0.6 * smoothAnim(t, 10, 2.5, 4.5);
+}
+
+function anim4back(m, t, sign = 1) {
+    m.position.y = sign * 2.0 * smoothAnim(t, 10, 0.5, 4.5);
+    let v = smoothAnim(t, 10, 1.5, 4.5);
+    m.rotation.z = sign * (Math.PI / 4) * v;
+    m.position.x = -0.6 * v;
+}
 
 function globeColors(geometry, egg) {
     const pos = geometry.attributes.position;
