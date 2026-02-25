@@ -173,8 +173,28 @@ function loadScene(reset = true) {
                 setTimeout(() => progressContainer.style.display = 'none', 500);
             }
         }, (xhr) => {
-            percentArray[i] = (xhr.loaded / xhr.total) * 100;
+            let currentPercent = 0;
+
+            if (xhr.lengthComputable && xhr.total > 0) {
+                // Standard math
+                currentPercent = (xhr.loaded / xhr.total) * 100;
+
+                // The Fix: Clamp to 100%. 
+                // If it's over 100 (due to Gzip), we stay at 99% until the file actually finishes.
+                if (currentPercent > 100) currentPercent = 99;
+            } else {
+                // Fallback: If total is 0 or unknown, we simulate progress based on loaded bytes.
+                // Assuming an average PLY is 2MB, this keeps the bar moving.
+                currentPercent = Math.min((xhr.loaded / 2000000) * 100, 95);
+            }
+
+            // Update the specific model's progress in the array
+            percentArray[i] = currentPercent;
+
+            // Calculate global average
             let totalPercent = percentArray.reduce((a, b) => a + b, 0) / config.models.length;
+
+            // Update UI
             progressBar.style.width = totalPercent + '%';
             progressBar.innerText = Math.round(totalPercent) + '%';
         });
