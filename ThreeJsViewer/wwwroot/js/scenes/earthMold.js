@@ -1,7 +1,7 @@
 ﻿import { smoothAnim } from '../utils.js';
 import * as THREE from 'three';
 
-export function createEarthMold2Scene(name, f, f1, f2, egg = false) {
+export function createEarthMold2Scene(name, f, f1, f2, egg = false, normalMaterial = false) {
     return {
         name: "Earth/" + name,
         color: 0xFFEFC1,
@@ -11,15 +11,13 @@ export function createEarthMold2Scene(name, f, f1, f2, egg = false) {
         models: [
             {
                 path: `assets/mold/${f1}.ply`,
-                animate: (m, t) => anim2(m, t, -1)/*,
-                setupMaterial: m => {
-                    m.opacity = 0.5;
-                    m.transparent = true;
-                },*/
+                animate: (m, t) => anim2(m, t, -1),
+                createMaterial: () => normalMaterial ? new THREE.MeshNormalMaterial() : null
             },
             {
                 path: `assets/mold/${f2}.ply`,
-                animate: (m, t) => anim2(m, t, 1)
+                animate: (m, t) => anim2(m, t, 1),
+                createMaterial: () => normalMaterial ? new THREE.MeshNormalMaterial() : null
             },
             {
                 path: `assets/mold/${f}.ply`,

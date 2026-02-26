@@ -107,7 +107,9 @@ function loadScene(reset = true) {
 
             if (modelData.createMaterial) {
                 material = modelData.createMaterial(useVertexColors);
-            } else {
+            }
+            if (!material)
+            {
                 let m = {
                     color: useVertexColors ? 0xffffff : modelData.color ?? (config.color ?? 0xffffff),
 
@@ -169,7 +171,7 @@ function loadScene(reset = true) {
 
                 document.getElementById('selectModel').classList.remove('d-none');
                 selectedMesh = -1;
-                document.getElementById('btnSelectNextModel').click();
+                changeSelectedMesh(1);
 
                 setTimeout(() => progressContainer.style.display = 'none', 500);
             }
@@ -265,7 +267,7 @@ function animate() {
         let blinkMesh = loadedMeshes[selectedMesh];
 
         // Check if we should be blinking
-        if (blinkMesh && (now - blinkStartTime) < blinkDuration) {
+        if (blinkMesh && (now - blinkStartTime) < blinkDuration ) {
             const elapsed = now - blinkStartTime;
 
             // Create a pulsing value between 0 and 1
@@ -274,10 +276,10 @@ function animate() {
 
             // Apply to the emissive property (makes it "glow")
             // We use a light blue/cyan for the "info" look
-            blinkMesh.material.emissive.setRGB(0, pulse * 0.5, pulse);
+            blinkMesh.material.emissive?.setRGB(0, pulse * 0.5, pulse);
         } else if (blinkMesh) {
             // Reset emissive to black when time is up or no mesh is selected
-            blinkMesh.material.emissive.setRGB(0, 0, 0);
+            blinkMesh.material.emissive?.setRGB(0, 0, 0);
             if (blinkMesh.userData.visible !== undefined) {
                 blinkMesh.visible = blinkMesh.userData.visible;
             }
@@ -432,9 +434,9 @@ document.getElementById('vertexColorsSwitch').addEventListener('change', (e) => 
 
             mesh.material.vertexColors = useVertexColors;
             if (useVertexColors) {
-                mesh.material.color.set(0xffffff);
+                mesh.material.color?.set(0xffffff);
             } else {
-                mesh.material.color.set(mesh.userData.color ?? 0xffffff);
+                mesh.material.color?.set(mesh.userData.color ?? 0xffffff);
             }
 
             mesh.material.needsUpdate = true;
@@ -514,9 +516,9 @@ document.getElementById('btnStepBack').addEventListener('click', () => {
     }
 });
 
-function changeSelectedScene(direction) {
+function changeSelectedMesh(direction) {
     if (selectedMesh >= 0) {
-        loadedMeshes[selectedMesh].material.emissive.setRGB(0, 0, 0);
+        loadedMeshes[selectedMesh].material.emissive?.setRGB(0, 0, 0);
     }
 
     selectedMesh = (selectedMesh + direction + loadedMeshes.length) % loadedMeshes.length;
@@ -531,9 +533,9 @@ function changeSelectedScene(direction) {
     blinkStartTime = Date.now();
 }
 
-document.getElementById('btnSelectNextModel').addEventListener('click', () => changeSelectedScene(1));
+document.getElementById('btnSelectNextModel').addEventListener('click', () => changeSelectedMesh(1));
 
-document.getElementById('btnSelectPrevModel').addEventListener('click', () => changeSelectedScene(-1));
+document.getElementById('btnSelectPrevModel').addEventListener('click', () => changeSelectedMesh(-1));
 
 document.getElementById('hideSelected').addEventListener('change', (e) => {
     loadedMeshes[selectedMesh].visible = !e.target.checked;
@@ -554,14 +556,12 @@ document.getElementById('modelOpacityRange').addEventListener('input', (e) => {
     // This avoids unnecessary shader recompiles
     if (mesh.material.transparent !== shouldBeTransparent) {
         mesh.material.transparent = shouldBeTransparent;
+        //mesh.material.depthWrite = !shouldBeTransparent;
         mesh.material.needsUpdate = true;
     }
 
     mesh.material.opacity = val;
 
-    if (origTransparent != mesh.material.transparent) {
-        mesh.material.needsUpdate = true;
-    }
 });
 
 // Animation Speed Slider
