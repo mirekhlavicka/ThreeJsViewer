@@ -215,6 +215,7 @@ export const sceneConfigurations = [
 
     createEarthMold4Scene("Earth mold 4", "earth", "earth00", "earth01", "earth10", "earth11"),
     createEarthMold4Scene("Egg Earth mold 4", "eggearth/m", "eggearth/m00", "eggearth/m01", "eggearth/m10", "eggearth/m11", true),
+    createEarthMold4Scene("Egg Earth mold 4 hole", "eggearth/m", "eggearth/m00h", "eggearth/m01h", "eggearth/m10h", "eggearth/m11h", true),
 
     dogCatScene,
     openHeartScene,

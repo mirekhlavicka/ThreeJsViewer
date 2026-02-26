@@ -6,6 +6,8 @@ import { sceneConfigurations } from './config.js?v=1.10';
 // --- State Variables ---
 let config;
 let selectedMesh = -1;
+let blinkStartTime = 0;
+const blinkDuration = 2000; // Blink for 2 seconds
 
 let controls, renderer, scene, camera, grid, pivot;
 
@@ -26,8 +28,6 @@ const loader = new PLYLoader();
 
 const timer = new THREE.Timer();
 let animationTime = 0; // Our custom "accumulated" time
-
-// URL Parameter Logic
 
 function setup() {
     scene = new THREE.Scene();
@@ -133,6 +133,11 @@ function loadScene(reset = true) {
             const mesh = new THREE.Mesh(geometry, material);
             mesh.userData = modelData; // Store config in mesh
 
+            if (mesh.userData.visible !== undefined) {
+                mesh.visible = mesh.userData.visible;
+            }
+
+
             if (showWire) {
                 const wireframe = new THREE.LineSegments(
                     new THREE.WireframeGeometry(geometry),
@@ -158,12 +163,13 @@ function loadScene(reset = true) {
                     }
                     animationTime = 0;
 
-                    document.getElementById('selectModel').classList.remove('d-none');
-                    document.getElementById('btnSelectNextModel').click();
-
                 } else if (isPaused) {
                     animateMeshes();
                 }
+
+                document.getElementById('selectModel').classList.remove('d-none');
+                selectedMesh = -1;
+                document.getElementById('btnSelectNextModel').click();
 
                 setTimeout(() => progressContainer.style.display = 'none', 500);
             }
@@ -226,10 +232,6 @@ function autoPositionGrid() {
     // to prevent the model from "touching" the grid lines
     grid.position.z = minZ - 0.02;
 }
-
-
-let blinkStartTime = 0;
-const blinkDuration = 2000; // Blink for 2 seconds
 function animate() {
     requestAnimationFrame(animate);
     controls.update();
@@ -257,7 +259,6 @@ function animate() {
         animateMeshes();
     }
 
-
     if (selectedMesh >= 0) {
         const now = Date.now();
 
@@ -277,6 +278,9 @@ function animate() {
         } else if (blinkMesh) {
             // Reset emissive to black when time is up or no mesh is selected
             blinkMesh.material.emissive.setRGB(0, 0, 0);
+            if (blinkMesh.userData.visible !== undefined) {
+                blinkMesh.visible = blinkMesh.userData.visible;
+            }
         }
     }
 
@@ -351,10 +355,9 @@ function selectScene(index) {
 
     // 3. URL: Update history
     const url = new URL(window.location);
-    url.searchParams.set('model', index);
+    url.searchParams.set('model', config.name);
     window.history.pushState({}, '', url);
-
-    selectedMesh = -1;
+    
     document.getElementById('selectModel').classList.add('d-none');
 
     // 4. Engine: Load
@@ -511,38 +514,36 @@ document.getElementById('btnStepBack').addEventListener('click', () => {
     }
 });
 
-document.getElementById('btnSelectNextModel').addEventListener('click', () => {
+function changeSelectedScene(direction) {
     if (selectedMesh >= 0) {
         loadedMeshes[selectedMesh].material.emissive.setRGB(0, 0, 0);
     }
 
-    selectedMesh++;
+    selectedMesh += direction;
     if (selectedMesh >= loadedMeshes.length) {
         selectedMesh = 0;
     }
-    document.getElementById('selectedModel').innerText = loadedMeshes[selectedMesh].userData.path.replace('assets/', '');
-    document.getElementById('hideSelected').checked = !loadedMeshes[selectedMesh].visible;
-    blinkStartTime = Date.now();
-});
-
-document.getElementById('btnSelectPrevModel').addEventListener('click', () => {
-    if (selectedMesh >= 0) {
-        loadedMeshes[selectedMesh].material.emissive.setRGB(0, 0, 0);
-    }
-
-    selectedMesh--;
     if (selectedMesh < 0) {
         selectedMesh = loadedMeshes.length - 1;
     }
+
     document.getElementById('selectedModel').innerText = loadedMeshes[selectedMesh].userData.path.replace('assets/', '');
     document.getElementById('hideSelected').checked = !loadedMeshes[selectedMesh].visible;
+
+    loadedMeshes[selectedMesh].userData.visible = loadedMeshes[selectedMesh].visible;
+    loadedMeshes[selectedMesh].visible = true;
+
     blinkStartTime = Date.now();
-});
+}
+
+document.getElementById('btnSelectNextModel').addEventListener('click', () => changeSelectedScene(1));
+
+document.getElementById('btnSelectPrevModel').addEventListener('click', () => changeSelectedScene(-1));
 
 document.getElementById('hideSelected').addEventListener('change', (e) => {
-    loadedMeshes[selectedMesh].visible = !e.target.checked;    
+    loadedMeshes[selectedMesh].visible = !e.target.checked;
+    loadedMeshes[selectedMesh].userData.visible = loadedMeshes[selectedMesh].visible;
 });
-
 
 // Animation Speed Slider
 const animRange = document.getElementById('animSpeedRange');
@@ -615,10 +616,29 @@ window.addEventListener('keydown', (e) => {
     }
 });
 
+
 // Start
 setup();
 
-const initialModel = new URLSearchParams(window.location.search).get('model') || 0; // Default to first scene
-selectScene(initialModel);
+//const initialModel = new URLSearchParams(window.location.search).get('model') || 0; // Default to first scene
+
+const urlParams = new URLSearchParams(window.location.search);
+const modelParam = urlParams.get('model');
+let initialIndex = 0; // Default to first scene
+
+if (modelParam !== null) {
+    // 1. Try to find the index by NAME
+    const foundIndex = sceneConfigurations.findIndex(c => c.name === modelParam);
+
+    if (foundIndex !== -1) {
+        initialIndex = foundIndex;
+    }
+    // 2. Fallback: Check if the param is a number (for old bookmarks)
+    else if (!isNaN(modelParam) && sceneConfigurations[modelParam]) {
+        initialIndex = parseInt(modelParam);
+    }
+}
+
+selectScene(initialIndex);
 
 animate();

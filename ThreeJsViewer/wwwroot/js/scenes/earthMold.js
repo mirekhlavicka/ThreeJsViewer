@@ -11,7 +11,11 @@ export function createEarthMold2Scene(name, f, f1, f2, egg = false) {
         models: [
             {
                 path: `assets/mold/${f1}.ply`,
-                animate: (m, t) => anim2(m, t, -1)
+                animate: (m, t) => anim2(m, t, -1)/*,
+                setupMaterial: m => {
+                    m.opacity = 0.5;
+                    m.transparent = true;
+                },*/
             },
             {
                 path: `assets/mold/${f2}.ply`,
