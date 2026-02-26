@@ -216,21 +216,25 @@
                     <div class="pt-3 mt-2 border-top border-secondary" id="selectModel">
 
                         <div class="d-flex flex-column mb-2">
-                            <small class="text-secondary text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05rem;">Inspecting scene</small>
-                            <span id="selectedModel" class="fw-bold text-info small text-truncate" title="Current Selection">
-                                (none)
-                            </span>
+                            <small class="text-secondary text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05rem;">Inspecting Mesh</small>
+                            <span id="selectedModel" class="fw-bold text-info small text-truncate">(none)</span>
                         </div>
 
-                        <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center gap-3">
 
                             <div class="btn-group border border-secondary rounded">
                                 <button class="btn btn-outline-info btn-sm border-0" id="btnSelectPrevModel" title="Previous mesh">
                                     <i class="bi bi-chevron-left"></i>
                                 </button>
-                                <div class="vr bg-secondary my-1"></div> <button class="btn btn-outline-info btn-sm border-0" id="btnSelectNextModel" title="Next mesh">
+                                <div class="vr bg-secondary my-1"></div>
+                                <button class="btn btn-outline-info btn-sm border-0" id="btnSelectNextModel" title="Next mesh">
                                     <i class="bi bi-chevron-right"></i>
                                 </button>
+                            </div>
+
+                            <div class="flex-grow-1 d-flex align-items-center gap-2">
+                                <i class="bi bi-circle-half small text-secondary" title="Opacity"></i>
+                                <input type="range" class="form-range" id="modelOpacityRange" min="0" max="1" step="0.05" value="1">
                             </div>
 
                             <div class="form-check form-switch mb-0">

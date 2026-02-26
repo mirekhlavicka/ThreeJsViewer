@@ -519,16 +519,11 @@ function changeSelectedScene(direction) {
         loadedMeshes[selectedMesh].material.emissive.setRGB(0, 0, 0);
     }
 
-    selectedMesh += direction;
-    if (selectedMesh >= loadedMeshes.length) {
-        selectedMesh = 0;
-    }
-    if (selectedMesh < 0) {
-        selectedMesh = loadedMeshes.length - 1;
-    }
+    selectedMesh = (selectedMesh + direction + loadedMeshes.length) % loadedMeshes.length;
 
     document.getElementById('selectedModel').innerText = loadedMeshes[selectedMesh].userData.path.replace('assets/', '');
     document.getElementById('hideSelected').checked = !loadedMeshes[selectedMesh].visible;
+    document.getElementById('modelOpacityRange').value = loadedMeshes[selectedMesh].material.opacity ?? 1;
 
     loadedMeshes[selectedMesh].userData.visible = loadedMeshes[selectedMesh].visible;
     loadedMeshes[selectedMesh].visible = true;
@@ -543,6 +538,30 @@ document.getElementById('btnSelectPrevModel').addEventListener('click', () => ch
 document.getElementById('hideSelected').addEventListener('change', (e) => {
     loadedMeshes[selectedMesh].visible = !e.target.checked;
     loadedMeshes[selectedMesh].userData.visible = loadedMeshes[selectedMesh].visible;
+});
+
+
+document.getElementById('modelOpacityRange').addEventListener('input', (e) => {
+
+    let mesh = loadedMeshes[selectedMesh];
+
+    if (!mesh) return;
+
+    const val = parseFloat(e.target.value);
+    const shouldBeTransparent = val < 1.0;
+
+    // Only update 'transparent' property if the state actually changes
+    // This avoids unnecessary shader recompiles
+    if (mesh.material.transparent !== shouldBeTransparent) {
+        mesh.material.transparent = shouldBeTransparent;
+        mesh.material.needsUpdate = true;
+    }
+
+    mesh.material.opacity = val;
+
+    if (origTransparent != mesh.material.transparent) {
+        mesh.material.needsUpdate = true;
+    }
 });
 
 // Animation Speed Slider
