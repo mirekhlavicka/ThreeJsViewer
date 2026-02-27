@@ -23,7 +23,8 @@ let autoRotateSpeed = 0.01;
 let materialRoughness = 0.3;
 let materialMetalness = 0.2;
     
-const loadedMeshes = []; 
+let loadedMeshes = []; 
+let loadedCount = 0;
 const loader = new PLYLoader();
 
 const timer = new THREE.Timer();
@@ -77,7 +78,6 @@ function loadScene(reset = true) {
             }
         });
         scene.remove(pivot);
-        loadedMeshes.length = 0;
     }
 
     // 2. Reset Progress UI
@@ -92,6 +92,10 @@ function loadScene(reset = true) {
     pivot = new THREE.Group();
     pivot.add(grid);
     scene.add(pivot);
+
+    // 1. Reset and pre-allocate the array with the correct size
+    loadedMeshes = new Array(config.models.length);
+    loadedCount = 0; // Use a separate counter for completion
 
     // 3. Load Models
     config.models.forEach((modelData, i) => {
@@ -154,9 +158,10 @@ function loadScene(reset = true) {
                 modelData.prepareMesh(mesh);
             }
 
-            loadedMeshes.push(mesh);
+            loadedMeshes[i] = mesh;
+            loadedCount++;
 
-            if (loadedMeshes.length === config.models.length) {
+            if (loadedCount === config.models.length) {
                 autoPositionGrid();
                 if (reset) {
                     controls.reset();
@@ -213,7 +218,7 @@ function loadScene(reset = true) {
 }
 
 function autoPositionGrid() {
-    if (loadedMeshes.length === 0) return;
+    if (loadedCount === 0) return;
 
     grid.rotation.y = 0;
 
@@ -243,7 +248,7 @@ function animate() {
     const delta = timer.getDelta();
 
     // Only render and animate if models are ready
-    if (loadedMeshes.length !== config.models.length) {
+    if (loadedCount !== config.models.length) {
         return;
     }
 

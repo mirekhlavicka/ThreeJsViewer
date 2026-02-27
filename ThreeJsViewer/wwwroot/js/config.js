@@ -209,12 +209,13 @@ export const sceneConfigurations = [
     },
 
     createEarthMold2Scene("Earth mold 2 a", "earth", "earthIn", "earthOut"),
-    createEarthMold2Scene("Earth mold 2 a normal", "earth", "earthIn", "earthOut", false, true),
+    //createEarthMold2Scene("Earth mold 2 a normal", "earth", "earthIn", "earthOut", false, true),
     createEarthMold2Scene("Earth mold 2 b", "earth", "earthOut1", "earthIn1"),
     createEarthMold2Scene("Egg Earth mold 2 a", "eggearth/m", "eggearth/m1", "eggearth/m2", true),
     createEarthMold2Scene("Egg Earth mold 2 b", "eggearth/m", "eggearth/ma", "eggearth/mb", true),
 
     createEarthMold4Scene("Earth mold 4", "earth", "earth00", "earth01", "earth10", "earth11"),
+    createEarthMold4Scene("Earth mold 4 hole", "earth", "earth00h", "earth01h", "earth10h", "earth11h"),
     createEarthMold4Scene("Egg Earth mold 4", "eggearth/m", "eggearth/m00", "eggearth/m01", "eggearth/m10", "eggearth/m11", true),
     createEarthMold4Scene("Egg Earth mold 4 hole", "eggearth/m", "eggearth/m00h", "eggearth/m01h", "eggearth/m10h", "eggearth/m11h", true),
 
