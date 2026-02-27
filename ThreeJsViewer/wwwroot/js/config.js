@@ -1,9 +1,9 @@
 ﻿import * as THREE from 'three';
-import { triangle01, sinSmooth, goldMaterial } from './utils.js?v=1.10';
+import { triangle01, sinSmooth, goldMaterial } from './utils.js?v=1.11';
 
-import { catMoldScene } from './scenes/catMold.js?v=1.01';
-import { createEarthMold2Scene, createEarthMold4Scene } from './scenes/earthMold.js?v=1.01';
-import { dogCatScene, openHeartScene, goldHeartScene, bikeHeartScene } from './scenes/heart.js?v=1.01';
+import { catMoldScene } from './scenes/catMold.js?v=1.11';
+import { createEarthMold2Scene, createEarthMold4Scene } from './scenes/earthMold.js?v=1.11';
+import { dogCatScene, openHeartScene, goldHeartScene, bikeHeartScene } from './scenes/heart.js?v=1.11';
 
 import { createBottleLidScene } from './scenes/bottle.js?v=1.01';
 
