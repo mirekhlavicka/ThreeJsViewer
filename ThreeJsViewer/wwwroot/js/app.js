@@ -176,7 +176,7 @@ function loadScene(reset = true) {
 
                 document.getElementById('selectModel').classList.remove('d-none');
                 selectedMesh = -1;
-                changeSelectedMesh(1);
+                changeSelectedMesh(1, false);
 
                 setTimeout(() => progressContainer.style.display = 'none', 500);
             }
@@ -521,7 +521,7 @@ document.getElementById('btnStepBack').addEventListener('click', () => {
     }
 });
 
-function changeSelectedMesh(direction) {
+function changeSelectedMesh(direction, blink = true) {
     if (selectedMesh >= 0) {
         loadedMeshes[selectedMesh].material.emissive?.setRGB(0, 0, 0);
     }
@@ -535,7 +535,7 @@ function changeSelectedMesh(direction) {
     loadedMeshes[selectedMesh].userData.visible = loadedMeshes[selectedMesh].visible;
     loadedMeshes[selectedMesh].visible = true;
 
-    blinkStartTime = Date.now();
+    if(blink) blinkStartTime = Date.now();
 }
 
 document.getElementById('btnSelectNextModel').addEventListener('click', () => changeSelectedMesh(1));

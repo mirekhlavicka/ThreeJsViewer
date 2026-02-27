@@ -5,6 +5,8 @@ import { catMoldScene } from './scenes/catMold.js?v=1.01';
 import { createEarthMold2Scene, createEarthMold4Scene } from './scenes/earthMold.js?v=1.01';
 import { dogCatScene, openHeartScene, goldHeartScene, bikeHeartScene } from './scenes/heart.js?v=1.01';
 
+import { createBottleLidScene } from './scenes/bottle.js?v=1.01';
+
 export const sceneConfigurations = [
 
     {
@@ -218,6 +220,9 @@ export const sceneConfigurations = [
     createEarthMold4Scene("Earth mold 4 hole", "earth", "earth00h", "earth01h", "earth10h", "earth11h"),
     createEarthMold4Scene("Egg Earth mold 4", "eggearth/m", "eggearth/m00", "eggearth/m01", "eggearth/m10", "eggearth/m11", true),
     createEarthMold4Scene("Egg Earth mold 4 hole", "eggearth/m", "eggearth/m00h", "eggearth/m01h", "eggearth/m10h", "eggearth/m11h", true),
+
+    createBottleLidScene("Bottle with Arnold as lid 1", "bottle", "arnoldCap1"),
+    createBottleLidScene("Bottle with Arnold as lid 2", "bottle", "arnoldCap2"),
 
     dogCatScene,
     openHeartScene,
