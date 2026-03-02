@@ -282,9 +282,15 @@ function animate() {
             // Apply to the emissive property (makes it "glow")
             // We use a light blue/cyan for the "info" look
             blinkMesh.material.emissive?.setRGB(0, pulse * 0.5, pulse);
-        } else if (blinkMesh) {
-            // Reset emissive to black when time is up or no mesh is selected
-            blinkMesh.material.emissive?.setRGB(0, 0, 0);
+            blinkMesh.userData.blinkReset = false;
+        } else if (blinkMesh && blinkMesh.userData.blinkReset === false) {
+            blinkMesh.userData.blinkReset = true;
+            // Reset emissive when time is up
+            if (blinkMesh.userData.originalEmissive !== undefined) {
+                blinkMesh.material.emissive.copy(blinkMesh.userData.originalEmissive);
+            } else {
+                blinkMesh.material.emissive?.setRGB(0, 0, 0);
+            }
             if (blinkMesh.userData.visible !== undefined) {
                 blinkMesh.visible = blinkMesh.userData.visible;
             }
@@ -435,7 +441,7 @@ document.getElementById('vertexColorsSwitch').addEventListener('change', (e) => 
 
     loadedMeshes.forEach(mesh => {
 
-        if (!mesh.userData.setupMaterial) {
+        /*if (!mesh.userData.setupMaterial)*/ {
 
             mesh.material.vertexColors = useVertexColors;
             if (useVertexColors) {
@@ -523,7 +529,11 @@ document.getElementById('btnStepBack').addEventListener('click', () => {
 
 function changeSelectedMesh(direction, blink = true) {
     if (selectedMesh >= 0) {
-        loadedMeshes[selectedMesh].material.emissive?.setRGB(0, 0, 0);
+        if (loadedMeshes[selectedMesh].userData.originalEmissive !== undefined) {
+            loadedMeshes[selectedMesh].material.emissive.copy(loadedMeshes[selectedMesh].userData.originalEmissive);
+        } else {
+            loadedMeshes[selectedMesh].material.emissive?.setRGB(0, 0, 0);
+        }
     }
 
     selectedMesh = (selectedMesh + direction + loadedMeshes.length) % loadedMeshes.length;
@@ -534,6 +544,11 @@ function changeSelectedMesh(direction, blink = true) {
 
     loadedMeshes[selectedMesh].userData.visible = loadedMeshes[selectedMesh].visible;
     loadedMeshes[selectedMesh].visible = true;
+
+    if (loadedMeshes[selectedMesh].userData.originalEmissive === undefined) {
+        // Use .clone() so we have a separate copy of the color values
+        loadedMeshes[selectedMesh].userData.originalEmissive = loadedMeshes[selectedMesh].material.emissive.clone();
+    }
 
     if(blink) blinkStartTime = Date.now();
 }
