@@ -154,7 +154,7 @@ export const sceneConfigurations = [
                     v = sinSmooth(v, 0, 1.2);
                     m.rotation.z = (Math.PI / 2) * v / 1.2;
                 },
-                createMaterial: (useVertexColors) => new THREE.MeshPhysicalMaterial({
+                createMaterial: () => new THREE.MeshPhysicalMaterial({
                     thickness: 0.5,        // Depth of the glass
                     roughness: 0.0,        // Perfectly smooth
                     transmission: 1.0,     // 100% of light passes through
@@ -162,7 +162,7 @@ export const sceneConfigurations = [
                     opacity: 1,           // Keep this at 1; transmission handles transparency
                     transparent: true,    // Must be true for transmission to work
                     envMapIntensity: 1.5,
-                    color: useVertexColors ? 0xffffff : 0xC79F70
+                    color: 0xC79F70
                 })
             },
             {

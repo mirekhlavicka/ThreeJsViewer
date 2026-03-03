@@ -110,15 +110,14 @@ function loadScene(reset = true) {
             let material = null;
 
             if (modelData.createMaterial) {
-                material = modelData.createMaterial(useVertexColors);
+                material = modelData.createMaterial();
             }
             if (!material)
             {
                 let m = {
-                    color: useVertexColors ? 0xffffff : modelData.color ?? (config.color ?? 0xffffff),
+                    color: modelData.color ?? (config.color ?? 0xffffff),
 
                     flatShading: useflatShading,
-                    vertexColors: useVertexColors,
 
                     roughness: materialRoughness,
                     metalness: materialMetalness,
@@ -137,7 +136,12 @@ function loadScene(reset = true) {
             }
 
             const mesh = new THREE.Mesh(geometry, material);
-            mesh.userData = modelData; // Store config in mesh
+            mesh.userData = modelData; 
+            mesh.userData.originalColor = mesh.material.color.clone();
+            if (useVertexColors) {
+                mesh.material.color?.set(0xffffff);
+                mesh.material.vertexColors = true;
+            }
 
             if (mesh.userData.visible !== undefined) {
                 mesh.visible = mesh.userData.visible;
@@ -440,18 +444,15 @@ document.getElementById('vertexColorsSwitch').addEventListener('change', (e) => 
     useVertexColors = e.target.checked;
 
     loadedMeshes.forEach(mesh => {
+        mesh.material.vertexColors = useVertexColors;
 
-        /*if (!mesh.userData.setupMaterial)*/ {
-
-            mesh.material.vertexColors = useVertexColors;
-            if (useVertexColors) {
-                mesh.material.color?.set(0xffffff);
-            } else {
-                mesh.material.color?.set(mesh.userData.color ?? 0xffffff);
-            }
-
-            mesh.material.needsUpdate = true;
+        if (useVertexColors) {
+            mesh.material.color?.set(0xffffff);
+        } else {
+            mesh.material.color?.set(mesh.userData.originalColor);
         }
+
+        mesh.material.needsUpdate = true;
     });
 });
 

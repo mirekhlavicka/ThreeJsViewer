@@ -16,7 +16,7 @@ export function createBottleLidScene(name, f1, f2, maxShift = 0.25) {
                     m.rotation.z = 0.09 * v;
                 },
                 color: 0xaaffaa,
-                createMaterial: (useVertexColors) => new THREE.MeshPhysicalMaterial({
+                createMaterial: () => new THREE.MeshPhysicalMaterial({
                     thickness: 0.8,        // Depth of the glass
                     roughness: 0.25,        
                     metalness: 0.2,
@@ -25,7 +25,7 @@ export function createBottleLidScene(name, f1, f2, maxShift = 0.25) {
                     opacity: 1,           // Keep this at 1; transmission handles transparency
                     transparent: true,    // Must be true for transmission to work
                     envMapIntensity: 1.5,
-                    color: useVertexColors ? 0xffffff : 0xaaffaa,
+                    color: 0xaaffaa,
                     side: THREE.DoubleSide
                 })
             },
@@ -64,7 +64,7 @@ function createWoodMaterial(baseColorHex = 0xC2A278) {
     const material = new THREE.MeshStandardMaterial({
         color: baseColorHex,
         roughness: 0.8,
-        flatShading: true
+        flatShading: false
     });
 
     material.onBeforeCompile = (shader) => {
@@ -79,6 +79,7 @@ function createWoodMaterial(baseColorHex = 0xC2A278) {
             }
 
             float noise(vec3 x) {
+                //return 0.0;
                 vec3 i = floor(x);
                 vec3 f = fract(x);
                 f = f * f * (3.0 - 2.0 * f);
@@ -96,8 +97,8 @@ function createWoodMaterial(baseColorHex = 0xC2A278) {
             #include <color_fragment>
             
             // Base coordinates for rings
-            //float dist = length(vLocalPosition.xz);
-            float dist = vLocalPosition.x;
+            float dist = length(vLocalPosition.xz);
+            //float dist = vLocalPosition.x;
             
             // Add turbulence to the rings
             float n = noise(vLocalPosition * 10.0);
@@ -113,7 +114,7 @@ function createWoodMaterial(baseColorHex = 0xC2A278) {
             float spacing = noise(vec3(dist * 0.8, 0.0, 0.0)) * 50.0;
             
             // Calculate final ring pattern
-            float rings = sin(dist * 25.0 + spacing + n * 8.0);
+            float rings = sin(dist * 150.0 + spacing + n * 8.0);
             
             // Add fine vertical fibers
             float fibers = noise(vLocalPosition * vec3(20.0, 0.5, 20.0)) * 0.1;
@@ -121,7 +122,7 @@ function createWoodMaterial(baseColorHex = 0xC2A278) {
             float finalGrain = smoothstep(-0.4, 0.4, rings) + fibers;
             
             // Apply the grain to the final color
-            diffuseColor.rgb *= mix(0.75, 1.0, finalGrain);
+            diffuseColor.rgb *= mix(0.85, 1.0, finalGrain);
             `
         );
 
