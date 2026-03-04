@@ -2,6 +2,7 @@
 import { triangle01, sinSmooth, goldMaterial } from './utils.js?v=1.11';
 
 import { catMoldScene } from './scenes/catMold.js?v=1.11';
+import { eggEarthContainerScene } from './scenes/eggEarthContainer.js?v=1.11';
 import { createEarthMold2Scene, createEarthMold4Scene } from './scenes/earthMold.js?v=1.11';
 import { dogCatScene, openHeartScene, goldHeartScene, bikeHeartScene } from './scenes/heart.js?v=1.11';
 
@@ -229,5 +230,6 @@ export const sceneConfigurations = [
     goldHeartScene,
     bikeHeartScene,
 
-    catMoldScene
+    catMoldScene,
+    eggEarthContainerScene
 ];
