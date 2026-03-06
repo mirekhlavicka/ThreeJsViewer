@@ -13,7 +13,7 @@ export const eggEarthContainerScene = {
             },
             prepareGeometry: prepareGeometry,
             animate: (m, t) => {
-                m.position.y = 0.05 * Math.sin(25 * smoothAnim(t, 15, 0, 2.8));
+                earthquake(m, t);
             }
         },
         {
@@ -25,8 +25,9 @@ export const eggEarthContainerScene = {
             },
             prepareGeometry: prepareGeometry,
             animate: (m, t) => {
-                m.position.y = 0.05 * Math.sin(25 * smoothAnim(t, 15, 0, 2.8));
-                m.position.z = 0.8 * smoothAnim(t, 15, 1.5, 4.5);
+                earthquake(m, t);
+
+                m.position.z += 0.9 * smoothAnim(t, 15, 1.5, 4.5);
                 m.rotation.y = (Math.PI / 4) * smoothAnim(t, 15, 2.5, 4.5);
                 m.rotation.x = (Math.PI / 6) * smoothAnim(t, 15, 3.5, 4.5);
             }
@@ -38,14 +39,18 @@ export const eggEarthContainerScene = {
                 g.rotateZ(-Math.PI / 2);
                 g.scale(0.5, 0.5, 0.5);
             },
+            createMaterial: () => createTwistMaterial(0xF8E47E),
             animate: (m, t) => {
-                m.position.y = 0.05 * Math.sin(25 * smoothAnim(t, 15, 0, 2.8));
+                m.material.userData.uTime.value = t;
+
+                earthquake(m, t);
+
                 m.position.z = 1.0 * smoothAnim(t, 15, 1.5, 4.5);
-                m.rotation.z = (1.8 * Math.PI) * smoothAnim(t, 15, 2.5, 4.5);
+                m.rotation.z = -(0.15 * Math.PI) * smoothAnim(t, 15, 2.5, 4.5);
 
                 m.position.x = -1.5 * smoothAnim(t, 15, 4.5, 7.5);
                 m.position.y = 1.5 * smoothAnim(t, 15, 4.5, 7.5);
-                m.rotation.y = (-0.25 * Math.PI) * smoothAnim(t, 15, 4.5, 7.5);;
+                m.rotation.y = (-0.25 * Math.PI) * smoothAnim(t, 15, 4.5, 7.5);
             }
         }
     ]
@@ -53,6 +58,12 @@ export const eggEarthContainerScene = {
 function prepareGeometry(g) {
     g.rotateZ(-0.9 * Math.PI);
     globeColors(g, true)
+}
+
+function earthquake(m, t) {
+    m.position.y = 0.02 * Math.sin(25 * smoothAnim(t, 15, 0, 2.8));
+    m.position.x = 0.03 * Math.sin(35 * smoothAnim(t, 15, 0, 2.8));
+    m.position.z = 0.01 * Math.sin(15 * smoothAnim(t, 15, 0, 2.8));
 }
 
 function globeColors(geometry, egg) {
@@ -142,4 +153,55 @@ function globeColors(geometry, egg) {
 
     geometry.setAttribute('color', new THREE.BufferAttribute(newColors, 3));
     geometry.attributes.color.needsUpdate = true;
+}
+
+function createTwistMaterial(baseColorHex) {
+    // 1. Create standard material (keeps your lighting/colors)
+    const material = new THREE.MeshStandardMaterial({
+        color: baseColorHex,
+        flatShading: false,
+        vertexColors: false 
+    });
+
+    // 2. Define uniforms to pass data from JS to the Shader
+    material.userData.uTime = { value: 0 };
+    material.userData.uTwistStrength = { value: 1.5 };
+
+    material.onBeforeCompile = (shader) => {
+        // Pass our JS uniforms into the shader
+        shader.uniforms.uTime = material.userData.uTime;
+        shader.uniforms.uTwistStrength = material.userData.uTwistStrength;
+
+        // 3. Inject uniform declarations into Vertex Shader
+        shader.vertexShader = `
+            uniform float uTime;
+            uniform float uTwistStrength;
+        ` + shader.vertexShader;
+
+        // 4. Inject the deformation math
+        // 'transformed' is the standard Three.js variable for vertex position
+        shader.vertexShader = shader.vertexShader.replace(
+            `#include <begin_vertex>`,
+            `
+            #include <begin_vertex>
+            
+            // Calculate angle based on height (y) and time
+            // sin(uTime) makes it breathe back and forth
+            float angle =
+                //smoothstep(-0.1, 0.2, transformed.z + transformed.x) *
+                smoothstep(-0.2, 0.2, transformed.z) *
+                smoothstep(-0.2, 0.2, transformed.x) *
+                transformed.y * uTwistStrength * sin(uTime * 4.0 - (transformed.x * 0.5));
+            
+            float s = sin(angle);
+            float c = cos(angle);
+            
+            // Apply 2D rotation matrix to X and Z coordinates
+            mat2 rotationMatrix = mat2(c, -s, s, c);
+            transformed.xy = rotationMatrix * transformed.xy;
+            `
+        );
+    };
+
+    return material;
 }
