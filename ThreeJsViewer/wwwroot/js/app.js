@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-import { sceneConfigurations } from './config.js?v=1.12';
+import { sceneConfigurations } from './config.js?v=1.13';
 
 // --- State Variables ---
 let config;
@@ -260,6 +260,10 @@ function animate() {
     if (!isPaused) {
         // 0.002 is your speed multiplier
         animationTime += delta * animationSpeed;
+    }
+
+    if (config.resetTime && animationTime > config.resetTime) {
+        animationTime = animationTime - config.resetTime;
     }
 
     if (!isPaused) {

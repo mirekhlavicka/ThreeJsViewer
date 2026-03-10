@@ -1,8 +1,10 @@
 ﻿import { smoothAnim } from '../utils.js';
 import * as THREE from 'three';
 
+const eggPeriod = 37;
 export const eggEarthContainerScene = {
-    name: "Earth/Egg Container",
+    name: "Earth/Dragon egg",
+    resetTime: eggPeriod,
     models: [
         {
             path: 'assets/EggEarthContainer/eggbottom1.ply',
@@ -27,9 +29,9 @@ export const eggEarthContainerScene = {
             animate: (m, t) => {
                 earthquake(m, t);
 
-                m.position.z += 0.9 * smoothAnim(t, 25, 1.5, 4.5);
-                m.rotation.y = (Math.PI / 4) * smoothAnim(t, 25, 2.5, 4.5);
-                m.rotation.x = (Math.PI / 6) * smoothAnim(t, 25, 3.5, 4.5);
+                m.position.z += 0.9 * smoothAnim(t, eggPeriod, 1.5, 4.5);
+                m.rotation.y = (Math.PI / 4) * smoothAnim(t, eggPeriod, 2.5, 4.5);
+                m.rotation.x = (Math.PI / 6) * smoothAnim(t, eggPeriod, 3.5, 4.5);
             }
         },
         {
@@ -42,16 +44,6 @@ export const eggEarthContainerScene = {
             createMaterial: () => createTwistMaterial(0xF8E47E),
             animate: (m, t) => {
                 m.material.userData.uTime.value = t;
-
-                //earthquake(m, t);
-
-                /*m.position.z = 1.0 * smoothAnim(t, 15, 1.5, 4.5);
-                m.rotation.z = -(0.25 * Math.PI) * smoothAnim(t, 15, 2.5, 4.5);
-
-                m.position.x = -1.5 * smoothAnim(t, 15, 4.5, 7.5);
-                m.position.y = 1.5 * smoothAnim(t, 15, 4.5, 7.5);
-                m.rotation.y = (-0.25 * Math.PI) * smoothAnim(t, 15, 4.5, 7.5);*/
-
                 updateDragonAnimation(m, t);
             }
         }
@@ -63,9 +55,9 @@ function prepareGeometry(g) {
 }
 
 function earthquake(m, t) {
-    m.position.y = 0.02 * Math.sin(25 * smoothAnim(t, 25, 0, 2.8));
-    m.position.x = 0.03 * Math.sin(35 * smoothAnim(t, 25, 0, 2.8));
-    m.position.z = 0.01 * Math.sin(15 * smoothAnim(t, 25, 0, 2.8));
+    m.position.y = 0.02 * Math.sin(45 * smoothAnim(t, eggPeriod, 1, 3.8));
+    m.position.x = 0.03 * Math.sin(65 * smoothAnim(t, eggPeriod, 1, 3.8));
+    m.position.z = 0.03 * Math.sin(55 * smoothAnim(t, eggPeriod, 1, 3.8));
 }
 
 function globeColors(geometry, egg) {
@@ -192,8 +184,7 @@ function createTwistMaterial(baseColorHex) {
             // Calculate angle based on height (y) and time
             // sin(uTime) makes it breathe back and forth
             float angle =
-                //smoothstep(-0.1, 0.2, transformed.z + transformed.x) *
-                smoothstep(-0.2, 0.2, transformed.z) *
+                smoothstep(-0.5, 0.2, transformed.z) *
                 smoothstep(-0.2, 0.2, transformed.x) *
                 transformed.y * uTwistStrength * sin(uTime * 4.0 - (transformed.x * 0.5));
             
@@ -205,7 +196,10 @@ function createTwistMaterial(baseColorHex) {
             transformed.xy = rotationMatrix * transformed.xy;
 
 
-            angle = 0.3 * smoothstep(-0.2, 0.0, transformed.z) * sin(uTime * 3.0);
+            angle = 0.4 *
+                smoothstep(-0.2, 0.0, transformed.z) *
+                (1.0 - smoothstep(0.2, 0.5, transformed.x)) *
+                sin(uTime * 2.0);
             s = sin(angle);
             c = cos(angle);
 
@@ -226,88 +220,23 @@ let orbitRadius = 0;
 let initialOrbitAngle = 0;
 
 function updateDragonAnimation(mesh, time) {
-    if (time < 1.5) return;
-
-    // 1. PHASE 1: 1.5s to 4.5s (Rise and Rotate)
-    if (time < 4.5) {
-        let t = (time - 1.5) / 3;
-        // Apply Easing
-        t = THREE.MathUtils.smoothstep(t, 0, 1);
-
-        mesh.position.z = THREE.MathUtils.lerp(0, 1.0, t);
-        mesh.rotation.z = -THREE.MathUtils.lerp(0, Math.PI / 4, t);
-    }
-
-    // 2. PHASE 2: 4.5s to 7.5s (Move Radially Forward)
-    else if (time < 7.5) {
-        let t = (time - 4.5) / 3;
-        t = THREE.MathUtils.smoothstep(t, 0, 1); // Smooth acceleration and deceleration
-
-        const distance = THREE.MathUtils.lerp(0, 1.5, t);
-        const angle = Math.PI - Math.PI / 4;
-
-        mesh.position.x = Math.cos(angle) * distance;
-        mesh.position.y = Math.sin(angle) * distance;
-
-        // Gentle descent and lean
-        mesh.position.z = 1.0 - (t / 4.0);
-        //mesh.rotation.x = (-0.15 * Math.PI) * t;
-        //mesh.rotation.y = (-0.15 * Math.PI) * t;
-
-        orbitRadius = 1.5;
-        initialOrbitAngle = angle;
-    }
-
-    // 3. PHASE 3: 7.5s to 9.5s (Local Rotation)
-    else if (time < 9.5) {
-        let t = (time - 7.5) / 2;
-        t = THREE.MathUtils.smoothstep(t, 0, 1);
-
-        mesh.rotation.z = -Math.PI / 4 + THREE.MathUtils.lerp(0, Math.PI / 2, t);
-    }
-
-    // 4. PHASE 4: 9.5s+ (The Global Orbit)
-    else {
-        const orbitTime = time - 9.5;
-
-        // --- SMOOTH ORBIT ENTRY ---
-        // To avoid the dragon "jerking" into motion at 8.5s, 
-        // we ease the orbit speed from 0 to 0.5 over the first 4 seconds.
-        const entryEase = THREE.MathUtils.smoothstep(orbitTime / 4.0, 0, 1);
-        const orbitSpeed = 0.5 * entryEase;
-
-        // Note: For a perfectly smooth orbit entry, we integrate the speed, 
-        // but for a simple visual, accelerating the 'time' factor works:
-        const currentAngle = initialOrbitAngle + (orbitTime * orbitSpeed);
-
-        mesh.position.x = Math.cos(currentAngle) * orbitRadius;
-        mesh.position.y = Math.sin(currentAngle) * orbitRadius;
-        mesh.rotation.z = currentAngle - Math.PI / 2;
-
-        // Return rotations to neutral during orbit
-        //mesh.rotation.x *= 0.95;
-        //mesh.rotation.y *= 0.95;
-    }
-}
-
-/*function updateDragonAnimation(mesh, time) {
-    if (time < 1.5) return;
+    if (time < 2.5) return;
 
     // Configuration for the "Return" trip
     const rotations = 1; // X rotations
-    const orbitDuration = (Math.PI * 2 * rotations) / 0.5 + 4.0; // Adding the 4s ease-in time
-    const phase4End = 9.5 + orbitDuration;
+    const orbitDuration = (Math.PI * 2 * rotations) / 0.5 /*+ 4.0*/; // Adding the 4s ease-in time
+    const phase4End = 10.5 + orbitDuration;
 
     // 1. PHASE 1: 1.5s to 4.5s (Rise and Rotate)
-    if (time < 4.5) {
-        let t = THREE.MathUtils.smoothstep((time - 1.5) / 3, 0, 1);
+    if (time < 5.5) {
+        let t = THREE.MathUtils.smoothstep((time - 2.5) / 3, 0, 1);
         mesh.position.z = THREE.MathUtils.lerp(0, 1.0, t);
         mesh.rotation.z = -THREE.MathUtils.lerp(0, Math.PI / 4, t);
     }
 
     // 2. PHASE 2: 4.5s to 7.5s (Move Radially Forward)
-    else if (time < 7.5) {
-        let t = THREE.MathUtils.smoothstep((time - 4.5) / 3, 0, 1);
+    else if (time < 8.5) {
+        let t = THREE.MathUtils.smoothstep((time - 5.5) / 3, 0, 1);
         const distance = THREE.MathUtils.lerp(0, 1.5, t);
         const angle = Math.PI - Math.PI / 4;
 
@@ -320,33 +249,42 @@ function updateDragonAnimation(mesh, time) {
     }
 
     // 3. PHASE 3: 7.5s to 9.5s (Local Rotation for Orbit Entry)
-    else if (time < 9.5) {
-        let t = THREE.MathUtils.smoothstep((time - 7.5) / 2, 0, 1);
+    else if (time < 10.5) {
+        let t = THREE.MathUtils.smoothstep((time - 8.5) / 2, 0, 1);
         mesh.rotation.z = -Math.PI / 4 + THREE.MathUtils.lerp(0, Math.PI / 2, t);
     }
 
-    // 4. PHASE 4: 9.5s to phase4End (The Global Orbit)
+    // 4. PHASE 4: 10.5s to phase4End (The Global Orbit)
     else if (time < phase4End) {
-        const orbitTime = time - 9.5;
-        const entryEase = THREE.MathUtils.smoothstep(orbitTime / 4.0, 0, 1);
-        const orbitSpeed = 0.5 * entryEase;
-        const currentAngle = initialOrbitAngle + (orbitTime * orbitSpeed);
+        const orbitTime = time - 10.5;
+
+        // 1. Calculate how far through the phase we are (0.0 to 1.0)
+        let progress = orbitTime / orbitDuration;
+
+        // 2. Apply S-Curve to the progress itself
+        // This ensures velocity is 0 at start AND 0 at the end
+        const smoothProgress = THREE.MathUtils.smoothstep(progress, 0, 1);
+
+        // 3. Calculate total distance to travel (Total Radians)
+        const totalAngleToTravel = Math.PI * 2 * rotations;
+
+        // 4. Determine current angle
+        const currentAngle = initialOrbitAngle + (smoothProgress * totalAngleToTravel);
 
         mesh.position.x = Math.cos(currentAngle) * orbitRadius;
         mesh.position.y = Math.sin(currentAngle) * orbitRadius;
         mesh.rotation.z = currentAngle - Math.PI / 2;
 
-        // Store the final angle to ensure Phase 5 starts exactly where Phase 4 ends
+        // Sync for Phase 5
         mesh.userData.finalOrbitAngle = currentAngle;
     }
-
     // 5. PHASE 5: (Local Rotation for Return) - Mirror Phase 3
     else if (time < phase4End + 2.0) {
         let t = THREE.MathUtils.smoothstep((time - phase4End) / 2, 0, 1);
-        const startAng = mesh.userData.finalOrbitAngle - Math.PI / 2;
+        const startAng = mesh.userData.finalOrbitAngle + - Math.PI / 2;
 
         // Dragon turns back to face the center
-        mesh.rotation.z = startAng + THREE.MathUtils.lerp(0, Math.PI, t);
+        mesh.rotation.z = startAng + THREE.MathUtils.lerp(0, Math.PI / 2, t);
     }
 
     // 6. PHASE 6: (Move Radially Back) - Mirror Phase 2
@@ -365,6 +303,6 @@ function updateDragonAnimation(mesh, time) {
         let t = THREE.MathUtils.smoothstep((time - (phase4End + 5.0)) / 3, 0, 1);
         mesh.position.z = THREE.MathUtils.lerp(1.0, 0, t);
         // Slowly return rotation.z to 0 or its original state
-        mesh.rotation.z = mesh.rotation.z * (1.0 - t);
+        mesh.rotation.z = mesh.userData.finalOrbitAngle - 0.75 * t * Math.PI;//mesh.rotation.z * (1.0 - t/2);
     }
-}*/
+}
