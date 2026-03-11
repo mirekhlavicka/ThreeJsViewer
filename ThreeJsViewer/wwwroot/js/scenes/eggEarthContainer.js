@@ -1,10 +1,10 @@
 ﻿import { smoothAnim } from '../utils.js';
 import * as THREE from 'three';
 
-const eggPeriod = 18;
+const eggPeriod = 11;
 export const eggEarthContainerScene = {
     name: "Earth/Dragon egg",
-    resetTime: 2*eggPeriod,
+    resetTime: 3*eggPeriod,
     models: [
         {
             path: 'assets/EggEarthContainer/eggbottom1.ply',
@@ -27,9 +27,15 @@ export const eggEarthContainerScene = {
             },
             prepareGeometry: prepareGeometry,
             animate: (m, t) => {
+
+                if (t > 11 && t < 22) {
+                    return;
+                }
+
+                m.position.z = 0.9 * smoothAnim(t, eggPeriod, 2.0, 4.5);
+
                 earthquake(m, t);
 
-                m.position.z += 0.9 * smoothAnim(t, eggPeriod, 1.5, 4.5);
                 m.rotation.y = (Math.PI / 4) * smoothAnim(t, eggPeriod, 2.5, 4.5);
                 m.rotation.x = (Math.PI / 6) * smoothAnim(t, eggPeriod, 3.5, 4.5);
             }
@@ -55,9 +61,12 @@ function prepareGeometry(g) {
 }
 
 function earthquake(m, t) {
-    m.position.y = 0.02 * Math.sin(25 * smoothAnim(t, eggPeriod, 1, 2));
-    m.position.x = 0.03 * Math.sin(17 * smoothAnim(t, eggPeriod, 1, 2));
-    m.position.z = 0.03 * Math.sin(21 * smoothAnim(t, eggPeriod, 1, 2));
+    if (t > 2) {
+        return;
+    }
+    m.position.y = 0.02 * Math.sin(8 * smoothAnim(t, eggPeriod, 1, 2) * Math.PI);
+    m.position.x = 0.03 * Math.sin(6 * smoothAnim(t, eggPeriod, 1, 2) * Math.PI);
+    m.position.z = 0.03 * Math.sin(7 * smoothAnim(t, eggPeriod, 1, 2) * Math.PI);
 }
 
 function globeColors(geometry, egg) {
