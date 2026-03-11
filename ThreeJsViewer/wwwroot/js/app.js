@@ -243,12 +243,12 @@ function autoPositionGrid() {
     // to prevent the model from "touching" the grid lines
     grid.position.z = minZ - 0.02;
 }
-function animate() {
+function animate(timestamp) {
     requestAnimationFrame(animate);
     controls.update();
 
     // Get the time passed since the last frame
-    timer.update();
+    timer.update(timestamp);
     const delta = timer.getDelta();
 
     // Only render and animate if models are ready
@@ -263,7 +263,7 @@ function animate() {
     }
 
     if (config.resetTime && animationTime > config.resetTime) {
-        animationTime = animationTime - config.resetTime;
+        animationTime = 0;// animationTime - config.resetTime;
     }
 
     if (!isPaused) {

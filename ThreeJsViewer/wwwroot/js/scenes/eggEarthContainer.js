@@ -1,10 +1,10 @@
 ﻿import { smoothAnim } from '../utils.js';
 import * as THREE from 'three';
 
-const eggPeriod = 37;
+const eggPeriod = 18;
 export const eggEarthContainerScene = {
     name: "Earth/Dragon egg",
-    resetTime: eggPeriod,
+    resetTime: 2*eggPeriod,
     models: [
         {
             path: 'assets/EggEarthContainer/eggbottom1.ply',
@@ -55,9 +55,9 @@ function prepareGeometry(g) {
 }
 
 function earthquake(m, t) {
-    m.position.y = 0.02 * Math.sin(45 * smoothAnim(t, eggPeriod, 1, 3.8));
-    m.position.x = 0.03 * Math.sin(65 * smoothAnim(t, eggPeriod, 1, 3.8));
-    m.position.z = 0.03 * Math.sin(55 * smoothAnim(t, eggPeriod, 1, 3.8));
+    m.position.y = 0.02 * Math.sin(25 * smoothAnim(t, eggPeriod, 1, 2));
+    m.position.x = 0.03 * Math.sin(17 * smoothAnim(t, eggPeriod, 1, 2));
+    m.position.z = 0.03 * Math.sin(21 * smoothAnim(t, eggPeriod, 1, 2));
 }
 
 function globeColors(geometry, egg) {
@@ -242,7 +242,7 @@ function updateDragonAnimation(mesh, time) {
 
         mesh.position.x = Math.cos(angle) * distance;
         mesh.position.y = Math.sin(angle) * distance;
-        mesh.position.z = 1.0 - (t / 4.0);
+        mesh.position.z = 1.0 - (THREE.MathUtils.smoothstep(t, 0.5, 1) / 2.0);
 
         orbitRadius = 1.5;
         initialOrbitAngle = angle;
@@ -295,7 +295,8 @@ function updateDragonAnimation(mesh, time) {
 
         mesh.position.x = Math.cos(angle) * distance;
         mesh.position.y = Math.sin(angle) * distance;
-        mesh.position.z = 0.75 + (t / 4.0); // Returning to 1.0 height
+        //mesh.position.z = 0.75 + (t / 4.0); // Returning to 1.0 height
+        mesh.position.z = 0.5 + (THREE.MathUtils.smoothstep(t, 0.0, 0.5) / 2.0);
     }
 
     // 7. PHASE 7: (Descend) - Mirror Phase 1
