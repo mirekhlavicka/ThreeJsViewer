@@ -249,7 +249,11 @@ function animate(timestamp) {
 
     // Get the time passed since the last frame
     timer.update(timestamp);
-    const delta = timer.getDelta();
+    let delta = timer.getDelta();
+
+    if (delta > 0.5) {
+        delta = 0.0;
+    }
 
     // Only render and animate if models are ready
     if (loadedCount !== config.models.length) {

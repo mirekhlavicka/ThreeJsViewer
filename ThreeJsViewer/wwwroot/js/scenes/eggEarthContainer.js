@@ -16,6 +16,10 @@ export const eggEarthContainerScene = {
             prepareGeometry: prepareGeometry,
             animate: (m, t) => {
                 earthquake(m, t);
+
+                if (t > 11 && t < 22) {
+                    m.rotation.z =  -4 * Math.PI * THREE.MathUtils.smoothstep(t, 11, 22);
+                }
             }
         },
         {
@@ -29,15 +33,16 @@ export const eggEarthContainerScene = {
             animate: (m, t) => {
 
                 if (t > 11 && t < 22) {
-                    return;
+                    m.rotation.z = -4 * Math.PI * THREE.MathUtils.smoothstep(t, 11, 22);
+                } else {
+
+                    m.position.z = 0.9 * smoothAnim(t, eggPeriod, 2.0, 4.5);
+
+                    earthquake(m, t);
+
+                    m.rotation.y = (Math.PI / 4) * smoothAnim(t, eggPeriod, 2.5, 4.5);
+                    m.rotation.x = (Math.PI / 6) * smoothAnim(t, eggPeriod, 3.5, 4.5);
                 }
-
-                m.position.z = 0.9 * smoothAnim(t, eggPeriod, 2.0, 4.5);
-
-                earthquake(m, t);
-
-                m.rotation.y = (Math.PI / 4) * smoothAnim(t, eggPeriod, 2.5, 4.5);
-                m.rotation.x = (Math.PI / 6) * smoothAnim(t, eggPeriod, 3.5, 4.5);
             }
         },
         {
@@ -48,6 +53,7 @@ export const eggEarthContainerScene = {
                 g.scale(0.5, 0.5, 0.5);
             },
             createMaterial: () => createTwistMaterial(0xF8E47E),
+            prepareMesh: m => m.rotation.order = 'ZXY',
             animate: (m, t) => {
                 m.material.userData.uTime.value = t;
                 updateDragonAnimation(m, t);
@@ -253,6 +259,8 @@ function updateDragonAnimation(mesh, time) {
         mesh.position.y = Math.sin(angle) * distance;
         mesh.position.z = 1.0 - (THREE.MathUtils.smoothstep(t, 0.5, 1) / 2.0);
 
+        mesh.rotation.y = -0.15 * Math.PI * t;
+
         orbitRadius = 1.5;
         initialOrbitAngle = angle;
     }
@@ -286,6 +294,8 @@ function updateDragonAnimation(mesh, time) {
 
         // Sync for Phase 5
         mesh.userData.finalOrbitAngle = currentAngle;
+
+        mesh.rotation.x = 0.5 * Math.sin(2.0* (currentAngle - initialOrbitAngle));
     }
     // 5. PHASE 5: (Local Rotation for Return) - Mirror Phase 3
     else if (time < phase4End + 2.0) {
@@ -306,6 +316,8 @@ function updateDragonAnimation(mesh, time) {
         mesh.position.y = Math.sin(angle) * distance;
         //mesh.position.z = 0.75 + (t / 4.0); // Returning to 1.0 height
         mesh.position.z = 0.5 + (THREE.MathUtils.smoothstep(t, 0.0, 0.5) / 2.0);
+
+        mesh.rotation.y = -0.15 * Math.PI * (1 - t);
     }
 
     // 7. PHASE 7: (Descend) - Mirror Phase 1
