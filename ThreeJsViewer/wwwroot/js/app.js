@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-import { sceneConfigurations } from './config.js?v=1.13';
+import { sceneConfigurations } from './config.js?v=1.14';
 
 // --- State Variables ---
 let config;
@@ -55,7 +55,15 @@ function setup() {
     scene.add(hemiLight);
 
     const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    dirLight.position.set(1, 1, 1);
+    //dirLight.position.set(1, 1, 1);
+    dirLight.position.set(-2, 1, 0.5);
+
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
+    dirLight.shadow.blurSamples = 16; // Adjust for smoothness
+    dirLight.shadow.radius = 2;
+
     camera.add(dirLight);
     dirLight.target.position.set(0, 0, -1);
     camera.add(dirLight.target);
@@ -63,7 +71,10 @@ function setup() {
 
     // Add a grid to the "floor" (XZ plane)
     grid = new THREE.GridHelper(4, 12, 0x555555, 0x444444);
-    grid.rotation.x = Math.PI / 2; // If your "up" is Z, or leave as is if "up" is Y    
+    grid.rotation.x = Math.PI / 2; // If your "up" is Z, or leave as is if "up" is Y
+
+    /*const helper = new THREE.CameraHelper(dirLight.shadow.camera);
+    scene.add(helper);*/
 }
 
 function loadScene(reset = true) {
@@ -171,6 +182,12 @@ function loadScene(reset = true) {
                     controls.reset();
                     if (config.setup) {
                         config.setup(camera);
+                    }
+                    if (config.shadowMapType != undefined) {
+                        renderer.shadowMap.enabled = true;
+                        renderer.shadowMap.type = config.shadowMapType;
+                    } else {
+                        renderer.shadowMap.enabled = false;
                     }
                     animationTime = 0;
 

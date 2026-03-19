@@ -2,7 +2,7 @@
 import { triangle01, sinSmooth, goldMaterial } from './utils.js?v=1.12';
 
 import { catMoldScene } from './scenes/catMold.js?v=1.12';
-import { eggEarthContainerScene } from './scenes/eggEarthContainer.js?v=1.13';
+import { eggEarthContainerScene } from './scenes/eggEarthContainer.js?v=1.14';
 import { createEarthMold2Scene, createEarthMold4Scene } from './scenes/earthMold.js?v=1.12';
 import { dogCatScene, openHeartScene, goldHeartScene, bikeHeartScene } from './scenes/heart.js?v=1.12';
 import { createBottleLidScene } from './scenes/bottle.js?v=1.01';

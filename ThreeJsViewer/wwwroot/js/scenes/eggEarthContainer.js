@@ -4,7 +4,11 @@ import * as THREE from 'three';
 const eggPeriod = 11;
 export const eggEarthContainerScene = {
     name: "Earth/Dragon egg",
-    resetTime: 3*eggPeriod,
+    resetTime: 3 * eggPeriod,
+    shadowMapType: THREE.VSMShadowMap, //THREE.VSMShadowMap, THREE.PCFShadowMap
+    setup: (camera) => {
+        camera.position.set(-3, 0, 1.2);
+    },
     models: [
         {
             path: 'assets/EggEarthContainer/eggbottom1.ply',
@@ -14,6 +18,9 @@ export const eggEarthContainerScene = {
                 m.vertexColors = true;
             },
             prepareGeometry: prepareGeometry,
+            prepareMesh: m => {
+                m.receiveShadow = true;
+            },
             animate: (m, t) => {
                 earthquake(m, t);
 
@@ -30,6 +37,9 @@ export const eggEarthContainerScene = {
                 m.vertexColors = true;
             },
             prepareGeometry: prepareGeometry,
+            prepareMesh: m => {
+                m.receiveShadow = true;
+            },
             animate: (m, t) => {
 
                 if (t > 11 && t < 22) {
@@ -53,7 +63,10 @@ export const eggEarthContainerScene = {
                 g.scale(0.5, 0.5, 0.5);
             },
             createMaterial: () => createTwistMaterial(0xF8E47E),
-            prepareMesh: m => m.rotation.order = 'ZXY',
+            prepareMesh: m => {
+                m.rotation.order = 'ZXY';
+                m.castShadow = true;
+            },
             animate: (m, t) => {
                 m.material.userData.uTime.value = t;
                 updateDragonAnimation(m, t);
