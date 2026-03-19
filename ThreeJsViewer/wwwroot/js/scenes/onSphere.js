@@ -5,45 +5,75 @@ export const onSphereScene = {
     name: "Games/On sphere",
     models: [
         {
-            path: 'assets/OnSphere/ball.ply',
+            path: 'assets/OnSphere/ball1.ply',
             color: 0xffd700,
             setupMaterial: m => {
                 m.color = 0xffffff;
                 m.vertexColors = true;
-            }/*,
-            prepareGeometry: prepareGeometry,
-            animate: (m, t) => {
-                earthquake(m, t);
-
-                if (t > 11 && t < 22) {
-                    m.rotation.z = -4 * Math.PI * THREE.MathUtils.smoothstep(t, 11, 22);
-                }
-            }*/
+            }
         },
         {
             path: 'assets/OnSphere/penguin.ply',
             color: 0xffd700,
             createMaterial: () => createTwistMaterial(0xF8E47E),
-            /*setupMaterial: m => {
-                m.color = 0xffffff;
-                m.vertexColors = false;
-            },*/
             prepareGeometry: g => {
-                /*m.rotation.x = Math.PI / 2;
-                m.scale.set(0.19, 0.19, 0.19);*/
-                // 1. Bake rotation into the vertices
-                g.rotateZ(-Math.PI / 2);
-
-                // 2. Bake scale into the vertices
+                g.rotateZ(Math.PI);
                 g.scale(0.06, 0.06, 0.06);
-                g.translate(0, 0, 1.005);
+                //g.translate(0, 0, 1.005);
             },
             animate: (m, t) => {
                 m.material.userData.uTime.value = t;
-                //updateDragonAnimation(m, t);
+
+                /*
+                //m.position.z = 1.01;
+
+                m.position.x = 1.01 * Math.sin(-0.2 * t);
+                m.position.z = 1.01 * Math.cos(0.2 * t);*/
+
+                updateFigureTransform(m,
+                    Math.sin(-0.08 * t), 0, Math.cos(0.08 * t), 
+                    -Math.cos(0.08 * t), 0, Math.sin(-0.08 * t),
+                    0.006)
             }
         }
     ]
+}
+
+/**
+ * @param {THREE.Object3D} figure - Your character mesh/model
+ * @param {number} x, y, z - Coordinates on the sphere surface
+ * @param {number} v1, v2, v3 - Velocity components (direction of movement)
+ * @param {number} shift - Distance to offset figure so it stands on surface
+ */
+function updateFigureTransform(figure, x, y, z, v1, v2, v3, shift) {
+    // 1. Create Vectors from inputs
+    const pos = new THREE.Vector3(x, y, z);
+    const vel = new THREE.Vector3(v1, v2, v3);
+
+    // 2. Define the Basis Vectors
+    // Z-axis (Normal): Points from center through the position
+    const newZ = pos.clone().normalize();
+
+    // X-axis (Side): Perpendicular to both Velocity and the Normal
+    // We calculate this first to ensure a perfect 90-degree system
+    const newX = new THREE.Vector3().crossVectors(vel, newZ).normalize();
+
+    // Y-axis (Forward): Perpendicular to Up and Side
+    // This ensures Y aligns with velocity even if v1,v2,v3 isn't perfectly tangent
+    const newY = new THREE.Vector3().crossVectors(newZ, newX).normalize();
+
+    // 3. Create and apply the Rotation Matrix
+    const matrix = new THREE.Matrix4();
+    matrix.makeBasis(newX, newY, newZ);
+    figure.quaternion.setFromRotationMatrix(matrix);
+
+    // 4. Set Position with the radial shift
+    // We add the normalized 'up' vector multiplied by your shift value
+    figure.position.set(
+        x + (newZ.x * shift),
+        y + (newZ.y * shift),
+        z + (newZ.z * shift)
+    );
 }
 
 function createTwistMaterial(baseColorHex) {
@@ -58,7 +88,7 @@ function createTwistMaterial(baseColorHex) {
 
     // 2. Define uniforms to pass data from JS to the Shader
     material.userData.uTime = { value: 0 };
-    material.userData.uTwistStrength = { value: 1.5 };
+    material.userData.uTwistStrength = { value: 8.0 };
 
     material.onBeforeCompile = (shader) => {
         // Pass our JS uniforms into the shader
@@ -78,29 +108,23 @@ function createTwistMaterial(baseColorHex) {
             `
             #include <begin_vertex>
             
-            // Calculate angle based on height (y) and time
-            // sin(uTime) makes it breathe back and forth
             float angle =
-                //smoothstep(-0.5, 0.2, transformed.z) *
-                (1.0 - smoothstep(1.0, 1.05, transformed.z)) *
-                0.1 * transformed.y * uTwistStrength * sin(uTime * 4.0 - (transformed.x * 0.5));
+                (1.0 - smoothstep(-0.005, 0.025, transformed.z)) *
+                transformed.x * uTwistStrength * sin(uTime * 16.0);
             
             float s = sin(angle);
             float c = cos(angle);
             
-            // Apply 2D rotation matrix to X and Z coordinates
             mat2 rotationMatrix = mat2(c, -s, s, c);
-            transformed.xz = rotationMatrix * transformed.xz;
+            transformed.yz = rotationMatrix * transformed.yz;
 
 
-            angle = 0.4 *
-                smoothstep(1.0, 1.05, transformed.z) *
-                //(1.0 - smoothstep(0.2, 0.5, transformed.x)) *
+            angle = 0.6 *
+                smoothstep(0.0, 0.03, transformed.z) *
                 sin(uTime * 2.0);
             s = sin(angle);
             c = cos(angle);
 
-            // Apply 2D rotation matrix to X and Z coordinates
             rotationMatrix = mat2(c, -s, s, c);
 
             transformed.xy = rotationMatrix * transformed.xy;
