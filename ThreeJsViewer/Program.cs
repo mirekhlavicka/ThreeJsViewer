@@ -8,6 +8,9 @@
 using Microsoft.AspNetCore.StaticFiles;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddControllers();
+
 var app = builder.Build();
 
 // 1. Create a provider and register the .ply extension
@@ -21,5 +24,7 @@ app.UseStaticFiles(new StaticFileOptions
 {
     ContentTypeProvider = provider
 });
+
+app.MapControllers();
 
 app.Run();

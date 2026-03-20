@@ -7,7 +7,7 @@ import { createEarthMold2Scene, createEarthMold4Scene } from './scenes/earthMold
 import { dogCatScene, openHeartScene, goldHeartScene, bikeHeartScene } from './scenes/heart.js?v=1.12';
 import { createBottleLidScene } from './scenes/bottle.js?v=1.01';
 
-import { onSphereScene } from './scenes/onSphere.js?v=1.00';
+import { penguinScene } from './scenes/penguin/penguin.js?v=1.00';
 
 export const sceneConfigurations = [
 
@@ -233,5 +233,5 @@ export const sceneConfigurations = [
 
     catMoldScene,
     eggEarthContainerScene,
-    onSphereScene
+    penguinScene
 ];

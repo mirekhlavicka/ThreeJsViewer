@@ -9,7 +9,7 @@ let selectedMesh = -1;
 let blinkStartTime = 0;
 const blinkDuration = 2000; // Blink for 2 seconds
 
-let controls, renderer, scene, camera, grid, pivot;
+let controls, renderer, scene, camera, dirLight, grid, pivot;
 
 let autoRotate = false;
 let useVertexColors = false;
@@ -54,9 +54,8 @@ function setup() {
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
     scene.add(hemiLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    //dirLight.position.set(1, 1, 1);
-    dirLight.position.set(-2, 1, 0.5);
+    dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    dirLight.position.set(1, 1, 1);
 
     dirLight.castShadow = true;
     dirLight.shadow.mapSize.width = 1024;
@@ -181,7 +180,11 @@ function loadScene(reset = true) {
                 if (reset) {
                     controls.reset();
                     if (config.setup) {
-                        config.setup(camera);
+                        config.setup(camera, dirLight);
+                    } else {
+                        camera.up.set(0, 0, 1);
+                        camera.position.set(-3, 0, 1.5);
+                        dirLight.position.set(1, 1, 1);
                     }
                     if (config.shadowMapType != undefined) {
                         renderer.shadowMap.enabled = true;
@@ -511,7 +514,7 @@ document.getElementById('showGridSwitch').addEventListener('change', (e) => {
 document.getElementById('btnResetCamera').addEventListener('click', (e) => {
     controls.reset();
     if (config.setup) {
-        config.setup(camera);
+        config.setup(camera, dirLight);
     }
     pivot.rotation.z = 0;
 });

@@ -6,8 +6,9 @@ export const eggEarthContainerScene = {
     name: "Earth/Dragon egg",
     resetTime: 3 * eggPeriod,
     shadowMapType: THREE.VSMShadowMap, //THREE.VSMShadowMap, THREE.PCFShadowMap
-    setup: (camera) => {
+    setup: (camera, dirLight) => {
         camera.position.set(-3, 0, 1.2);
+        dirLight.position.set(-2, 1, 0.5);
     },
     models: [
         {
