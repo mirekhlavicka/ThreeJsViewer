@@ -295,7 +295,7 @@ function animate(timestamp) {
             pivot.rotation.z += autoRotateSpeed;
         }
 
-        animateMeshes();
+        animateMeshes(delta);
     }
 
     if (selectedMesh >= 0) {
@@ -332,10 +332,10 @@ function animate(timestamp) {
     renderer.render(scene, camera);
 }
 
-function animateMeshes() {
+function animateMeshes(delta) {
     loadedMeshes.forEach(mesh => {
         if (mesh.userData.animate) {
-            mesh.userData.animate(mesh, animationTime);
+            mesh.userData.animate(mesh, animationTime, delta);
         }
     });        
 }

@@ -2,75 +2,97 @@
 import { vertices } from './dodeca.js';
 import * as THREE from 'three';
 
-let currenti = 0;
-let currentj = 1;
-let changed = false;
+export function createPenguinScene(count) {
+    let scene = {
+        name: "Games/Quo vadis penguin",
+        models: [
+            {
+                path: 'assets/OnSphere/ball2.ply',
+                //color: 0xc0c0ff,
+                createMaterial: () => new THREE.MeshPhysicalMaterial({
+                    color: 0xdbf3ff,            // Very pale blue (simulates scattered light)
+                    transmission: 0.95,         // Not 1.0, to keep some surface body
+                    ior: 1.31,
 
+                    // LIGHT SETTINGS (The "Bright" Fix)
+                    attenuationColor: 0x00abff, // The "Deep" blue
+                    attenuationDistance: 5.0,   // INCREASE THIS to let more light through
 
-export const penguinScene = {
-    name: "Games/Quo vadis penguin",
-    models: [
-        {
-            path: 'assets/OnSphere/ball2.ply',
-            color: 0xffd700,
-            setupMaterial: m => {
-                m.color = 0xffffff;
-                m.vertexColors = true;
+                    roughness: 0.1,             // Lower roughness for clarity
+                    metalness: 0.0,
+
+                    // THE "WET/SNOW" LAYER
+                    clearcoat: 1.0,
+                    clearcoatRoughness: 0.2,    // Rougher top layer looks like melting frost
+
+                    sheen: 1.0,                 // Adds a soft "fuzzy" glow to edges
+                    sheenColor: 0xffffff,
+                })
             }
+        ]
+    };
+
+    for (let i = 0; i < count; i++) {
+        let startI = Math.floor(Math.random() * vertices.length);
+        let startJ = vertices[startI].vertices[Math.floor(Math.random() * vertices[startI].vertices.length)];
+        const value = 128 + Math.floor(Math.random() * 128);
+        const grayColor = (value << 16) | (value << 8) | value;
+        scene.models.push(createPenguin({ startI, startJ, speed: 0.1 + Math.random() / 4.0, color: grayColor }));
+    }
+
+    return scene;
+}
+
+
+function createPenguin(params = {}) {
+    let currenti = params.startI;
+    let currentj = params.startJ;
+    let speed = params.speed;
+    let changed = false;
+
+    return {
+        path: 'assets/OnSphere/penguin.ply',
+        color: 0xa0a0a0,
+        createMaterial: () => createTwistMaterial(params.color),
+        prepareGeometry: g => {
+            g.rotateZ(Math.PI);
+            g.scale(0.07, 0.07, 0.07);
         },
-        {
-            path: 'assets/OnSphere/penguin.ply',
-            color: 0xffd700,
-            createMaterial: () => createTwistMaterial(0xF8E47E),
-            prepareGeometry: g => {
-                g.rotateZ(Math.PI);
-                g.scale(0.06, 0.06, 0.06);
-                //g.translate(0, 0, 1.005);
-            },
-            animate: (m, t) => {
-                m.material.userData.uTime.value = t;
+        animate: (m, t, delta) => {
+            
 
-                /*
-                //m.position.z = 1.01;
+            let x1 = vertices[currenti].x;
+            let y1 = vertices[currenti].y;
+            let z1 = vertices[currenti].z;
 
-                m.position.x = 1.01 * Math.sin(-0.2 * t);
-                m.position.z = 1.01 * Math.cos(0.2 * t);*/
+            let x2 = vertices[currentj].x;
+            let y2 = vertices[currentj].y;
+            let z2 = vertices[currentj].z;
 
-                let x1 = vertices[currenti].x;
-                let y1 = vertices[currenti].y;
-                let z1 = vertices[currenti].z;
+            let tt = (speed * t) % 1;
 
-                let n = vertices[currenti].vertices[currentj];
+            m.material.userData.uTime.value = t;// / speed;
 
-                let x2 = vertices[n].x;
-                let y2 = vertices[n].y;
-                let z2 = vertices[n].z;
+            if (tt < 0.01) {
+                changed = false;
+            }
 
-                let tt = 0.2 * t % 1;
+            if (tt >= 0.99 && !changed) {
+                currenti = currentj;
+                currentj = vertices[currenti].vertices[Math.floor(Math.random() * vertices[currenti].vertices.length)];
+                changed = true;
+                m.material.userData.uTwistStrength.value = 0;
+            }
 
-                if (tt < 0.01) {
-                    changed = false;
-                }
-
-                if (tt >= 0.99 && !changed) {
-                    currenti = n;
-                    currentj = Math.floor(Math.random() * vertices[currenti].vertices.length);
-                    changed = true;
-                }
-
-                if (!changed) {
-                    let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt);
-                    updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.03);
-                }
-
-                /*updateFigureTransform(m,
-                    Math.sin(-0.08 * t), 0, Math.cos(0.08 * t), 
-                    -Math.cos(0.08 * t), 0, Math.sin(-0.08 * t),
-                    0.03)*/
+            if (!changed) {
+                let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt);
+                updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.04);
+                m.material.userData.uTwistStrength.value += 8 * 80 * speed * delta * pos.v * Math.cos(80 * tt);
             }
         }
-    ]
+    }
 }
+
 
 /**
  * @param {THREE.Object3D} figure - Your character mesh/model
@@ -114,7 +136,7 @@ function updateFigureTransform(figure, x, y, z, v1, v2, v3, shift) {
  * @param {number} x1, y1, z1 - Start point (t=0)
  * @param {number} x2, y2, z2 - End point (t=1)
  * @param {number} t - Linear time (0 to 1)
- * @returns {Object} {x, y, z, v1, v2, v3}
+ * @returns {Object} {x, y, z, v1, v2, v3, v}
  */
 function getGeodesicState(x1, y1, z1, x2, y2, z2, t) {
     // 1. Setup Vectors
@@ -148,17 +170,19 @@ function getGeodesicState(x1, y1, z1, x2, y2, z2, t) {
 
     // If we are at the very start/end, speed is 0. 
     // We return the direction vector so the character still "points" the right way.
-    const velocity = direction.clone().multiplyScalar(Math.max(speed, 0.0001));
+    //const velocity = direction.clone().multiplyScalar(Math.max(speed, 0.0001));
 
     return {
         x: posAtT.x,
         y: posAtT.y,
         z: posAtT.z,
-        v1: velocity.x,
-        v2: velocity.y,
-        v3: velocity.z
+        v1: direction.x,
+        v2: direction.y,
+        v3: direction.z,
+        v: speed
     };
 }
+
 function createTwistMaterial(baseColorHex) {
     // 1. Create standard material (keeps your lighting/colors)
     const material = new THREE.MeshStandardMaterial({
@@ -171,7 +195,7 @@ function createTwistMaterial(baseColorHex) {
 
     // 2. Define uniforms to pass data from JS to the Shader
     material.userData.uTime = { value: 0 };
-    material.userData.uTwistStrength = { value: 8.0 };
+    material.userData.uTwistStrength = { value: 0.0 };
 
     material.onBeforeCompile = (shader) => {
         // Pass our JS uniforms into the shader
@@ -193,7 +217,7 @@ function createTwistMaterial(baseColorHex) {
             
             float angle =
                 (1.0 - smoothstep(-0.005, 0.025, transformed.z)) *
-                transformed.x * uTwistStrength * sin(uTime * 16.0);
+                transformed.x * uTwistStrength; 
             
             float s = sin(angle);
             float c = cos(angle);
