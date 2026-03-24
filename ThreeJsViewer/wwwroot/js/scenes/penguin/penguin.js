@@ -8,8 +8,12 @@ export function createPenguinScene(count) {
         models: [
             {
                 path: 'assets/OnSphere/ball2.ply',
+                setupMaterial: m => {
+                    m.color = 0xffffff;
+                    m.vertexColors = true;
+                }
                 //color: 0xc0c0ff,
-                createMaterial: () => new THREE.MeshPhysicalMaterial({
+                /*createMaterial: () => new THREE.MeshPhysicalMaterial({
                     color: 0xdbf3ff,            // Very pale blue (simulates scattered light)
                     transmission: 0.95,         // Not 1.0, to keep some surface body
                     ior: 1.31,
@@ -27,7 +31,7 @@ export function createPenguinScene(count) {
 
                     sheen: 1.0,                 // Adds a soft "fuzzy" glow to edges
                     sheenColor: 0xffffff,
-                })
+                })*/
             }
         ]
     };
@@ -37,7 +41,7 @@ export function createPenguinScene(count) {
         let startJ = vertices[startI].vertices[Math.floor(Math.random() * vertices[startI].vertices.length)];
         const value = 128 + Math.floor(Math.random() * 128);
         const grayColor = (value << 16) | (value << 8) | value;
-        scene.models.push(createPenguin({ startI, startJ, speed: 0.1 + Math.random() / 4.0, color: grayColor }));
+        scene.models.push(createPenguin({ startI, startJ, speed: 0.2 + Math.random() / 3.0, color: grayColor }));
     }
 
     return scene;
@@ -47,8 +51,38 @@ export function createPenguinScene(count) {
 function createPenguin(params = {}) {
     let currenti = params.startI;
     let currentj = params.startJ;
+    let nextj = 0;
     let speed = params.speed;
-    let changed = false;
+    let t0 = -1;
+    let t1 = -1;
+    let animType = 0;
+    let animChange = false;
+
+    function progress(t) {
+        if (t0 < 0) {
+            t0 = t;
+            t1 = t + 1.0 / speed;
+        }
+
+        let tt = 0;
+
+        if (Math.abs(t1 - t0) < 0.001) {
+            tt = 2.0;
+        } else {
+            tt = (t - t0) / (t1 - t0);
+        }
+
+        if (tt > 1) {
+            t0 = t;
+            t1 = t + 1.0 / speed;
+            tt = 0;
+
+            animType = (animType + 1) % 3;
+            animChange = true;
+        }
+
+        return tt;
+    }
 
     return {
         path: 'assets/OnSphere/penguin.ply',
@@ -58,41 +92,82 @@ function createPenguin(params = {}) {
             g.rotateZ(Math.PI);
             g.scale(0.07, 0.07, 0.07);
         },
-        animate: (m, t, delta) => {
-            
+        animate: (m, t) => {
 
-            let x1 = vertices[currenti].x;
-            let y1 = vertices[currenti].y;
-            let z1 = vertices[currenti].z;
+            let tt = progress(t);
 
-            let x2 = vertices[currentj].x;
-            let y2 = vertices[currentj].y;
-            let z2 = vertices[currentj].z;
+            if (animType == 0) {
+                if (animChange) {
+                    currenti = currentj;
+                    currentj = nextj;
+                    animChange = false;
+                }
 
-            let tt = (speed * t) % 1;
+                let x1 = vertices[currenti].x;
+                let y1 = vertices[currenti].y;
+                let z1 = vertices[currenti].z;
 
-            m.material.userData.uTime.value = t;// / speed;
+                let x2 = vertices[currentj].x;
+                let y2 = vertices[currentj].y;
+                let z2 = vertices[currentj].z;
 
-            if (tt < 0.01) {
-                changed = false;
-            }
-
-            if (tt >= 0.99 && !changed) {
-                currenti = currentj;
-                currentj = vertices[currenti].vertices[Math.floor(Math.random() * vertices[currenti].vertices.length)];
-                changed = true;
-                m.material.userData.uTwistStrength.value = 0;
-            }
-
-            if (!changed) {
                 let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt);
                 updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.04);
-                m.material.userData.uTwistStrength.value += 8 * 80 * speed * delta * pos.v * Math.cos(80 * tt);
+                m.material.userData.uTwistStrength.value = 30.0 * oscillation1(tt, 80);                
+            }
+
+            if (animType == 1) {
+                if (animChange) {
+                    t1 = t0 + 0.5 * (t1 - t0);
+                    animChange = false;
+                }
+                m.material.userData.uTime.value = 2 * Math.PI * tt;
+            }
+
+            if (animType == 2) {
+                if (animChange) {
+                    nextj = vertices[currentj].vertices[Math.floor(Math.random() * vertices[currentj].vertices.length)];
+                }
+
+                let x1 = vertices[currenti].x;
+                let y1 = vertices[currenti].y;
+                let z1 = vertices[currenti].z;
+
+                let x2 = vertices[currentj].x;
+                let y2 = vertices[currentj].y;
+                let z2 = vertices[currentj].z;
+
+                let x3 = vertices[nextj].x;
+                let y3 = vertices[nextj].y;
+                let z3 = vertices[nextj].z;
+
+
+                let pos1 = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0);
+                let pos2 = getGeodesicState(x2, y2, z2, x3, y3, z3, 0.0);
+
+                let posv = getGeodesicState(pos1.v1, pos1.v2, pos1.v3, pos2.v1, pos2.v2, pos2.v3, tt);
+
+                if (animChange) {
+                    animChange = false;
+                    t1 = t0 + 0.5 * (t1 - t0) * Math.abs(posv.totalAngle) / Math.PI;
+                }
+
+                updateFigureTransform(m, pos1.x, pos1.y, pos1.z, posv.x, posv.y, posv.z, 0.04);
+                m.material.userData.uTwistStrength.value = 10.0 * oscillation1(tt, 80 * (t1 - t0) * speed);
             }
         }
     }
 }
 
+function oscillation1(t, m) {
+    const phi = m * (1 - Math.cos(Math.PI * t)) / Math.PI;
+    return Math.sin(phi) * t * (1 - t);
+}
+
+function oscillation2(t, m) {
+    const phi = m * (t / 2 - Math.sin(2 * Math.PI * t) / (4 * Math.PI));
+    return Math.sin(phi) * t * (1 - t);
+}
 
 /**
  * @param {THREE.Object3D} figure - Your character mesh/model
@@ -147,8 +222,27 @@ function getGeodesicState(x1, y1, z1, x2, y2, z2, t) {
     const axis = new THREE.Vector3().crossVectors(p1, p2);
 
     // Handle cases where points are identical or polar opposites
+    //if (axis.lengthSq() < 0.000001) {
+    //    return { x: x1, y: y1, z: z1, v1: 0, v2: 0, v3: 0 };
+    //}
+    // --- STABLE ANTIPODAL HANDLING ---
     if (axis.lengthSq() < 0.000001) {
-        return { x: x1, y: y1, z: z1, v1: 0, v2: 0, v3: 0 };
+        // Case: Points are identical
+        if (p1.distanceTo(p2) < 0.0001) {
+            return { x: x1, y: y1, z: z1, v1: 0, v2: 0, v3: 0, speed: 0, totalAngle: 0 };
+        }
+
+        // Case: Points are opposites. 
+        // We need an axis perpendicular to p1. 
+        // Logic: find the smallest component of p1 and cross with that basis vector.
+        // This is deterministic and won't flip-flop.
+        const ax = Math.abs(p1.x);
+        const ay = Math.abs(p1.y);
+        const az = Math.abs(p1.z);
+
+        if (ax <= ay && ax <= az) axis.set(0, -p1.z, p1.y);
+        else if (ay <= ax && ay <= az) axis.set(-p1.z, 0, p1.x);
+        else axis.set(-p1.y, p1.x, 0);
     }
     axis.normalize();
 
@@ -179,7 +273,8 @@ function getGeodesicState(x1, y1, z1, x2, y2, z2, t) {
         v1: direction.x,
         v2: direction.y,
         v3: direction.z,
-        v: speed
+        v: speed,
+        totalAngle: totalAngle 
     };
 }
 
@@ -226,9 +321,9 @@ function createTwistMaterial(baseColorHex) {
             transformed.yz = rotationMatrix * transformed.yz;
 
 
-            angle = 0.6 *
+            angle = 1.2 *
                 smoothstep(0.0, 0.03, transformed.z) *
-                sin(uTime * 2.0);
+                sin(uTime);
             s = sin(angle);
             c = cos(angle);
 
