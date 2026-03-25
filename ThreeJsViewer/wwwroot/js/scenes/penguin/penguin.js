@@ -1,19 +1,34 @@
 ﻿import { smoothAnim } from '../../utils.js';
-import { vertices } from './dodeca.js';
+import { dodecaVertices } from './dodeca.js';
 import * as THREE from 'three';
 
+let vertices;
+
 export function createPenguinScene(count) {
+
+    vertices = dodecaVertices;
+
     let scene = {
-        name: "Games/Quo vadis penguin",
+        setup: (camera, dirLight) => {
+            camera.position.set(-1.5, 0.0, 1.0);
+            //dirLight.position.set(-2, 1, 0.5);
+        },
+        gameMode: true,
+        shadowMapType: THREE.VSMShadowMap, //THREE.VSMShadowMap, THREE.PCFShadowMap
+        name: "Penguin/Quo vadis penguin",
         models: [
             {
                 path: 'assets/OnSphere/ball2.ply',
-                setupMaterial: m => {
+                /*setupMaterial: m => {
                     m.color = 0xffffff;
                     m.vertexColors = true;
-                }
+                },*/
+                prepareMesh: m => {
+                    m.receiveShadow = true;
+                },
+
                 //color: 0xc0c0ff,
-                /*createMaterial: () => new THREE.MeshPhysicalMaterial({
+                createMaterial: () => new THREE.MeshPhysicalMaterial({
                     color: 0xdbf3ff,            // Very pale blue (simulates scattered light)
                     transmission: 0.95,         // Not 1.0, to keep some surface body
                     ior: 1.31,
@@ -31,17 +46,46 @@ export function createPenguinScene(count) {
 
                     sheen: 1.0,                 // Adds a soft "fuzzy" glow to edges
                     sheenColor: 0xffffff,
-                })*/
+                })
             }
         ]
     };
 
+    vertices.forEach(v => {
+        v.penguin = -1;
+    });
+
     for (let i = 0; i < count; i++) {
-        let startI = Math.floor(Math.random() * vertices.length);
-        let startJ = vertices[startI].vertices[Math.floor(Math.random() * vertices[startI].vertices.length)];
+
+        let startI = randomIndexWhere(vertices, v => v.penguin == -1); //Math.floor(Math.random() * vertices.length);
+        vertices[startI].penguin = i;
+
+        let startJ = -1;
+
+        //let n = randomIndexWhere(vertices[startI].vertices, vi => vertices[vi].penguin == -1);
+
+        let n = -1;
+
+        if (n >= 0) {
+            startJ = vertices[startI].vertices[n];
+            vertices[startJ].penguin = i;
+        } else {
+            startJ = startI;
+            startI = vertices[startI].vertices[0];
+        }     
+
         const value = 128 + Math.floor(Math.random() * 128);
         const grayColor = (value << 16) | (value << 8) | value;
-        scene.models.push(createPenguin({ startI, startJ, speed: 0.2 + Math.random() / 3.0, color: grayColor }));
+
+        scene.models.push(createPenguin({
+            index: i,
+            startI,
+            startJ,
+            animType: n < 0 ? 1 : 0,
+            animChange: n < 0,
+            speed: 0.2 + Math.random() / 3.0,
+            color: grayColor
+        }));
     }
 
     return scene;
@@ -49,14 +93,15 @@ export function createPenguinScene(count) {
 
 
 function createPenguin(params = {}) {
+    let index = params.index;
     let currenti = params.startI;
     let currentj = params.startJ;
     let nextj = 0;
     let speed = params.speed;
     let t0 = -1;
     let t1 = -1;
-    let animType = 0;
-    let animChange = false;
+    let animType = params.animType;
+    let animChange = params.animChange;
 
     function progress(t) {
         if (t0 < 0) {
@@ -66,7 +111,7 @@ function createPenguin(params = {}) {
 
         let tt = 0;
 
-        if (Math.abs(t1 - t0) < 0.001) {
+        if (Math.abs(t1 - t0) < 0.00001) {
             tt = 2.0;
         } else {
             tt = (t - t0) / (t1 - t0);
@@ -86,11 +131,14 @@ function createPenguin(params = {}) {
 
     return {
         path: 'assets/OnSphere/penguin.ply',
-        color: 0xa0a0a0,
+        //color: 0xa0a0a0,
         createMaterial: () => createTwistMaterial(params.color),
         prepareGeometry: g => {
             g.rotateZ(Math.PI);
             g.scale(0.07, 0.07, 0.07);
+        },
+        prepareMesh: m => {
+            m.castShadow = true;
         },
         animate: (m, t) => {
 
@@ -113,7 +161,11 @@ function createPenguin(params = {}) {
 
                 let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt);
                 updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.04);
-                m.material.userData.uTwistStrength.value = 30.0 * oscillation1(tt, 80);                
+                m.material.userData.uTwistStrength.value = 30.0 * oscillation1(tt, 80);
+
+                if (tt > 0.5 && vertices[currenti].penguin == index) {
+                    vertices[currenti].penguin = -1;
+                }
             }
 
             if (animType == 1) {
@@ -121,12 +173,33 @@ function createPenguin(params = {}) {
                     t1 = t0 + 0.5 * (t1 - t0);
                     animChange = false;
                 }
+
+                let x1 = vertices[currenti].x;
+                let y1 = vertices[currenti].y;
+                let z1 = vertices[currenti].z;
+
+                let x2 = vertices[currentj].x;
+                let y2 = vertices[currentj].y;
+                let z2 = vertices[currentj].z;
+
+                let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0);
+                updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.04);
                 m.material.userData.uTime.value = 2 * Math.PI * tt;
             }
 
             if (animType == 2) {
                 if (animChange) {
-                    nextj = vertices[currentj].vertices[Math.floor(Math.random() * vertices[currentj].vertices.length)];
+
+                    let n = randomIndexWhere(vertices[currentj].vertices, vi => vertices[vi].penguin == -1);
+
+                    if (n < 0) {
+                        animType = 1;
+                        animChange = true;
+                        return;
+                    } else {
+                        nextj = vertices[currentj].vertices[n];
+                        vertices[nextj].penguin = index; 
+                    }
                 }
 
                 let x1 = vertices[currenti].x;
@@ -153,10 +226,20 @@ function createPenguin(params = {}) {
                 }
 
                 updateFigureTransform(m, pos1.x, pos1.y, pos1.z, posv.x, posv.y, posv.z, 0.04);
-                m.material.userData.uTwistStrength.value = 10.0 * oscillation1(tt, 80 * (t1 - t0) * speed);
+                m.material.userData.uTwistStrength.value = 20.0 * oscillation1(tt, 80 * (t1 - t0) * speed);
             }
         }
     }
+}
+
+function randomIndexWhere(arr, predicate) {
+    const eligible = arr.reduce((acc, el, i) => {
+        if (predicate(el)) acc.push(i);
+        return acc;
+    }, []);
+
+    if (eligible.length === 0) return -1; // or null, or throw
+    return eligible[Math.floor(Math.random() * eligible.length)];
 }
 
 function oscillation1(t, m) {
@@ -164,10 +247,10 @@ function oscillation1(t, m) {
     return Math.sin(phi) * t * (1 - t);
 }
 
-function oscillation2(t, m) {
+/*function oscillation2(t, m) {
     const phi = m * (t / 2 - Math.sin(2 * Math.PI * t) / (4 * Math.PI));
     return Math.sin(phi) * t * (1 - t);
-}
+}*/
 
 /**
  * @param {THREE.Object3D} figure - Your character mesh/model
@@ -284,8 +367,8 @@ function createTwistMaterial(baseColorHex) {
         color: baseColorHex,
         flatShading: false,
         vertexColors: false,
-        metalness: 0.7,
-        roughness: 0.3
+        metalness: 0.4,
+        roughness: 0.5
     });
 
     // 2. Define uniforms to pass data from JS to the Shader
@@ -321,7 +404,7 @@ function createTwistMaterial(baseColorHex) {
             transformed.yz = rotationMatrix * transformed.yz;
 
 
-            angle = 1.2 *
+            angle = 1.1 *
                 smoothstep(0.0, 0.03, transformed.z) *
                 sin(uTime);
             s = sin(angle);

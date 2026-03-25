@@ -19,7 +19,7 @@ let showWire = false;
 let isPaused = false;
 
 let animationSpeed = 1.2;
-let autoRotateSpeed = 0.01;
+let autoRotateSpeed = 0.0025;
 let materialRoughness = 0.3;
 let materialMetalness = 0.2;
     
@@ -239,6 +239,15 @@ function loadScene(reset = true) {
 
     document.getElementById('sceneButton').innerText = title + " ";
     document.title = title;
+
+    if (config.gameMode) {
+        if (grid.visible) {
+            document.getElementById('showGridSwitch').click();
+        }
+        if (!autoRotate) {
+            document.getElementById('autoRotateSwitch').click();
+        }        
+    }
 }
 
 function autoPositionGrid() {
