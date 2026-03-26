@@ -1,12 +1,13 @@
 ﻿import { smoothAnim } from '../../utils.js';
 import { dodecaVertices } from './dodeca.js';
+import { icosaVertices } from './icosa.js';
 import * as THREE from 'three';
 
 let vertices;
 
 export function createPenguinScene(count) {
 
-    vertices = dodecaVertices;
+    vertices = icosaVertices;
 
     let scene = {
         setup: (camera, dirLight) => {
@@ -14,18 +15,18 @@ export function createPenguinScene(count) {
             //dirLight.position.set(-2, 1, 0.5);
         },
         gameMode: true,
-        shadowMapType: THREE.VSMShadowMap, //THREE.VSMShadowMap, THREE.PCFShadowMap
+        //shadowMapType: THREE.VSMShadowMap, //THREE.VSMShadowMap, THREE.PCFShadowMap
         name: "Penguin/Quo vadis penguin",
         models: [
             {
-                path: 'assets/OnSphere/ball2.ply',
-                /*setupMaterial: m => {
+                path: 'assets/OnSphere/geodesicSphereIcosa.ply',
+                setupMaterial: m => {
                     m.color = 0xffffff;
                     m.vertexColors = true;
-                },*/
+                },
                 prepareMesh: m => {
                     m.receiveShadow = true;
-                },
+                }/*,
 
                 //color: 0xc0c0ff,
                 createMaterial: () => new THREE.MeshPhysicalMaterial({
@@ -46,7 +47,7 @@ export function createPenguinScene(count) {
 
                     sheen: 1.0,                 // Adds a soft "fuzzy" glow to edges
                     sheenColor: 0xffffff,
-                })
+                })*/
             }
         ]
     };
@@ -74,7 +75,7 @@ export function createPenguinScene(count) {
             startI = vertices[startI].vertices[0];
         }     
 
-        const value = 128 + Math.floor(Math.random() * 128);
+        const value = 64 + Math.floor(Math.random() * 3 * 64);
         const grayColor = (value << 16) | (value << 8) | value;
 
         scene.models.push(createPenguin({
@@ -83,7 +84,7 @@ export function createPenguinScene(count) {
             startJ,
             animType: n < 0 ? 1 : 0,
             animChange: n < 0,
-            speed: 0.2 + Math.random() / 3.0,
+            speed: 0.15 + Math.random() / 2.0,
             color: grayColor
         }));
     }
@@ -190,7 +191,7 @@ function createPenguin(params = {}) {
             if (animType == 2) {
                 if (animChange) {
 
-                    let n = randomIndexWhere(vertices[currentj].vertices, vi => vertices[vi].penguin == -1);
+                    let n = randomIndexWhere(vertices[currentj].vertices, vi => /*vi == currenti && */ vertices[vi].penguin == -1);
 
                     if (n < 0) {
                         animType = 1;

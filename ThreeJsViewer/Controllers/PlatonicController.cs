@@ -9,30 +9,42 @@ namespace ThreeJsViewer.Controllers
     public class PlatonicController : ControllerBase
     {
         [HttpGet("{type}")]
-        public ActionResult GetMesh(string type)
+        public ActionResult GetMesh(string type = "dodeca")
         {
-            var p = Polyhedron.CreateDodecahedron();
+            Polyhedron p = null;
 
-            foreach (var face in p.Faces)
+            if (type == "dodeca")
             {
-                var vx = face.Sum(i => p.Vertices[i].X) / face.Length;
-                var vy = face.Sum(i => p.Vertices[i].Y) / face.Length;
-                var vz = face.Sum(i => p.Vertices[i].Z) / face.Length;
 
-                var rr = Math.Sqrt(vx * vx + vy * vy + vz * vz);
-                vx /= rr;
-                vy /= rr;
-                vz /= rr;
+                p = Polyhedron.CreateDodecahedron();
 
-                p.Vertices.Add(new Vec3(vx, vy, vz));
-
-                var j = p.Vertices.Count - 1;
-
-                foreach (var i in face)
+                foreach (var face in p.Faces)
                 {
-                    p.Edges.Add((i, j));
+                    var vx = face.Sum(i => p.Vertices[i].X) / face.Length;
+                    var vy = face.Sum(i => p.Vertices[i].Y) / face.Length;
+                    var vz = face.Sum(i => p.Vertices[i].Z) / face.Length;
+
+                    var rr = Math.Sqrt(vx * vx + vy * vy + vz * vz);
+                    vx /= rr;
+                    vy /= rr;
+                    vz /= rr;
+
+                    p.Vertices.Add(new Vec3(vx, vy, vz));
+
+                    var j = p.Vertices.Count - 1;
+
+                    foreach (var i in face)
+                    {
+                        p.Edges.Add((i, j));
+                    }
                 }
+
             }
+            else
+            { 
+                p = Polyhedron.CreateGeodesicSphere();
+            }
+
 
             var res = p.Vertices.Select((v, i) => new
             {
