@@ -233,5 +233,5 @@ export const sceneConfigurations = [
 
     catMoldScene,
     eggEarthContainerScene,
-    createPenguinScene(25)
+    createPenguinScene(20, 10)
 ];
