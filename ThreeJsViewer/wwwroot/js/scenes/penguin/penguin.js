@@ -4,6 +4,7 @@ import { icosaVertices } from './icosa.js';
 import * as THREE from 'three';
 
 let vertices;
+let eggs = [];
 
 export function createPenguinScene(pcount, ecount) {
 
@@ -59,58 +60,48 @@ export function createPenguinScene(pcount, ecount) {
         v.egg = -1;
     });
 
+    for (let i = 0; i < ecount; i++) {
+
+        let startTo = randomIndexWhere(vertices, v => v.penguin == -1 && v.egg == -1 && v.vertices.length == 6);
+        vertices[startTo].egg = i;
+
+
+        let startFrom = vertices[startTo].vertices[0];
+
+        let egg = createEgg({
+            index: i,
+            startFrom,
+            startTo,
+            animType: 1,
+            animChange: true,
+            speed: 0.2,
+            color: 0xffffff
+        });
+
+        scene.models.push(egg);
+        eggs.push(egg);
+    }
+
+
     for (let i = 0; i < pcount; i++) {
 
-        let startI = randomIndexWhere(vertices, v => v.penguin == -1 & v.egg == -1); 
-        vertices[startI].penguin = i;
-
-        let startJ = -1;
-
-        //let n = randomIndexWhere(vertices[startI].vertices, vi => vertices[vi].penguin == -1);
-
-        let n = -1;
-
-        if (n >= 0) {
-            startJ = vertices[startI].vertices[n];
-            vertices[startJ].penguin = i;
-        } else {
-            startJ = startI;
-            startI = vertices[startI].vertices[0];
-        }     
+        let startTo = randomIndexWhere(vertices, v => v.penguin == -1 && v.egg == -1); 
+        let startFrom = vertices[startTo].vertices[0];
+        vertices[startTo].penguin = i;
 
         const value = 64 + Math.floor(Math.random() * 3 * 64);
         const grayColor = (value << 16) | (value << 8) | value;
 
         scene.models.push(createPenguin({
             index: i,
-            startI,
-            startJ,
-            animType: n < 0 ? 1 : 0,
-            animChange: n < 0,
+            startFrom,
+            startTo,
+            animType: 1,
+            animChange: true,
             speed: 0.15 + Math.random() / 2.0,
             color: grayColor
         }));
     }
-
-    for (let i = 0; i < ecount; i++) {
-
-        let startI = randomIndexWhere(vertices, v => v.penguin == -1 & v.egg == -1);
-        vertices[startI].egg = i;
-
-
-        let startJ = vertices[startI].vertices[0];
-
-        scene.models.push(createEgg({
-            index: i,
-            startI,
-            startJ,
-            animType: 0,
-            animChange: false,
-            speed: 0,
-            color: 0xffffff
-        }));
-    }
-
 
     return scene;
 }
@@ -118,14 +109,19 @@ export function createPenguinScene(pcount, ecount) {
 
 function createPenguin(params = {}) {
     let index = params.index;
-    let currenti = params.startI;
-    let currentj = params.startJ;
-    let nextj = 0;
+    let fromVertex = params.startFrom;
+    let toVertex = params.startTo;
+    let nextVertex = 0;
     let speed = params.speed;
     let t0 = -1;
     let t1 = -1;
     let animType = params.animType;
     let animChange = params.animChange;
+    let fromEgg = false;
+    let toEgg = false;
+    let nextFromEgg = false;
+    let nextToEgg = false;
+
 
     function progress(t) {
         if (t0 < 0) {
@@ -171,25 +167,27 @@ function createPenguin(params = {}) {
 
             if (animType == 0) {
                 if (animChange) {
-                    currenti = currentj;
-                    currentj = nextj;
+                    fromVertex = toVertex;
+                    toVertex = nextVertex;
+                    fromEgg = nextFromEgg;
+                    toEgg = nextToEgg;
                     animChange = false;
                 }
 
-                let x1 = vertices[currenti].x;
-                let y1 = vertices[currenti].y;
-                let z1 = vertices[currenti].z;
+                let x1 = vertices[fromVertex].x;
+                let y1 = vertices[fromVertex].y;
+                let z1 = vertices[fromVertex].z;
 
-                let x2 = vertices[currentj].x;
-                let y2 = vertices[currentj].y;
-                let z2 = vertices[currentj].z;
+                let x2 = vertices[toVertex].x;
+                let y2 = vertices[toVertex].y;
+                let z2 = vertices[toVertex].z;
 
-                let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt, vertices[currenti].egg != -1 ? da : 0.0, vertices[currentj].egg != -1 ? da : 0.0);
+                let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt, fromEgg ? da : 0.0, toEgg ? da : 0.0);
                 updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.043);
                 m.material.userData.uTwistStrength.value = 30.0 * oscillation1(tt, 80);
 
-                if (tt > 0.1 && vertices[currenti].penguin == index && vertices[currentj].egg == -1) {
-                    vertices[currenti].penguin = -1;
+                if (tt > 0.1 && vertices[fromVertex].penguin == index && !toEgg) {
+                    vertices[fromVertex].penguin = -1;
                 }
             }
 
@@ -199,15 +197,15 @@ function createPenguin(params = {}) {
                     animChange = false;
                 }
 
-                let x1 = vertices[currenti].x;
-                let y1 = vertices[currenti].y;
-                let z1 = vertices[currenti].z;
+                let x1 = vertices[fromVertex].x;
+                let y1 = vertices[fromVertex].y;
+                let z1 = vertices[fromVertex].z;
 
-                let x2 = vertices[currentj].x;
-                let y2 = vertices[currentj].y;
-                let z2 = vertices[currentj].z;
+                let x2 = vertices[toVertex].x;
+                let y2 = vertices[toVertex].y;
+                let z2 = vertices[toVertex].z;
 
-                let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0, vertices[currenti].egg != -1 ? da : 0.0, vertices[currentj].egg != -1 ? da : 0.0);
+                let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0, fromEgg ? da : 0.0, toEgg ? da : 0.0);
                 updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.043);
                 m.material.userData.uTime.value = 2 * Math.PI * tt;
             }
@@ -215,34 +213,51 @@ function createPenguin(params = {}) {
             if (animType == 2) {
                 if (animChange) {
 
-                    let n = randomIndexWhere(vertices[currentj].vertices, vi => /*vi == currenti && */(vertices[vi].penguin == -1 || vertices[vi].penguin == index || vertices[vi].egg != -1) && (vertices[currentj].egg == -1 || vi == currenti) /*&& vertices[vi].egg == -1*/);
+                    let n = randomIndexWhere(vertices[toVertex].vertices, vi => (vertices[vi].penguin == -1 || vertices[vi].penguin == index || vertices[vi].egg != -1) && (!toEgg || vi == fromVertex));
 
                     if (n < 0) {
                         animType = 1;
                         animChange = true;
                         return;
                     } else {
-                        nextj = vertices[currentj].vertices[n];
-                        vertices[nextj].penguin = index; 
+                        nextVertex = vertices[toVertex].vertices[n];
+                        if (toEgg) {
+                            nextToEgg = vertices[nextVertex].egg != -1; //false;
+                            nextFromEgg = true;
+                        } else {
+                            nextToEgg = vertices[nextVertex].egg != -1;
+                            nextFromEgg = false;
+                        }
+                        if (!nextToEgg) {
+                            vertices[nextVertex].penguin = index;
+                        }
+                    }
+
+                    if (toEgg && vertices[toVertex].egg != -1) {
+                        let n = randomIndexWhere(vertices[toVertex].vertices, vi => vertices[vi].egg == -1 && vertices[vi].penguin == -1 && vi != nextVertex);
+                        if (n >= 0) {
+                            let moveTo = vertices[toVertex].vertices[n];                            
+                            eggs[vertices[toVertex].egg].moveTo(moveTo);
+                        }
                     }
                 }
 
-                let x1 = vertices[currenti].x;
-                let y1 = vertices[currenti].y;
-                let z1 = vertices[currenti].z;
+                let x1 = vertices[fromVertex].x;
+                let y1 = vertices[fromVertex].y;
+                let z1 = vertices[fromVertex].z;
 
-                let x2 = vertices[currentj].x;
-                let y2 = vertices[currentj].y;
-                let z2 = vertices[currentj].z;
+                let x2 = vertices[toVertex].x;
+                let y2 = vertices[toVertex].y;
+                let z2 = vertices[toVertex].z;
 
-                let x3 = vertices[nextj].x;
-                let y3 = vertices[nextj].y;
-                let z3 = vertices[nextj].z;
+                let x3 = vertices[nextVertex].x;
+                let y3 = vertices[nextVertex].y;
+                let z3 = vertices[nextVertex].z;
 
-                let pos1 = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0, vertices[currenti].egg != -1 ? da : 0.0, vertices[currentj].egg != -1 ? da : 0.0);
-                let pos2 = getGeodesicState(x2, y2, z2, x3, y3, z3, 0.0, vertices[currentj].egg != -1 ? da : 0.0, vertices[nextj].egg != -1 ? da : 0.0);
+                let pos1 = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0, fromEgg ? da : 0.0, toEgg ? da : 0.0);
+                let pos2 = getGeodesicState(x2, y2, z2, x3, y3, z3, 0.0, nextFromEgg ? da : 0.0, nextToEgg ? da : 0.0);
 
-                let posv = getGeodesicState(pos1.v1, pos1.v2, pos1.v3, pos2.v1, pos2.v2, pos2.v3, tt);
+                let posv = getGeodesicState(pos1.v1, pos1.v2, pos1.v3, pos2.v1, pos2.v2, pos2.v3, tt, 0, 0, new THREE.Vector3(x2, y2, z2));
 
                 if (animChange) {
                     animChange = false;
@@ -260,14 +275,14 @@ function createPenguin(params = {}) {
 
 function createEgg(params = {}) {
     let index = params.index;
-    let currenti = params.startI;
-    let currentj = params.startJ;
-    let nextj = 0;
+    let fromVertex = params.startFrom;
+    let toVertex = params.startTo;
     let speed = params.speed;
     let t0 = -1;
     let t1 = -1;
     let animType = params.animType;
     let animChange = params.animChange;
+    let inMove = false;
 
     function progress(t) {
         if (t0 < 0) {
@@ -288,11 +303,28 @@ function createEgg(params = {}) {
             t1 = t + 1.0 / speed;
             tt = 0;
 
-            animType = (animType + 1) % 3;
+            if (animType == 0) {
+                animType = 1;
+            }
             animChange = true;
         }
 
         return tt;
+    }
+
+    function moveTo(nextVertex) {
+        if (inMove) {
+            return;
+        }
+
+        vertices[nextVertex].egg = index;
+
+        inMove = true;
+
+        fromVertex = toVertex;
+        toVertex = nextVertex;
+        t0 = -1;
+        animType = 0;
     }
 
     return {
@@ -317,100 +349,50 @@ function createEgg(params = {}) {
 
             let tt = progress(t);
 
-            let x1 = vertices[currenti].x;
-            let y1 = vertices[currenti].y;
-            let z1 = vertices[currenti].z;
-
-            let x2 = vertices[currentj].x;
-            let y2 = vertices[currentj].y;
-            let z2 = vertices[currentj].z;
-
-            let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, 0);
-            updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.038);
-
-
-            /*if (animType == 0) {
+            if (animType == 0) {
                 if (animChange) {
-                    currenti = currentj;
-                    currentj = nextj;
                     animChange = false;
                 }
 
-                let x1 = vertices[currenti].x;
-                let y1 = vertices[currenti].y;
-                let z1 = vertices[currenti].z;
+                let x1 = vertices[fromVertex].x;
+                let y1 = vertices[fromVertex].y;
+                let z1 = vertices[fromVertex].z;
 
-                let x2 = vertices[currentj].x;
-                let y2 = vertices[currentj].y;
-                let z2 = vertices[currentj].z;
+                let x2 = vertices[toVertex].x;
+                let y2 = vertices[toVertex].y;
+                let z2 = vertices[toVertex].z;
 
                 let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt);
                 updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.035);
 
-                if (tt > 0.1 && vertices[currenti].egg == index) {
-                    vertices[currenti].egg = -1;
-                }
+                /*if (tt > 0.1 && vertices[fromVertex].egg == index) {
+                    vertices[fromVertex].egg = -1;
+                }*/
             }
 
             if (animType == 1) {
                 if (animChange) {
-                    t1 = t0 + 0.5 * (t1 - t0);
                     animChange = false;
+                    if (vertices[fromVertex].egg == index) {
+                        vertices[fromVertex].egg = -1;
+                    }
+                    vertices[toVertex].egg = index;
+                    inMove = false;
                 }
 
-                let x1 = vertices[currenti].x;
-                let y1 = vertices[currenti].y;
-                let z1 = vertices[currenti].z;
+                let x1 = vertices[fromVertex].x;
+                let y1 = vertices[fromVertex].y;
+                let z1 = vertices[fromVertex].z;
 
-                let x2 = vertices[currentj].x;
-                let y2 = vertices[currentj].y;
-                let z2 = vertices[currentj].z;
+                let x2 = vertices[toVertex].x;
+                let y2 = vertices[toVertex].y;
+                let z2 = vertices[toVertex].z;
 
                 let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0);
                 updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.035);
             }
-
-            if (animType == 2) {
-                if (animChange) {
-
-                    let n = randomIndexWhere(vertices[currentj].vertices, vi =>  vertices[vi].penguin == -1 && vertices[vi].egg == -1);
-
-                    if (n < 0) {
-                        animType = 1;
-                        animChange = true;
-                        return;
-                    } else {
-                        nextj = vertices[currentj].vertices[n];
-                        vertices[nextj].egg = index;
-                    }
-                }
-
-                let x1 = vertices[currenti].x;
-                let y1 = vertices[currenti].y;
-                let z1 = vertices[currenti].z;
-
-                let x2 = vertices[currentj].x;
-                let y2 = vertices[currentj].y;
-                let z2 = vertices[currentj].z;
-
-                let x3 = vertices[nextj].x;
-                let y3 = vertices[nextj].y;
-                let z3 = vertices[nextj].z;
-
-
-                let pos1 = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0);
-                let pos2 = getGeodesicState(x2, y2, z2, x3, y3, z3, 0.0);
-
-                let posv = getGeodesicState(pos1.v1, pos1.v2, pos1.v3, pos2.v1, pos2.v2, pos2.v3, tt);
-
-                if (animChange) {
-                    animChange = false;
-                    t1 = t0 + 0.5 * (t1 - t0) * Math.abs(posv.totalAngle) / Math.PI;
-                }
-
-                updateFigureTransform(m, pos1.x, pos1.y, pos1.z, posv.x, posv.y, posv.z, 0.035);
-            }*/
-        }
+        },
+        moveTo
     }
 }
 
@@ -478,13 +460,13 @@ function updateFigureTransform(figure, x, y, z, v1, v2, v3, shift) {
  * @param {number} t - Linear time (0 to 1)
  * @returns {Object} {x, y, z, v1, v2, v3, v}
  */
-function getGeodesicState(x1, y1, z1, x2, y2, z2, t, da1 = 0, da2 = 0) {
+function getGeodesicState(x1, y1, z1, x2, y2, z2, t, da1 = 0, da2 = 0, axis1 = null) {
     // 1. Setup Vectors
     const p1 = new THREE.Vector3(x1, y1, z1);
     const p2 = new THREE.Vector3(x2, y2, z2);
 
     // 2. Define the rotation axis (perpendicular to the path)
-    const axis = new THREE.Vector3().crossVectors(p1, p2);
+    let axis = new THREE.Vector3().crossVectors(p1, p2);
 
     // Handle cases where points are identical or polar opposites
     //if (axis.lengthSq() < 0.000001) {
@@ -497,17 +479,21 @@ function getGeodesicState(x1, y1, z1, x2, y2, z2, t, da1 = 0, da2 = 0) {
             return { x: x1, y: y1, z: z1, v1: 0, v2: 0, v3: 0, speed: 0, totalAngle: 0 };
         }
 
-        // Case: Points are opposites. 
-        // We need an axis perpendicular to p1. 
-        // Logic: find the smallest component of p1 and cross with that basis vector.
-        // This is deterministic and won't flip-flop.
-        const ax = Math.abs(p1.x);
-        const ay = Math.abs(p1.y);
-        const az = Math.abs(p1.z);
+        if (axis1 != null) {
+            axis = axis1;
+        } else {
+            // Case: Points are opposites. 
+            // We need an axis perpendicular to p1. 
+            // Logic: find the smallest component of p1 and cross with that basis vector.
+            // This is deterministic and won't flip-flop.
+            const ax = Math.abs(p1.x);
+            const ay = Math.abs(p1.y);
+            const az = Math.abs(p1.z);
 
-        if (ax <= ay && ax <= az) axis.set(0, -p1.z, p1.y);
-        else if (ay <= ax && ay <= az) axis.set(-p1.z, 0, p1.x);
-        else axis.set(-p1.y, p1.x, 0);
+            if (ax <= ay && ax <= az) axis.set(0, -p1.z, p1.y);
+            else if (ay <= ax && ay <= az) axis.set(-p1.z, 0, p1.x);
+            else axis.set(-p1.y, p1.x, 0);
+        }
     }
     axis.normalize();
 
