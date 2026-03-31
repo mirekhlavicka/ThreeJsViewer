@@ -58,10 +58,11 @@ function setup() {
     dirLight.position.set(1, 1, 1);
 
     dirLight.castShadow = true;
-    dirLight.shadow.mapSize.width = 1024;
-    dirLight.shadow.mapSize.height = 1024;
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
     dirLight.shadow.blurSamples = 16; // Adjust for smoothness
     dirLight.shadow.radius = 2;
+    dirLight.shadow.normalBias = 0.01; // Start small (0.01 to 0.1)
 
     camera.add(dirLight);
     dirLight.target.position.set(0, 0, -1);
