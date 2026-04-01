@@ -30,6 +30,8 @@ const loader = new PLYLoader();
 const timer = new THREE.Timer();
 let animationTime = 0; // Our custom "accumulated" time
 
+let audio;
+
 function setup() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x3a3a3a);
@@ -123,8 +125,7 @@ function loadScene(reset = true) {
             if (modelData.createMaterial) {
                 material = modelData.createMaterial();
             }
-            if (!material)
-            {
+            if (!material) {
                 let m = {
                     color: modelData.color ?? (config.color ?? 0xffffff),
 
@@ -147,7 +148,7 @@ function loadScene(reset = true) {
             }
 
             const mesh = new THREE.Mesh(geometry, material);
-            mesh.userData = modelData; 
+            mesh.userData = modelData;
             mesh.userData.originalColor = mesh.material.color.clone();
             if (useVertexColors) {
                 mesh.material.color?.set(0xffffff);
@@ -233,6 +234,14 @@ function loadScene(reset = true) {
         });
     });
 
+    if (config.audio) {
+        document.getElementById("viewer").addEventListener('click', initAudio);
+    } else if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio = null;
+    }
+
     let title = config.name;
     if (title.includes('/')){
         title = title.split('/')[1];
@@ -245,10 +254,21 @@ function loadScene(reset = true) {
         if (grid.visible) {
             document.getElementById('showGridSwitch').click();
         }
-        if (!autoRotate) {
+        /*if (!autoRotate) {
             document.getElementById('autoRotateSwitch').click();
-        }        
+        }*/        
     }
+}
+
+function initAudio() {
+    if (!audio) {
+        audio = new Audio(config.audio);
+        audio.loop = true;
+        audio.volume = 0.5;
+        audio.play();
+        document.documentElement.requestFullscreen();
+    }
+    document.getElementById("viewer").removeEventListener('click', initAudio);
 }
 
 function autoPositionGrid() {

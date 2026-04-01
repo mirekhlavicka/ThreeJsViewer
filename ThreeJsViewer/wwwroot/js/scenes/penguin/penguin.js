@@ -15,6 +15,7 @@ export function createPenguinScene(pcount, ecount) {
     vertices = icosaVertices;
 
     let scene = {
+        audio: "assets/OnSphere/magellano-penguins.wav",
         setup: (camera, dirLight) => {
             camera.position.set(-1.5, 0.0, 1.0);
             //dirLight.position.set(-2, 1, 0.5);
@@ -66,10 +67,9 @@ export function createPenguinScene(pcount, ecount) {
 
     for (let i = 0; i < ecount; i++) {
 
-        let startTo = randomIndexWhere(vertices, v => v.penguin == -1 && v.egg == -1 && v.vertices.length == 6);
-        vertices[startTo].egg = i;
-
+        let startTo = randomIndexWhere(vertices, v => v.penguin == -1 && v.egg == -1 /*&& v.vertices.length == 6*/);
         let startFrom = vertices[startTo].vertices[0];
+        vertices[startTo].egg = i;
 
         let egg = createEgg({
             index: i,
@@ -126,6 +126,7 @@ function createPenguin(params = {}) {
     let nextFromEgg = false;
     let nextToEgg = false;
     let nextWithEgg = false;
+    let lastPos = null;
 
 
     function progress(t) {
@@ -172,6 +173,11 @@ function createPenguin(params = {}) {
 
             if (animType == 0) {
                 if (animChange) {
+                    if (nextWithEgg) {
+                        eggs[vertices[toVertex].egg].setSpeed(speed);
+                        eggs[vertices[toVertex].egg].moveTo(nextVertex)
+                    }
+
                     fromVertex = toVertex;
                     toVertex = nextVertex;
                     fromEgg = nextFromEgg;
@@ -188,11 +194,22 @@ function createPenguin(params = {}) {
                 let y2 = vertices[toVertex].y;
                 let z2 = vertices[toVertex].z;
 
-                let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt, withEgg ? -da : (fromEgg ? da : 0.0), toEgg ? da : 0.0);
+                let da1 = withEgg ? -da : (fromEgg ? da : 0.0);
+                let da2 = toEgg ? da : 0.0;
+
+                if (withEgg && lastPos != null) {
+                    let stt = Math.sqrt(tt);
+                    x1 = stt * x1 + (1 - stt) * lastPos.x;
+                    y1 = stt * y1 + (1 - stt) * lastPos.y;
+                    z1 = stt * z1 + (1 - stt) * lastPos.z;
+                    da1 = stt * da1;
+                }
+
+                let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt, da1, da2);
                 updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.043);
                 m.material.userData.uTwistStrength.value = 30.0 * oscillation1(tt, 80);
 
-                if (tt > 0.1 && vertices[fromVertex].penguin == index && !toEgg) {
+                if (tt > 0.1 && vertices[fromVertex].penguin == index && !(toEgg /*&& !withEgg*/)) {
                     vertices[fromVertex].penguin = -1;
                 }
             }
@@ -214,6 +231,7 @@ function createPenguin(params = {}) {
                 let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0, withEgg ? -da : (fromEgg ? da : 0.0), toEgg ? da : 0.0);
                 updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.043);
                 m.material.userData.uTime.value = 2 * Math.PI * tt;
+                lastPos = pos;
             }
 
             if (animType == 2) {
@@ -224,19 +242,25 @@ function createPenguin(params = {}) {
 
                         if (vertices[toVertex].egg != -1 && !eggs[vertices[toVertex].egg].isInMove()) {
 
-                            let moveTo = opositeVertex(fromVertex, toVertex);
-                            if (moveTo >= 0 && vertices[moveTo].egg == -1 && vertices[moveTo].penguin == -1 && vertices[moveTo].vertices.length == 6) {
-                                eggs[vertices[toVertex].egg].setSpeed(speed);
-                                eggs[vertices[toVertex].egg].moveTo(moveTo);
+                            opositeVertex(fromVertex, toVertex).forEach(moveTo => {
+                                if (followEgg || moveTo <  0) {
+                                    return;
+                                }
 
-                                nextVertex = moveTo;
-                                nextToEgg = true;
-                                nextFromEgg = false;
-                                nextWithEgg = true;
-                                vertices[nextVertex].penguin = index;
-                                followEgg = true;
-                                vertices[fromVertex].penguin = -1;
-                            }
+                                if (vertices[moveTo].egg == -1 && vertices[moveTo].penguin == -1 /*&& vertices[moveTo].vertices.length == 6*/) {
+                                    /*eggs[vertices[toVertex].egg].setSpeed(speed);
+                                    eggs[vertices[toVertex].egg].moveTo(moveTo);*/
+
+                                    nextVertex = moveTo;
+                                    nextToEgg = true;
+                                    nextFromEgg = false;
+                                    nextWithEgg = true;
+                                    vertices[toVertex].penguin = index;
+                                    vertices[nextVertex].penguin = index;
+                                    followEgg = true;
+                                    vertices[fromVertex].penguin = -1;
+                                }
+                            });
                         }
 
                         if (!followEgg) {
@@ -245,7 +269,12 @@ function createPenguin(params = {}) {
                             nextFromEgg = true;
                             nextWithEgg = false;
                             vertices[nextVertex].penguin = index;
-                        }
+                        }/* else {
+                            t0 = -1;
+                            animType = 0;
+                            animChange = true;
+                            return;
+                        }*/
 
                     } else {
 
@@ -266,10 +295,10 @@ function createPenguin(params = {}) {
                         } else {
                             nextVertex = vertices[toVertex].vertices[n];
                             nextWithEgg = false;
-                            if (toEgg) {
+                            /*if (toEgg) {
                                 nextToEgg = vertices[nextVertex].egg != -1; //false;
                                 nextFromEgg = true;
-                            } else {
+                            } else */{
                                 nextToEgg = vertices[nextVertex].egg != -1;
                                 nextFromEgg = false;
                             }
@@ -465,9 +494,9 @@ function oscillation1(t, m) {
 }*/
 
 function opositeVertex(fromVertex, toVertex) {
-    if (vertices[toVertex].vertices.length != 6) {
-        return -1;
-    }
+    /*if (vertices[toVertex].vertices.length != 6) {
+        return [-1];
+    }*/
 
     let toNeighbor = vertices[toVertex].vertices;
     let intersection = vertices[fromVertex].vertices.filter(x => toNeighbor.includes(x));
@@ -488,7 +517,7 @@ function opositeVertex(fromVertex, toVertex) {
         }
     }
 
-    return p;
+    return vertices[toVertex].vertices.length == 6 ? [p] : [p0, p];
 }
 
 /**
