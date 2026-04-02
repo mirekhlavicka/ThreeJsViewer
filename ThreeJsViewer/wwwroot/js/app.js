@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-import { sceneConfigurations } from './config.js?v=1.14';
+import { sceneConfigurations } from './config.js?v=1.15';
 
 // --- State Variables ---
 let config;
@@ -427,6 +427,13 @@ function selectScene(index) {
 
     // 2. Data: Update config
     config = sceneConfigurations[index];
+
+    if (config.used && config.reset) {
+        config = config.reset();
+    }
+
+    config.used = true;
+
 
     // 3. URL: Update history
     const url = new URL(window.location);

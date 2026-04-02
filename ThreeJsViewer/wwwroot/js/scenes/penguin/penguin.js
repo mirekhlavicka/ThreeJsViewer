@@ -4,21 +4,25 @@ import { icosaVertices } from './icosa.js';
 import * as THREE from 'three';
 
 let vertices;
-let eggs = [];
+let eggs;
 
 export function createPenguinScene(pcount, ecount) {
 
-    /*const audio = new Audio('assets/OnSphere/magellano-penguins.wav');
-    audio.loop = true; 
-    audio.play();*/
-
-    vertices = icosaVertices;
+    vertices = structuredClone(icosaVertices);
+    eggs = [];
 
     let scene = {
+        reset: () => {
+            if (scene.used) {
+                return createPenguinScene(pcount, ecount);                
+            } else {
+                return scene;
+            }            
+        },
         audio: "assets/OnSphere/magellano-penguins.wav",
         setup: (camera, dirLight) => {
             camera.position.set(-1.5, 0.0, 1.0);
-            //dirLight.position.set(-2, 1, 0.5);
+            dirLight.position.set(1, 1, 1);
         },
         gameMode: true,
         //shadowMapType: THREE.VSMShadowMap, //THREE.VSMShadowMap, THREE.PCFShadowMap
@@ -67,7 +71,7 @@ export function createPenguinScene(pcount, ecount) {
 
     for (let i = 0; i < ecount; i++) {
 
-        let startTo = randomIndexWhere(vertices, v => v.penguin == -1 && v.egg == -1 /*&& v.vertices.length == 6*/);
+        let startTo = randomIndexWhere(vertices, v => v.penguin == -1 && v.egg == -1);
         let startFrom = vertices[startTo].vertices[0];
         vertices[startTo].egg = i;
 
@@ -92,7 +96,9 @@ export function createPenguinScene(pcount, ecount) {
         let startFrom = vertices[startTo].vertices[0];
         vertices[startTo].penguin = i;
 
-        const value = 64 + Math.floor(Math.random() * 3 * 64);
+        let clrspeed = i / (pcount - 1);
+
+        const value = 63 + Math.floor(/*Math.random()*/ clrspeed * 3 * 64);
         const grayColor = (value << 16) | (value << 8) | value;
 
         scene.models.push(createPenguin({
@@ -101,7 +107,7 @@ export function createPenguinScene(pcount, ecount) {
             startTo,
             animType: 1,
             animChange: true,
-            speed: 0.15 + Math.random() / 2.0,
+            speed: 0.25 + /*Math.random()*/ 0.4 * clrspeed,
             color: grayColor
         }));
     }
@@ -175,7 +181,7 @@ function createPenguin(params = {}) {
                 if (animChange) {
                     if (nextWithEgg) {
                         eggs[vertices[toVertex].egg].setSpeed(speed);
-                        eggs[vertices[toVertex].egg].moveTo(nextVertex)
+                        eggs[vertices[toVertex].egg].startMoveTo(nextVertex);
                     }
 
                     fromVertex = toVertex;
@@ -198,7 +204,7 @@ function createPenguin(params = {}) {
                 let da2 = toEgg ? da : 0.0;
 
                 if (withEgg && lastPos != null) {
-                    let stt = Math.sqrt(tt);
+                    let stt = (2.0 * Math.sqrt(tt) + tt) / 3.0;
                     x1 = stt * x1 + (1 - stt) * lastPos.x;
                     y1 = stt * y1 + (1 - stt) * lastPos.y;
                     z1 = stt * z1 + (1 - stt) * lastPos.z;
@@ -209,7 +215,7 @@ function createPenguin(params = {}) {
                 updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.043);
                 m.material.userData.uTwistStrength.value = 30.0 * oscillation1(tt, 80);
 
-                if (tt > 0.1 && vertices[fromVertex].penguin == index && !(toEgg /*&& !withEgg*/)) {
+                if (tt > 0.1 && vertices[fromVertex].penguin == index && !toEgg) {
                     vertices[fromVertex].penguin = -1;
                 }
             }
@@ -237,55 +243,43 @@ function createPenguin(params = {}) {
             if (animType == 2) {
                 if (animChange) {
                     if (toEgg) {
-
                         let followEgg = false;
-
                         if (vertices[toVertex].egg != -1 && !eggs[vertices[toVertex].egg].isInMove()) {
-
                             opositeVertex(fromVertex, toVertex).forEach(moveTo => {
-                                if (followEgg || moveTo <  0) {
+                                if (followEgg || moveTo < 0) {
                                     return;
                                 }
 
-                                if (vertices[moveTo].egg == -1 && vertices[moveTo].penguin == -1 /*&& vertices[moveTo].vertices.length == 6*/) {
-                                    /*eggs[vertices[toVertex].egg].setSpeed(speed);
-                                    eggs[vertices[toVertex].egg].moveTo(moveTo);*/
-
+                                if (vertices[moveTo].egg == -1 && vertices[moveTo].penguin == -1) {
                                     nextVertex = moveTo;
                                     nextToEgg = true;
                                     nextFromEgg = false;
                                     nextWithEgg = true;
+                                    followEgg = true;
                                     vertices[toVertex].penguin = index;
                                     vertices[nextVertex].penguin = index;
-                                    followEgg = true;
                                     vertices[fromVertex].penguin = -1;
+                                    eggs[vertices[toVertex].egg].initMoveTo(moveTo);
                                 }
                             });
                         }
-
                         if (!followEgg) {
                             nextVertex = fromVertex;
                             nextToEgg = false;
                             nextFromEgg = true;
                             nextWithEgg = false;
-                            vertices[nextVertex].penguin = index;
-                        }/* else {
-                            t0 = -1;
-                            animType = 0;
-                            animChange = true;
-                            return;
-                        }*/
-
+                            vertices[nextVertex].penguin = index; //not needed, allready set
+                        }
                     } else {
 
                         let n = -1;
 
                         if (!fromEgg) {
-                            n = randomIndexWhere(vertices[toVertex].vertices, vi => vertices[vi].egg != -1 && !eggs[vertices[vi].egg].isInMove() );
+                            n = randomIndexWhere(vertices[toVertex].vertices, vi => (vertices[vi].penguin == -1 || vertices[vi].penguin == index)  && (vertices[vi].egg != -1 && !eggs[vertices[vi].egg].isInMove()));
                         }
 
                         if (n < 0) {
-                            n = randomIndexWhere(vertices[toVertex].vertices, vi => (vertices[vi].penguin == -1 || vertices[vi].penguin == index) && vertices[vi].egg == -1 /*vertices[vi].penguin == -1 || vertices[vi].penguin == index || vertices[vi].egg != -1*/);
+                            n = randomIndexWhere(vertices[toVertex].vertices, vi => (vertices[vi].penguin == -1 || vertices[vi].penguin == index) && vertices[vi].egg == -1);
                         }
 
                         if (n < 0) {
@@ -295,13 +289,9 @@ function createPenguin(params = {}) {
                         } else {
                             nextVertex = vertices[toVertex].vertices[n];
                             nextWithEgg = false;
-                            /*if (toEgg) {
-                                nextToEgg = vertices[nextVertex].egg != -1; //false;
-                                nextFromEgg = true;
-                            } else */{
-                                nextToEgg = vertices[nextVertex].egg != -1;
-                                nextFromEgg = false;
-                            }
+                            nextToEgg = vertices[nextVertex].egg != -1;
+                            nextFromEgg = false;
+
                             if (!nextToEgg) {
                                 vertices[nextVertex].penguin = index;
                             }
@@ -349,7 +339,7 @@ function createEgg(params = {}) {
     let t1 = -1;
     let animType = params.animType;
     let animChange = params.animChange;
-    let inMove = false;
+    let moveState = -1;
 
     function progress(t) {
         if (t0 < 0) {
@@ -384,23 +374,30 @@ function createEgg(params = {}) {
     }
 
     function isInMove() {
-        return inMove;
+        return moveState != -1;
     }
 
-    function moveTo(nextVertex) {
-        if (inMove) {
+    function initMoveTo(nextVertex) {
+        if (moveState != -1) {
             return;
         }
 
         vertices[nextVertex].egg = index;
-
-        inMove = true;
-
+        moveState = 0;
+    }
+    function startMoveTo(nextVertex) {
         fromVertex = toVertex;
         toVertex = nextVertex;
+
+        if (!vertices[fromVertex].vertices.includes(toVertex)) {
+            console.log('chyba');
+        }
+
         t0 = -1;
         animType = 0;
+        moveState = 1;
     }
+
 
     return {
         path: 'assets/OnSphere/egg.ply',
@@ -448,11 +445,17 @@ function createEgg(params = {}) {
             if (animType == 1) {
                 if (animChange) {
                     animChange = false;
-                    if (vertices[fromVertex].egg == index) {
-                        vertices[fromVertex].egg = -1;
+                    if (moveState == 1) {
+                        if (vertices[fromVertex].egg == index) {
+                            vertices[fromVertex].egg = -1;
+                        }
+                        moveState = -1;
                     }
-                    vertices[toVertex].egg = index;
-                    inMove = false;
+
+                    //vertices.filter(v => v.egg == index).forEach(v => v.egg = -1);
+                    //vertices[toVertex].egg = index;
+
+                    //inMove = false;
                 }
 
                 let x1 = vertices[fromVertex].x;
@@ -467,7 +470,8 @@ function createEgg(params = {}) {
                 updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.035);
             }
         },
-        moveTo,
+        initMoveTo,
+        startMoveTo,
         isInMove,
         setSpeed
     }
@@ -494,30 +498,36 @@ function oscillation1(t, m) {
 }*/
 
 function opositeVertex(fromVertex, toVertex) {
-    /*if (vertices[toVertex].vertices.length != 6) {
-        return [-1];
-    }*/
 
     let toNeighbor = vertices[toVertex].vertices;
     let intersection = vertices[fromVertex].vertices.filter(x => toNeighbor.includes(x));
 
     let p0 = fromVertex;
     let p = intersection[0];
+    let p1 = -1;
 
-    for (var i = 0; i < 2; i++) {
+    for (var i = 0; i < (vertices[toVertex].vertices.length == 6 ? 3 : 2); i++) {
 
         intersection = vertices[p].vertices.filter(x => toNeighbor.includes(x));
 
-        if (p0 == intersection[0]) {
-            p0 = p;
-            p = intersection[1];
+        if (i == 2) {
+            if (p0 == intersection[0]) {
+                p1 = intersection[1];
+            } else {
+                p1 = intersection[0];
+            }
         } else {
-            p0 = p;
-            p = intersection[0];
+            if (p0 == intersection[0]) {
+                p0 = p;
+                p = intersection[1];
+            } else {
+                p0 = p;
+                p = intersection[0];
+            }
         }
     }
 
-    return vertices[toVertex].vertices.length == 6 ? [p] : [p0, p];
+    return vertices[toVertex].vertices.length == 6 ? [p, p0, p1] : [p0, p];
 }
 
 /**
