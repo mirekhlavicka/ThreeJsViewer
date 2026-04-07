@@ -446,6 +446,60 @@ function selectScene(index) {
     loadScene();
 }
 
+
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+function onPointerDown(event) {
+    // 1. Calculate pointer position in normalized device coordinates
+    // Works for both mouse and touch
+    const x = event.clientX || event.touches[0].clientX;
+    const y = event.clientY || event.touches[0].clientY;
+
+    mouse.x = (x / window.innerWidth) * 2 - 1;
+    mouse.y = -(y / window.innerHeight) * 2 + 1;
+
+    // 2. Update the picking ray with the camera and pointer position
+    raycaster.setFromCamera(mouse, camera);
+
+    // 3. Calculate objects intersecting the picking ray
+    // Set 'true' for the second parameter to check all descendants (children)
+    const intersects = raycaster.intersectObjects(/*scene.children*/loadedMeshes, true);
+
+    /*intersects.forEach((hit, index) => {
+        console.log(`Hit ${index}:`, hit.object.type, "| Visible:", hit.object.visible, "| Name:", hit.object.name);
+    });*/
+
+    if (intersects.length > 0) {
+        // The first intersection is the closest one
+        const hit = intersects[0];
+
+        const mesh = hit.object;
+
+        // 1. Copy the world hit point
+        const localPoint = hit.point.clone();
+
+        // 2. Convert from World Space to Local Space
+        mesh.worldToLocal(localPoint);
+
+        console.log("Clicked Mesh:", mesh);
+        console.log("World Point:", hit.point);
+        console.log("Local Point (Original Geometry):", localPoint);
+        console.log("Distance from Camera:", hit.distance);
+
+        let i = loadedMeshes.indexOf(mesh);
+
+        if (i >= 0 && i != selectedMesh) {
+            changeSelectedMesh(-1, true, loadedMeshes.indexOf(mesh));
+        }
+    }
+}
+
+window.addEventListener('mousedown', onPointerDown);
+window.addEventListener('touchstart', onPointerDown);
+
+
 // 3. Render submenus FIRST
 Object.keys(groups).forEach(groupName => {
     if (groupName === "_root") return;
@@ -593,7 +647,7 @@ document.getElementById('btnStepBack').addEventListener('click', () => {
     }
 });
 
-function changeSelectedMesh(direction, blink = true) {
+function changeSelectedMesh(direction, blink = true, setTo = -1) {
     if (selectedMesh >= 0) {
         if (loadedMeshes[selectedMesh].userData.originalEmissive !== undefined) {
             loadedMeshes[selectedMesh].material.emissive.copy(loadedMeshes[selectedMesh].userData.originalEmissive);
@@ -602,7 +656,11 @@ function changeSelectedMesh(direction, blink = true) {
         }
     }
 
-    selectedMesh = (selectedMesh + direction + loadedMeshes.length) % loadedMeshes.length;
+    if (setTo != -1) {
+        selectedMesh = setTo;
+    } else {
+        selectedMesh = (selectedMesh + direction /*+ loadedMeshes.length*/) % loadedMeshes.length;
+    }
 
     document.getElementById('selectedModel').innerText = loadedMeshes[selectedMesh].userData.path.replace('assets/', '');
     document.getElementById('hideSelected').checked = !loadedMeshes[selectedMesh].visible;
