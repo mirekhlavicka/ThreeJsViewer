@@ -149,6 +149,7 @@ function loadScene(reset = true) {
 
             const mesh = new THREE.Mesh(geometry, material);
             mesh.userData = modelData;
+            modelData.mesh = mesh;
             mesh.userData.originalColor = mesh.material.color.clone();
             if (useVertexColors) {
                 mesh.material.color?.set(0xffffff);
@@ -483,15 +484,19 @@ function onPointerDown(event) {
         // 2. Convert from World Space to Local Space
         mesh.worldToLocal(localPoint);
 
-        console.log("Clicked Mesh:", mesh);
+        /*console.log("Clicked Mesh:", mesh);
         console.log("World Point:", hit.point);
         console.log("Local Point (Original Geometry):", localPoint);
-        console.log("Distance from Camera:", hit.distance);
+        console.log("Distance from Camera:", hit.distance);*/
 
-        let i = loadedMeshes.indexOf(mesh);
 
-        if (i >= 0 && i != selectedMesh) {
-            changeSelectedMesh(-1, true, loadedMeshes.indexOf(mesh));
+        if (config.onPointerDown) {
+            config.onPointerDown(mesh, localPoint);
+        } else {
+            let i = loadedMeshes.indexOf(mesh);
+            if (i >= 0 /*&& i != selectedMesh*/) {
+                changeSelectedMesh(-1, true, loadedMeshes.indexOf(mesh));
+            }
         }
     }
 }

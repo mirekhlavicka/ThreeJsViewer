@@ -1,25 +1,429 @@
-﻿import { smoothAnim } from '../../utils.js';
-import { dodecaVertices } from './dodeca.js';
-import { icosaVertices } from './icosa.js';
+﻿import { icosaVertices } from './icosa.js';
 import * as THREE from 'three';
-
-let vertices;
-let eggs;
 
 export function createPenguinScene(pcount, ecount) {
 
-    vertices = structuredClone(icosaVertices);
-    eggs = [];
+    let vertices = structuredClone(icosaVertices);
+    let eggs = [];
+    let penguins = [];
+    let selectedPenguin = null;
+
+    function createPenguin(params = {}) {
+        let index = params.index;
+        let fromVertex = params.startFrom;
+        let toVertex = params.startTo;
+        let nextVertex = 0;
+        let speed = params.speed;
+        let t0 = -1;
+        let t1 = -1;
+        let animType = params.animType;
+        let animChange = params.animChange;
+        let fromEgg = false;
+        let toEgg = false;
+        let withEgg = false;
+        let nextFromEgg = false;
+        let nextToEgg = false;
+        let nextWithEgg = false;
+        let lastPos = null;
+
+
+        function progress(t) {
+            if (t0 < 0) {
+                t0 = t;
+                t1 = t + 1.0 / speed;
+            }
+
+            let tt = 0;
+
+            if (Math.abs(t1 - t0) < 0.00001) {
+                tt = 2.0;
+            } else {
+                tt = (t - t0) / (t1 - t0);
+            }
+
+            if (tt > 1) {
+                t0 = t;
+                t1 = t + 1.0 / speed;
+                tt = 0;
+
+                animType = (animType + 1) % 3;
+                animChange = true;
+            }
+
+            return tt;
+        }
+
+        return {
+            path: 'assets/OnSphere/penguin.ply',
+            //color: 0xa0a0a0,
+            createMaterial: () => createTwistMaterial(params.color),
+            prepareGeometry: g => {
+                g.rotateZ(Math.PI);
+                g.scale(0.07, 0.07, 0.07);
+            },
+            prepareMesh: m => {
+                m.castShadow = true;
+            },
+            animate: (m, t) => {
+
+                let tt = progress(t);
+                let da = 0.1;
+
+                if (animType == 0) {
+                    if (animChange) {
+                        if (nextWithEgg) {
+                            eggs[vertices[toVertex].egg].setSpeed(speed);
+                            eggs[vertices[toVertex].egg].startMoveTo(nextVertex);
+                        }
+
+                        fromVertex = toVertex;
+                        toVertex = nextVertex;
+                        fromEgg = nextFromEgg;
+                        toEgg = nextToEgg;
+                        withEgg = nextWithEgg,
+                            animChange = false;
+                    }
+
+                    let x1 = vertices[fromVertex].x;
+                    let y1 = vertices[fromVertex].y;
+                    let z1 = vertices[fromVertex].z;
+
+                    let x2 = vertices[toVertex].x;
+                    let y2 = vertices[toVertex].y;
+                    let z2 = vertices[toVertex].z;
+
+                    let da1 = withEgg ? -da : (fromEgg ? da : 0.0);
+                    let da2 = toEgg ? da : 0.0;
+
+                    if (withEgg && lastPos != null) {
+                        let stt = (2.0 * Math.sqrt(tt) + tt) / 3.0;
+                        x1 = stt * x1 + (1 - stt) * lastPos.x;
+                        y1 = stt * y1 + (1 - stt) * lastPos.y;
+                        z1 = stt * z1 + (1 - stt) * lastPos.z;
+                        da1 = stt * da1;
+                    }
+
+                    let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt, da1, da2);
+                    updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.043);
+                    m.material.userData.uTwistStrength.value = 30.0 * oscillation1(tt, 80);
+
+                    if (tt > 0.1 && vertices[fromVertex].penguin == index && !toEgg) {
+                        vertices[fromVertex].penguin = -1;
+                    }
+                }
+
+                if (animType == 1) {
+                    if (animChange) {
+                        t1 = t0 + 0.5 * (t1 - t0);
+                        animChange = false;
+                    }
+
+                    let x1 = vertices[fromVertex].x;
+                    let y1 = vertices[fromVertex].y;
+                    let z1 = vertices[fromVertex].z;
+
+                    let x2 = vertices[toVertex].x;
+                    let y2 = vertices[toVertex].y;
+                    let z2 = vertices[toVertex].z;
+
+                    let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0, withEgg ? -da : (fromEgg ? da : 0.0), toEgg ? da : 0.0);
+                    updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.043);
+                    m.material.userData.uTime.value = 2 * Math.PI * tt;
+                    lastPos = pos;
+                }
+
+                if (animType == 2) {
+                    if (animChange) {
+                        if (toEgg) {
+                            let followEgg = false;
+                            if (vertices[toVertex].egg != -1 && !eggs[vertices[toVertex].egg].isInMove()) {
+                                opositeVertex(fromVertex, toVertex).forEach(moveTo => {
+                                    if (followEgg || moveTo < 0) {
+                                        return;
+                                    }
+
+                                    if (vertices[moveTo].egg == -1 && vertices[moveTo].penguin == -1) {
+                                        nextVertex = moveTo;
+                                        nextToEgg = true;
+                                        nextFromEgg = false;
+                                        nextWithEgg = true;
+                                        followEgg = true;
+                                        vertices[toVertex].penguin = index;
+                                        vertices[nextVertex].penguin = index;
+                                        vertices[fromVertex].penguin = -1;
+                                        eggs[vertices[toVertex].egg].initMoveTo(moveTo);
+                                    }
+                                });
+                            }
+                            if (!followEgg) {
+                                nextVertex = fromVertex;
+                                nextToEgg = false;
+                                nextFromEgg = true;
+                                nextWithEgg = false;
+                                vertices[nextVertex].penguin = index; //not needed, allready set
+                            }
+                        } else {
+
+                            let n = -1;
+
+                            if (!fromEgg) {
+                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (vertices[vi].penguin == -1 || vertices[vi].penguin == index) && (vertices[vi].egg != -1 && !eggs[vertices[vi].egg].isInMove()));
+                            }
+
+                            if (n < 0) {
+                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (vertices[vi].penguin == -1 || vertices[vi].penguin == index) && vertices[vi].egg == -1);
+                            }
+
+                            if (n < 0) {
+                                animType = 1;
+                                animChange = true;
+                                return;
+                            } else {
+                                nextVertex = vertices[toVertex].vertices[n];
+                                nextWithEgg = false;
+                                nextToEgg = vertices[nextVertex].egg != -1;
+                                nextFromEgg = false;
+
+                                if (!nextToEgg) {
+                                    vertices[nextVertex].penguin = index;
+                                }
+                            }
+                        }
+                    }
+
+                    let x1 = vertices[fromVertex].x;
+                    let y1 = vertices[fromVertex].y;
+                    let z1 = vertices[fromVertex].z;
+
+                    let x2 = vertices[toVertex].x;
+                    let y2 = vertices[toVertex].y;
+                    let z2 = vertices[toVertex].z;
+
+                    let x3 = vertices[nextVertex].x;
+                    let y3 = vertices[nextVertex].y;
+                    let z3 = vertices[nextVertex].z;
+
+                    let pos1 = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0, withEgg ? -da : (fromEgg ? da : 0.0), toEgg ? da : 0.0);
+                    let pos2 = getGeodesicState(x2, y2, z2, x3, y3, z3, 0.0, nextWithEgg ? -da : (nextFromEgg ? da : 0.0), nextToEgg ? da : 0.0);
+
+                    let posv = getGeodesicState(pos1.v1, pos1.v2, pos1.v3, pos2.v1, pos2.v2, pos2.v3, tt, 0, 0, new THREE.Vector3(x2, y2, z2));
+
+                    if (animChange) {
+                        animChange = false;
+                        t1 = t0 + 0.5 * (t1 - t0) * Math.abs(posv.totalAngle) / Math.PI;
+                    }
+
+                    updateFigureTransform(m, pos1.x, pos1.y, pos1.z, posv.x, posv.y, posv.z, 0.043);
+
+                    m.material.userData.uTwistStrength.value = 20.0 * oscillation1(tt, 80 * (t1 - t0) * speed);
+                }
+            }
+        }
+    }
+
+    function createEgg(params = {}) {
+        let index = params.index;
+        let fromVertex = params.startFrom;
+        let toVertex = params.startTo;
+        let speed = params.speed;
+        let t0 = -1;
+        let t1 = -1;
+        let animType = params.animType;
+        let animChange = params.animChange;
+        let moveState = -1;
+
+        function progress(t) {
+            if (t0 < 0) {
+                t0 = t;
+                t1 = t + 1.0 / speed;
+            }
+
+            let tt = 0;
+
+            if (Math.abs(t1 - t0) < 0.00001) {
+                tt = 2.0;
+            } else {
+                tt = (t - t0) / (t1 - t0);
+            }
+
+            if (tt > 1) {
+                t0 = t;
+                t1 = t + 1.0 / speed;
+                tt = 0;
+
+                if (animType == 0) {
+                    animType = 1;
+                }
+                animChange = true;
+            }
+
+            return tt;
+        }
+
+        function setSpeed(newSpeed) {
+            speed = newSpeed;
+        }
+
+        function isInMove() {
+            return moveState != -1;
+        }
+
+        function initMoveTo(nextVertex) {
+            if (moveState != -1) {
+                return;
+            }
+
+            vertices[nextVertex].egg = index;
+            moveState = 0;
+        }
+        function startMoveTo(nextVertex) {
+            fromVertex = toVertex;
+            toVertex = nextVertex;
+
+            if (!vertices[fromVertex].vertices.includes(toVertex)) {
+                console.log('chyba');
+            }
+
+            t0 = -1;
+            animType = 0;
+            moveState = 1;
+        }
+
+
+        return {
+            path: 'assets/OnSphere/egg.ply',
+            color: params.color,
+            setupMaterial: m => {
+                m.color = params.color;
+                m.vertexColors = false;
+                m.roughness = 0.1;
+                m.metalness = 0.3;
+
+            },
+            //createMaterial: () => createTwistMaterial(params.color),
+            prepareGeometry: g => {
+                g.rotateZ(Math.PI);
+                g.scale(0.08, 0.08, 0.08);
+            },
+            prepareMesh: m => {
+                m.castShadow = true;
+            },
+            animate: (m, t) => {
+
+                let tt = progress(t);
+
+                if (animType == 0) {
+                    if (animChange) {
+                        animChange = false;
+                    }
+
+                    let x1 = vertices[fromVertex].x;
+                    let y1 = vertices[fromVertex].y;
+                    let z1 = vertices[fromVertex].z;
+
+                    let x2 = vertices[toVertex].x;
+                    let y2 = vertices[toVertex].y;
+                    let z2 = vertices[toVertex].z;
+
+                    let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt);
+                    updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.035);
+
+                    /*if (tt > 0.1 && vertices[fromVertex].egg == index) {
+                        vertices[fromVertex].egg = -1;
+                    }*/
+                }
+
+                if (animType == 1) {
+                    if (animChange) {
+                        animChange = false;
+                        if (moveState == 1) {
+                            if (vertices[fromVertex].egg == index) {
+                                vertices[fromVertex].egg = -1;
+                            }
+                            moveState = -1;
+                        }
+
+                        //vertices.filter(v => v.egg == index).forEach(v => v.egg = -1);
+                        //vertices[toVertex].egg = index;
+
+                        //inMove = false;
+                    }
+
+                    let x1 = vertices[fromVertex].x;
+                    let y1 = vertices[fromVertex].y;
+                    let z1 = vertices[fromVertex].z;
+
+                    let x2 = vertices[toVertex].x;
+                    let y2 = vertices[toVertex].y;
+                    let z2 = vertices[toVertex].z;
+
+                    let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0);
+                    updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.035);
+                }
+            },
+            initMoveTo,
+            startMoveTo,
+            isInMove,
+            setSpeed
+        }
+    }
+
+    function opositeVertex(fromVertex, toVertex) {
+
+        let toNeighbor = vertices[toVertex].vertices;
+        let intersection = vertices[fromVertex].vertices.filter(x => toNeighbor.includes(x));
+
+        let p0 = fromVertex;
+        let p = intersection[0];
+        let p1 = -1;
+
+        for (var i = 0; i < (vertices[toVertex].vertices.length == 6 ? 3 : 2); i++) {
+
+            intersection = vertices[p].vertices.filter(x => toNeighbor.includes(x));
+
+            if (i == 2) {
+                if (p0 == intersection[0]) {
+                    p1 = intersection[1];
+                } else {
+                    p1 = intersection[0];
+                }
+            } else {
+                if (p0 == intersection[0]) {
+                    p0 = p;
+                    p = intersection[1];
+                } else {
+                    p0 = p;
+                    p = intersection[0];
+                }
+            }
+        }
+
+        return vertices[toVertex].vertices.length == 6 ? [p, p0, p1] : [p0, p];
+    }
 
     let scene = {
         reset: () => {
             if (scene.used) {
-                return createPenguinScene(pcount, ecount);                
+                return createPenguinScene(pcount, ecount);
             } else {
                 return scene;
-            }            
+            }
         },
-        audio: "assets/OnSphere/magellano-penguins.wav",
+        onPointerDown: (m, p) => {
+
+            let i = penguins.indexOf(m.userData);
+            if (i >= 0) {
+                if (selectedPenguin == m.userData) {
+                    selectedPenguin.mesh.material.color.set(0x404040);
+                    selectedPenguin = null;
+                } else {
+                    selectedPenguin = m.userData;
+                    penguins.forEach(p => p.mesh.material.color.set(0x404040));
+                    m.material.color.set(0xe0e0e0);
+                }
+            }
+        },
+        //audio: "assets/OnSphere/magellano-penguins.wav",
         setup: (camera, dirLight) => {
             camera.position.set(-1.5, 0.0, 1.0);
             dirLight.position.set(1, 1, 1);
@@ -98,384 +502,26 @@ export function createPenguinScene(pcount, ecount) {
 
         let clrspeed = i / (pcount - 1);
 
-        const value = 63 + Math.floor(/*Math.random()*/ clrspeed * 3 * 64);
-        const grayColor = (value << 16) | (value << 8) | value;
+        //const value = 63 + Math.floor(/*Math.random()*/ clrspeed * 3 * 64);
+        //const grayColor = (value << 16) | (value << 8) | value;
 
-        scene.models.push(createPenguin({
+        let penguin = createPenguin({
             index: i,
             startFrom,
             startTo,
             animType: 1,
             animChange: true,
             speed: 0.25 + /*Math.random()*/ 0.4 * clrspeed,
-            color: grayColor
-        }));
+            color: 0x404040//grayColor
+        });
+
+        scene.models.push(penguin);
+        penguins.push(penguin);
     }
 
     return scene;
 }
 
-
-function createPenguin(params = {}) {
-    let index = params.index;
-    let fromVertex = params.startFrom;
-    let toVertex = params.startTo;
-    let nextVertex = 0;
-    let speed = params.speed;
-    let t0 = -1;
-    let t1 = -1;
-    let animType = params.animType;
-    let animChange = params.animChange;
-    let fromEgg = false;
-    let toEgg = false;
-    let withEgg = false;
-    let nextFromEgg = false;
-    let nextToEgg = false;
-    let nextWithEgg = false;
-    let lastPos = null;
-
-
-    function progress(t) {
-        if (t0 < 0) {
-            t0 = t;
-            t1 = t + 1.0 / speed;
-        }
-
-        let tt = 0;
-
-        if (Math.abs(t1 - t0) < 0.00001) {
-            tt = 2.0;
-        } else {
-            tt = (t - t0) / (t1 - t0);
-        }
-
-        if (tt > 1) {
-            t0 = t;
-            t1 = t + 1.0 / speed;
-            tt = 0;
-
-            animType = (animType + 1) % 3;
-            animChange = true;
-        }
-
-        return tt;
-    }
-
-    return {
-        path: 'assets/OnSphere/penguin.ply',
-        //color: 0xa0a0a0,
-        createMaterial: () => createTwistMaterial(params.color),
-        prepareGeometry: g => {
-            g.rotateZ(Math.PI);
-            g.scale(0.07, 0.07, 0.07);
-        },
-        prepareMesh: m => {
-            m.castShadow = true;
-        },
-        animate: (m, t) => {
-
-            let tt = progress(t);
-            let da = 0.1;
-
-            if (animType == 0) {
-                if (animChange) {
-                    if (nextWithEgg) {
-                        eggs[vertices[toVertex].egg].setSpeed(speed);
-                        eggs[vertices[toVertex].egg].startMoveTo(nextVertex);
-                    }
-
-                    fromVertex = toVertex;
-                    toVertex = nextVertex;
-                    fromEgg = nextFromEgg;
-                    toEgg = nextToEgg;
-                    withEgg = nextWithEgg,
-                    animChange = false;
-                }
-
-                let x1 = vertices[fromVertex].x;
-                let y1 = vertices[fromVertex].y;
-                let z1 = vertices[fromVertex].z;
-
-                let x2 = vertices[toVertex].x;
-                let y2 = vertices[toVertex].y;
-                let z2 = vertices[toVertex].z;
-
-                let da1 = withEgg ? -da : (fromEgg ? da : 0.0);
-                let da2 = toEgg ? da : 0.0;
-
-                if (withEgg && lastPos != null) {
-                    let stt = (2.0 * Math.sqrt(tt) + tt) / 3.0;
-                    x1 = stt * x1 + (1 - stt) * lastPos.x;
-                    y1 = stt * y1 + (1 - stt) * lastPos.y;
-                    z1 = stt * z1 + (1 - stt) * lastPos.z;
-                    da1 = stt * da1;
-                }
-
-                let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt, da1, da2);
-                updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.043);
-                m.material.userData.uTwistStrength.value = 30.0 * oscillation1(tt, 80);
-
-                if (tt > 0.1 && vertices[fromVertex].penguin == index && !toEgg) {
-                    vertices[fromVertex].penguin = -1;
-                }
-            }
-
-            if (animType == 1) {
-                if (animChange) {
-                    t1 = t0 + 0.5 * (t1 - t0);
-                    animChange = false;
-                }
-
-                let x1 = vertices[fromVertex].x;
-                let y1 = vertices[fromVertex].y;
-                let z1 = vertices[fromVertex].z;
-
-                let x2 = vertices[toVertex].x;
-                let y2 = vertices[toVertex].y;
-                let z2 = vertices[toVertex].z;
-
-                let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0, withEgg ? -da : (fromEgg ? da : 0.0), toEgg ? da : 0.0);
-                updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.043);
-                m.material.userData.uTime.value = 2 * Math.PI * tt;
-                lastPos = pos;
-            }
-
-            if (animType == 2) {
-                if (animChange) {
-                    if (toEgg) {
-                        let followEgg = false;
-                        if (vertices[toVertex].egg != -1 && !eggs[vertices[toVertex].egg].isInMove()) {
-                            opositeVertex(fromVertex, toVertex).forEach(moveTo => {
-                                if (followEgg || moveTo < 0) {
-                                    return;
-                                }
-
-                                if (vertices[moveTo].egg == -1 && vertices[moveTo].penguin == -1) {
-                                    nextVertex = moveTo;
-                                    nextToEgg = true;
-                                    nextFromEgg = false;
-                                    nextWithEgg = true;
-                                    followEgg = true;
-                                    vertices[toVertex].penguin = index;
-                                    vertices[nextVertex].penguin = index;
-                                    vertices[fromVertex].penguin = -1;
-                                    eggs[vertices[toVertex].egg].initMoveTo(moveTo);
-                                }
-                            });
-                        }
-                        if (!followEgg) {
-                            nextVertex = fromVertex;
-                            nextToEgg = false;
-                            nextFromEgg = true;
-                            nextWithEgg = false;
-                            vertices[nextVertex].penguin = index; //not needed, allready set
-                        }
-                    } else {
-
-                        let n = -1;
-
-                        if (!fromEgg) {
-                            n = randomIndexWhere(vertices[toVertex].vertices, vi => (vertices[vi].penguin == -1 || vertices[vi].penguin == index)  && (vertices[vi].egg != -1 && !eggs[vertices[vi].egg].isInMove()));
-                        }
-
-                        if (n < 0) {
-                            n = randomIndexWhere(vertices[toVertex].vertices, vi => (vertices[vi].penguin == -1 || vertices[vi].penguin == index) && vertices[vi].egg == -1);
-                        }
-
-                        if (n < 0) {
-                            animType = 1;
-                            animChange = true;
-                            return;
-                        } else {
-                            nextVertex = vertices[toVertex].vertices[n];
-                            nextWithEgg = false;
-                            nextToEgg = vertices[nextVertex].egg != -1;
-                            nextFromEgg = false;
-
-                            if (!nextToEgg) {
-                                vertices[nextVertex].penguin = index;
-                            }
-                        }
-                    }
-                }
-
-                let x1 = vertices[fromVertex].x;
-                let y1 = vertices[fromVertex].y;
-                let z1 = vertices[fromVertex].z;
-
-                let x2 = vertices[toVertex].x;
-                let y2 = vertices[toVertex].y;
-                let z2 = vertices[toVertex].z;
-
-                let x3 = vertices[nextVertex].x;
-                let y3 = vertices[nextVertex].y;
-                let z3 = vertices[nextVertex].z;
-
-                let pos1 = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0, withEgg ? -da : (fromEgg ? da : 0.0), toEgg ? da : 0.0);
-                let pos2 = getGeodesicState(x2, y2, z2, x3, y3, z3, 0.0, nextWithEgg ? -da : (nextFromEgg ? da : 0.0), nextToEgg ? da : 0.0);
-
-                let posv = getGeodesicState(pos1.v1, pos1.v2, pos1.v3, pos2.v1, pos2.v2, pos2.v3, tt, 0, 0, new THREE.Vector3(x2, y2, z2));
-
-                if (animChange) {
-                    animChange = false;
-                    t1 = t0 + 0.5 * (t1 - t0) * Math.abs(posv.totalAngle) / Math.PI;
-                }
-
-                updateFigureTransform(m, pos1.x, pos1.y, pos1.z, posv.x, posv.y, posv.z, 0.043);
-
-                m.material.userData.uTwistStrength.value = 20.0 * oscillation1(tt, 80 * (t1 - t0) * speed);
-            }
-        }
-    }
-}
-
-
-function createEgg(params = {}) {
-    let index = params.index;
-    let fromVertex = params.startFrom;
-    let toVertex = params.startTo;
-    let speed = params.speed;
-    let t0 = -1;
-    let t1 = -1;
-    let animType = params.animType;
-    let animChange = params.animChange;
-    let moveState = -1;
-
-    function progress(t) {
-        if (t0 < 0) {
-            t0 = t;
-            t1 = t + 1.0 / speed;
-        }
-
-        let tt = 0;
-
-        if (Math.abs(t1 - t0) < 0.00001) {
-            tt = 2.0;
-        } else {
-            tt = (t - t0) / (t1 - t0);
-        }
-
-        if (tt > 1) {
-            t0 = t;
-            t1 = t + 1.0 / speed;
-            tt = 0;
-
-            if (animType == 0) {
-                animType = 1;
-            }
-            animChange = true;
-        }
-
-        return tt;
-    }
-
-    function setSpeed(newSpeed) {
-        speed = newSpeed;
-    }
-
-    function isInMove() {
-        return moveState != -1;
-    }
-
-    function initMoveTo(nextVertex) {
-        if (moveState != -1) {
-            return;
-        }
-
-        vertices[nextVertex].egg = index;
-        moveState = 0;
-    }
-    function startMoveTo(nextVertex) {
-        fromVertex = toVertex;
-        toVertex = nextVertex;
-
-        if (!vertices[fromVertex].vertices.includes(toVertex)) {
-            console.log('chyba');
-        }
-
-        t0 = -1;
-        animType = 0;
-        moveState = 1;
-    }
-
-
-    return {
-        path: 'assets/OnSphere/egg.ply',
-        color: params.color,
-        setupMaterial: m => {
-            m.color = params.color;
-            m.vertexColors = false;
-            m.roughness = 0.1;
-            m.metalness = 0.3;
-
-        },
-        //createMaterial: () => createTwistMaterial(params.color),
-        prepareGeometry: g => {
-            g.rotateZ(Math.PI);
-            g.scale(0.08, 0.08, 0.08);
-        },
-        prepareMesh: m => {
-            m.castShadow = true;
-        },
-        animate: (m, t) => {
-
-            let tt = progress(t);
-
-            if (animType == 0) {
-                if (animChange) {
-                    animChange = false;
-                }
-
-                let x1 = vertices[fromVertex].x;
-                let y1 = vertices[fromVertex].y;
-                let z1 = vertices[fromVertex].z;
-
-                let x2 = vertices[toVertex].x;
-                let y2 = vertices[toVertex].y;
-                let z2 = vertices[toVertex].z;
-
-                let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt);
-                updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.035);
-
-                /*if (tt > 0.1 && vertices[fromVertex].egg == index) {
-                    vertices[fromVertex].egg = -1;
-                }*/
-            }
-
-            if (animType == 1) {
-                if (animChange) {
-                    animChange = false;
-                    if (moveState == 1) {
-                        if (vertices[fromVertex].egg == index) {
-                            vertices[fromVertex].egg = -1;
-                        }
-                        moveState = -1;
-                    }
-
-                    //vertices.filter(v => v.egg == index).forEach(v => v.egg = -1);
-                    //vertices[toVertex].egg = index;
-
-                    //inMove = false;
-                }
-
-                let x1 = vertices[fromVertex].x;
-                let y1 = vertices[fromVertex].y;
-                let z1 = vertices[fromVertex].z;
-
-                let x2 = vertices[toVertex].x;
-                let y2 = vertices[toVertex].y;
-                let z2 = vertices[toVertex].z;
-
-                let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0);
-                updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.035);
-            }
-        },
-        initMoveTo,
-        startMoveTo,
-        isInMove,
-        setSpeed
-    }
-}
 
 function randomIndexWhere(arr, predicate) {
     const eligible = arr.reduce((acc, el, i) => {
@@ -496,39 +542,6 @@ function oscillation1(t, m) {
     const phi = m * (t / 2 - Math.sin(2 * Math.PI * t) / (4 * Math.PI));
     return Math.sin(phi) * t * (1 - t);
 }*/
-
-function opositeVertex(fromVertex, toVertex) {
-
-    let toNeighbor = vertices[toVertex].vertices;
-    let intersection = vertices[fromVertex].vertices.filter(x => toNeighbor.includes(x));
-
-    let p0 = fromVertex;
-    let p = intersection[0];
-    let p1 = -1;
-
-    for (var i = 0; i < (vertices[toVertex].vertices.length == 6 ? 3 : 2); i++) {
-
-        intersection = vertices[p].vertices.filter(x => toNeighbor.includes(x));
-
-        if (i == 2) {
-            if (p0 == intersection[0]) {
-                p1 = intersection[1];
-            } else {
-                p1 = intersection[0];
-            }
-        } else {
-            if (p0 == intersection[0]) {
-                p0 = p;
-                p = intersection[1];
-            } else {
-                p0 = p;
-                p = intersection[0];
-            }
-        }
-    }
-
-    return vertices[toVertex].vertices.length == 6 ? [p, p0, p1] : [p0, p];
-}
 
 /**
  * @param {THREE.Object3D} figure - Your character mesh/model
