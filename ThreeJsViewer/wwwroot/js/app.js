@@ -453,13 +453,18 @@ const raycaster = new THREE.Raycaster();
 const mouse = new THREE.Vector2();
 
 function onPointerDown(event) {
+    if (event.target !== renderer.domElement) return;
+
     // 1. Calculate pointer position in normalized device coordinates
     // Works for both mouse and touch
-    const x = event.clientX || event.touches[0].clientX;
+    /*const x = event.clientX || event.touches[0].clientX;
     const y = event.clientY || event.touches[0].clientY;
 
     mouse.x = (x / window.innerWidth) * 2 - 1;
-    mouse.y = -(y / window.innerHeight) * 2 + 1;
+    mouse.y = -(y / window.innerHeight) * 2 + 1;*/
+
+    mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+    mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
 
     // 2. Update the picking ray with the camera and pointer position
     raycaster.setFromCamera(mouse, camera);
@@ -491,7 +496,9 @@ function onPointerDown(event) {
 
 
         if (config.onPointerDown) {
-            config.onPointerDown(mesh, localPoint);
+            if (config.onPointerDown(mesh, localPoint)) {
+                event.stopPropagation();
+            }
         } else {
             let i = loadedMeshes.indexOf(mesh);
             if (i >= 0 /*&& i != selectedMesh*/) {
@@ -501,8 +508,9 @@ function onPointerDown(event) {
     }
 }
 
-window.addEventListener('mousedown', onPointerDown);
-window.addEventListener('touchstart', onPointerDown);
+//window.addEventListener('mousedown', onPointerDown);
+//window.addEventListener('touchstart', onPointerDown);
+window.addEventListener('pointerdown', onPointerDown, true);
 
 
 // 3. Render submenus FIRST

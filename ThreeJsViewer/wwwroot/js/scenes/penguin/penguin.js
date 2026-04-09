@@ -53,7 +53,7 @@ export function createPenguinScene(pcount, ecount) {
             return tt;
         }
 
-        return {
+        let penguin = {
             path: 'assets/OnSphere/penguin.ply',
             //color: 0xa0a0a0,
             createMaterial: () => createTwistMaterial(params.color),
@@ -133,6 +133,12 @@ export function createPenguinScene(pcount, ecount) {
                 }
 
                 if (animType == 2) {
+                    if (selectedPenguin == penguin) {
+                        animType = 1;
+                        animChange = true;
+                        return;
+                    }
+
                     if (animChange) {
                         if (toEgg) {
                             let followEgg = false;
@@ -219,6 +225,8 @@ export function createPenguinScene(pcount, ecount) {
                 }
             }
         }
+
+        return penguin;
     }
 
     function createEgg(params = {}) {
@@ -421,6 +429,9 @@ export function createPenguinScene(pcount, ecount) {
                     penguins.forEach(p => p.mesh.material.color.set(0x404040));
                     m.material.color.set(0xe0e0e0);
                 }
+                return true;
+            } else {
+                return false;
             }
         },
         //audio: "assets/OnSphere/magellano-penguins.wav",
