@@ -133,13 +133,13 @@ export function createPenguinScene(pcount, ecount) {
                 }
 
                 if (animType == 2) {
-                    if (selectedPenguin == penguin) {
-                        animType = 1;
-                        animChange = true;
-                        return;
-                    }
-
                     if (animChange) {
+                        if (selectedPenguin == penguin) {
+                            animType = 1;
+                            animChange = true;
+                            return;
+                        }
+
                         if (toEgg) {
                             let followEgg = false;
                             if (vertices[toVertex].egg != -1 && !eggs[vertices[toVertex].egg].isInMove()) {
@@ -418,7 +418,6 @@ export function createPenguinScene(pcount, ecount) {
             }
         },
         onPointerDown: (m, p) => {
-
             let i = penguins.indexOf(m.userData);
             if (i >= 0) {
                 if (selectedPenguin == m.userData) {
@@ -430,9 +429,23 @@ export function createPenguinScene(pcount, ecount) {
                     m.material.color.set(0xe0e0e0);
                 }
                 return true;
-            } else {
-                return false;
             }
+
+            i = eggs.indexOf(m.userData);
+            if (i >= 0) {
+                console.log(eggs[i].isInMove());
+                return true;
+            }
+
+            if (m.userData == scene.models[0]) {
+
+                let d = findNearestVertex(p, vertices)
+
+                console.log(d);
+            }
+
+            return false;
+
         },
         //audio: "assets/OnSphere/magellano-penguins.wav",
         setup: (camera, dirLight) => {
@@ -725,4 +738,32 @@ function createTwistMaterial(baseColorHex) {
     };
 
     return material;
+}
+
+function findNearestVertex(p, vertices) {
+    let nearestIndex = -1;
+    let minDistanceSq = Infinity;
+
+    // We reuse one Vector3 object to avoid creating thousands of objects in memory
+    const tempVec = new THREE.Vector3();
+
+    for (let i = 0; i < vertices.length; i++) {
+        const v = vertices[i];
+
+        // Set our temp vector to the current vertex coordinates
+        tempVec.set(v.x, v.y, v.z);
+
+        // Calculate squared distance
+        const distSq = p.distanceToSquared(tempVec);
+
+        if (distSq < minDistanceSq) {
+            minDistanceSq = distSq;
+            nearestIndex = i;
+        }
+    }
+
+    return {
+        index: nearestIndex,
+        distance: Math.sqrt(minDistanceSq) // Square root only once at the very end
+    };
 }
