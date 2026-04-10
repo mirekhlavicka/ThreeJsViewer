@@ -7,6 +7,7 @@ export function createPenguinScene(pcount, ecount) {
     let eggs = [];
     let penguins = [];
     let selectedPenguin = null;
+    let selectedVertex = -1;
 
     function createPenguin(params = {}) {
         let index = params.index;
@@ -51,6 +52,10 @@ export function createPenguinScene(pcount, ecount) {
             }
 
             return tt;
+        }
+
+        function inVertex() {
+            return toVertex;
         }
 
         let penguin = {
@@ -134,17 +139,14 @@ export function createPenguinScene(pcount, ecount) {
 
                 if (animType == 2) {
                     if (animChange) {
-                        if (selectedPenguin == penguin) {
-                            animType = 1;
-                            animChange = true;
-                            return;
-                        }
+
+                        let testSelected = (v) => selectedPenguin != penguin || v == selectedVertex ;
 
                         if (toEgg) {
                             let followEgg = false;
                             if (vertices[toVertex].egg != -1 && !eggs[vertices[toVertex].egg].isInMove()) {
                                 opositeVertex(fromVertex, toVertex).forEach(moveTo => {
-                                    if (followEgg || moveTo < 0) {
+                                    if (moveTo < 0 || !testSelected(moveTo) || followEgg) {
                                         return;
                                     }
 
@@ -162,22 +164,28 @@ export function createPenguinScene(pcount, ecount) {
                                 });
                             }
                             if (!followEgg) {
-                                nextVertex = fromVertex;
-                                nextToEgg = false;
-                                nextFromEgg = true;
-                                nextWithEgg = false;
-                                vertices[nextVertex].penguin = index; //not needed, allready set
+                                if (testSelected(fromVertex)) {
+                                    nextVertex = fromVertex;
+                                    nextToEgg = false;
+                                    nextFromEgg = true;
+                                    nextWithEgg = false;
+                                    vertices[nextVertex].penguin = index; //not needed, allready set
+                                } else {
+                                    animType = 1;
+                                    animChange = true;
+                                    return;
+                                }
                             }
                         } else {
 
                             let n = -1;
 
-                            if (!fromEgg) {
-                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (vertices[vi].penguin == -1 || vertices[vi].penguin == index) && (vertices[vi].egg != -1 && !eggs[vertices[vi].egg].isInMove()));
+                            if (!fromEgg || selectedPenguin == penguin) {
+                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (testSelected(vi) && vertices[vi].penguin == -1 || vertices[vi].penguin == index) && (vertices[vi].egg != -1 && !eggs[vertices[vi].egg].isInMove()));
                             }
 
                             if (n < 0) {
-                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (vertices[vi].penguin == -1 || vertices[vi].penguin == index) && vertices[vi].egg == -1);
+                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (testSelected(vi) && vertices[vi].penguin == -1 || vertices[vi].penguin == index) && vertices[vi].egg == -1);
                             }
 
                             if (n < 0) {
@@ -194,6 +202,10 @@ export function createPenguinScene(pcount, ecount) {
                                     vertices[nextVertex].penguin = index;
                                 }
                             }
+                        }
+
+                        if (selectedPenguin == penguin) {
+                            selectedVertex = -1;
                         }
                     }
 
@@ -223,7 +235,8 @@ export function createPenguinScene(pcount, ecount) {
 
                     m.material.userData.uTwistStrength.value = 20.0 * oscillation1(tt, 80 * (t1 - t0) * speed);
                 }
-            }
+            },
+            inVertex
         }
 
         return penguin;
@@ -274,6 +287,10 @@ export function createPenguinScene(pcount, ecount) {
 
         function isInMove() {
             return moveState != -1;
+        }
+
+        function inVertex() {
+            return toVertex;
         }
 
         function initMoveTo(nextVertex) {
@@ -372,6 +389,7 @@ export function createPenguinScene(pcount, ecount) {
             initMoveTo,
             startMoveTo,
             isInMove,
+            inVertex,
             setSpeed
         }
     }
@@ -424,30 +442,46 @@ export function createPenguinScene(pcount, ecount) {
                     selectedPenguin.mesh.material.color.set(0x404040);
                     selectedPenguin = null;
                 } else {
-                    selectedPenguin = m.userData;
-                    penguins.forEach(p => p.mesh.material.color.set(0x404040));
+                    if (selectedPenguin != null) {
+                        selectedPenguin.mesh.material.color.set(0x404040)
+                    }
+                    selectedPenguin = m.userData;                    
                     m.material.color.set(0xe0e0e0);
                 }
+                selectedVertex = -1;
                 return true;
             }
 
+            if (selectedPenguin == null) {
+                return false;
+            }
+
+            let v = -1
             i = eggs.indexOf(m.userData);
             if (i >= 0) {
-                console.log(eggs[i].isInMove());
-                return true;
+                let egg = m.userData;
+                if (!egg.isInMove()) {
+                    v = egg.inVertex();
+                }
             }
 
             if (m.userData == scene.models[0]) {
-
                 let d = findNearestVertex(p, vertices)
+                if (d.distance < 0.15) {
+                    v = d.index;
+                }
+            }
 
-                console.log(d);
+            if (v != -1 && vertices[selectedPenguin.inVertex()].vertices.indexOf(v) != -1) {
+                selectedVertex = v;
+                console.log(selectedVertex);
+                return true;
             }
 
             return false;
 
         },
-        //audio: "assets/OnSphere/magellano-penguins.wav",
+        audio: "assets/OnSphere/magellano-penguins.wav",
         setup: (camera, dirLight) => {
             camera.position.set(-1.5, 0.0, 1.0);
             dirLight.position.set(1, 1, 1);
@@ -524,7 +558,7 @@ export function createPenguinScene(pcount, ecount) {
         let startFrom = vertices[startTo].vertices[0];
         vertices[startTo].penguin = i;
 
-        let clrspeed = i / (pcount - 1);
+        let clrspeed = (pcount == 1 ? 1 : i / (pcount - 1));
 
         //const value = 63 + Math.floor(/*Math.random()*/ clrspeed * 3 * 64);
         //const grayColor = (value << 16) | (value << 8) | value;
