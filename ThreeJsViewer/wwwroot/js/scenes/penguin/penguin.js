@@ -15,6 +15,8 @@ export function createPenguinScene(pcount, ecount) {
         let toVertex = params.startTo;
         let nextVertex = 0;
         let speed = params.speed;
+        let initspeed = params.speed;
+        let color = params.color;
         let t0 = -1;
         let t1 = -1;
         let animType = params.animType;
@@ -58,10 +60,20 @@ export function createPenguinScene(pcount, ecount) {
             return toVertex;
         }
 
+        function setSelected(selected) {
+            if (selected) {
+                penguin.mesh.material.color.set(0xffffff);
+                speed = 0.8;
+            } else {
+                penguin.mesh.material.color.set(color);
+                speed = initspeed;
+            }
+        }
+
         let penguin = {
             path: 'assets/OnSphere/penguin.ply',
             //color: 0xa0a0a0,
-            createMaterial: () => createTwistMaterial(params.color),
+            createMaterial: () => createTwistMaterial(color),
             prepareGeometry: g => {
                 g.rotateZ(Math.PI);
                 g.scale(0.07, 0.07, 0.07);
@@ -85,8 +97,8 @@ export function createPenguinScene(pcount, ecount) {
                         toVertex = nextVertex;
                         fromEgg = nextFromEgg;
                         toEgg = nextToEgg;
-                        withEgg = nextWithEgg,
-                            animChange = false;
+                        withEgg = nextWithEgg;
+                        animChange = false;
                     }
 
                     let x1 = vertices[fromVertex].x;
@@ -133,8 +145,17 @@ export function createPenguinScene(pcount, ecount) {
 
                     let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0, withEgg ? -da : (fromEgg ? da : 0.0), toEgg ? da : 0.0);
                     updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.043);
-                    m.material.userData.uTime.value = 2 * Math.PI * tt;
+                    m.material.userData.uTime1.value = (selectedPenguin == penguin ? 0 : 2 * Math.PI * tt);
+                    m.material.userData.uTime2.value = (selectedPenguin != penguin ? 0 : 2 * Math.PI * tt);
                     lastPos = pos;
+
+                    if (selectedPenguin == penguin && selectedVertex != -1) {
+                        animType = 2;
+                        m.material.userData.uTime2.value = 0;
+                        t0 = -1;
+                        animChange = true;
+                        return;
+                    }
                 }
 
                 if (animType == 2) {
@@ -164,7 +185,7 @@ export function createPenguinScene(pcount, ecount) {
                                 });
                             }
                             if (!followEgg) {
-                                if (testSelected(fromVertex)) {
+                                if (selectedPenguin != penguin || selectedVertex == fromVertex || vertices[toVertex].egg == -1 || eggs[vertices[toVertex].egg].isInMove()) {
                                     nextVertex = fromVertex;
                                     nextToEgg = false;
                                     nextFromEgg = true;
@@ -172,7 +193,9 @@ export function createPenguinScene(pcount, ecount) {
                                     vertices[nextVertex].penguin = index; //not needed, allready set
                                 } else {
                                     animType = 1;
+                                    t0 = -1;
                                     animChange = true;
+                                    selectedVertex = -1;
                                     return;
                                 }
                             }
@@ -190,7 +213,9 @@ export function createPenguinScene(pcount, ecount) {
 
                             if (n < 0) {
                                 animType = 1;
+                                t0 = -1;
                                 animChange = true;
+                                selectedVertex = -1;
                                 return;
                             } else {
                                 nextVertex = vertices[toVertex].vertices[n];
@@ -236,7 +261,8 @@ export function createPenguinScene(pcount, ecount) {
                     m.material.userData.uTwistStrength.value = 20.0 * oscillation1(tt, 80 * (t1 - t0) * speed);
                 }
             },
-            inVertex
+            inVertex,
+            setSelected
         }
 
         return penguin;
@@ -439,14 +465,14 @@ export function createPenguinScene(pcount, ecount) {
             let i = penguins.indexOf(m.userData);
             if (i >= 0) {
                 if (selectedPenguin == m.userData) {
-                    selectedPenguin.mesh.material.color.set(0x404040);
+                    selectedPenguin.setSelected(false);
                     selectedPenguin = null;
                 } else {
                     if (selectedPenguin != null) {
-                        selectedPenguin.mesh.material.color.set(0x404040)
+                        selectedPenguin.setSelected(false);
                     }
                     selectedPenguin = m.userData;                    
-                    m.material.color.set(0xe0e0e0);
+                    selectedPenguin.setSelected(true);
                 }
                 selectedVertex = -1;
                 return true;
@@ -474,8 +500,7 @@ export function createPenguinScene(pcount, ecount) {
 
             if (v != -1 && vertices[selectedPenguin.inVertex()].vertices.indexOf(v) != -1) {
                 selectedVertex = v;
-                console.log(selectedVertex);
-                return true;
+                //return true;
             }
 
             return false;
@@ -551,17 +576,16 @@ export function createPenguinScene(pcount, ecount) {
         eggs.push(egg);
     }
 
-
     for (let i = 0; i < pcount; i++) {
 
         let startTo = randomIndexWhere(vertices, v => v.penguin == -1 && v.egg == -1); 
         let startFrom = vertices[startTo].vertices[0];
         vertices[startTo].penguin = i;
 
-        let clrspeed = (pcount == 1 ? 1 : i / (pcount - 1));
+        let clrspeed = /*0.5 * */(pcount == 1 ? 1 : i / (pcount - 1));
 
-        //const value = 63 + Math.floor(/*Math.random()*/ clrspeed * 3 * 64);
-        //const grayColor = (value << 16) | (value << 8) | value;
+        const value = 63 + Math.floor(clrspeed * 3 * 64);
+        const grayColor = (value << 16) | (value << 8) | value;
 
         let penguin = createPenguin({
             index: i,
@@ -569,8 +593,8 @@ export function createPenguinScene(pcount, ecount) {
             startTo,
             animType: 1,
             animChange: true,
-            speed: 0.25 + /*Math.random()*/ 0.4 * clrspeed,
-            color: 0x404040//grayColor
+            speed: 0.25 + 0.25 * clrspeed,
+            color: grayColor
         });
 
         scene.models.push(penguin);
@@ -579,7 +603,6 @@ export function createPenguinScene(pcount, ecount) {
 
     return scene;
 }
-
 
 function randomIndexWhere(arr, predicate) {
     const eligible = arr.reduce((acc, el, i) => {
@@ -725,17 +748,20 @@ function createTwistMaterial(baseColorHex) {
     });
 
     // 2. Define uniforms to pass data from JS to the Shader
-    material.userData.uTime = { value: 0 };
+    material.userData.uTime1 = { value: 0 };
+    material.userData.uTime2 = { value: 0 };
     material.userData.uTwistStrength = { value: 0.0 };
 
     material.onBeforeCompile = (shader) => {
         // Pass our JS uniforms into the shader
-        shader.uniforms.uTime = material.userData.uTime;
+        shader.uniforms.uTime1 = material.userData.uTime1;
+        shader.uniforms.uTime2 = material.userData.uTime2;
         shader.uniforms.uTwistStrength = material.userData.uTwistStrength;
 
         // 3. Inject uniform declarations into Vertex Shader
         shader.vertexShader = `
-            uniform float uTime;
+            uniform float uTime1;
+            uniform float uTime2;
             uniform float uTwistStrength;
         ` + shader.vertexShader;
 
@@ -759,13 +785,23 @@ function createTwistMaterial(baseColorHex) {
 
             angle = 1.1 *
                 smoothstep(0.0, 0.03, transformed.z) *
-                sin(uTime);
+                sin(uTime1);
             s = sin(angle);
             c = cos(angle);
 
             rotationMatrix = mat2(c, -s, s, c);
 
             transformed.xy = rotationMatrix * transformed.xy;
+
+            angle = 0.18 *
+                smoothstep(0.0, 0.03, transformed.z) *
+                (0.7 + sin(uTime2));
+            s = sin(angle);
+            c = cos(angle);
+
+            rotationMatrix = mat2(c, -s, s, c);
+
+            transformed.yz = rotationMatrix * transformed.yz;
 
             `
         );
