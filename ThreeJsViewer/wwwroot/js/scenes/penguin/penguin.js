@@ -63,9 +63,11 @@ export function createPenguinScene(pcount, ecount) {
         function setSelected(selected) {
             if (selected) {
                 penguin.mesh.material.color.set(0xffffff);
+                penguin.mesh.material.emissive?.setRGB(0.0, 0.2, 0.4);
                 speed = 0.8;
             } else {
                 penguin.mesh.material.color.set(color);
+                penguin.mesh.material.emissive?.setRGB(0, 0, 0);
                 speed = initspeed;
             }
         }
@@ -507,7 +509,7 @@ export function createPenguinScene(pcount, ecount) {
             return false;
 
         },
-        //audio: "assets/OnSphere/magellano-penguins.wav",
+        audio: "assets/OnSphere/magellano-penguins.wav",
         setup: (camera, dirLight) => {
             camera.position.set(-1.5, 0.0, 1.0);
             dirLight.position.set(1, 1, 1);
