@@ -84,7 +84,7 @@ export function createPenguinScene(pcount, ecount) {
             animate: (m, t) => {
 
                 let tt = progress(t);
-                let da = 0.1;
+                let da = 0.105;
 
                 if (animType == 0) {
                     if (animChange) {
@@ -117,6 +117,7 @@ export function createPenguinScene(pcount, ecount) {
                         x1 = stt * x1 + (1 - stt) * lastPos.x;
                         y1 = stt * y1 + (1 - stt) * lastPos.y;
                         z1 = stt * z1 + (1 - stt) * lastPos.z;
+                        //stt = tt ** (1 / 3); 
                         da1 = stt * da1;
                     }
 
@@ -342,7 +343,7 @@ export function createPenguinScene(pcount, ecount) {
 
 
         return {
-            path: 'assets/OnSphere/egg.ply',
+            path: index % 2 == 0 ? 'assets/OnSphere/openedegg.ply': 'assets/OnSphere/egg.ply',
             color: params.color,
             setupMaterial: m => {
                 m.color = params.color;
@@ -377,7 +378,7 @@ export function createPenguinScene(pcount, ecount) {
                     let z2 = vertices[toVertex].z;
 
                     let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, tt);
-                    updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.035);
+                    updateFigureTransform(m, pos.x, pos.y, pos.z, 0, 0, 0, 0.04);
 
                     /*if (tt > 0.1 && vertices[fromVertex].egg == index) {
                         vertices[fromVertex].egg = -1;
@@ -409,7 +410,7 @@ export function createPenguinScene(pcount, ecount) {
                     let z2 = vertices[toVertex].z;
 
                     let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0);
-                    updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.035);
+                    updateFigureTransform(m, pos.x, pos.y, pos.z, 0, 0, 0, 0.04);
                 }
             },
             initMoveTo,
@@ -506,7 +507,7 @@ export function createPenguinScene(pcount, ecount) {
             return false;
 
         },
-        audio: "assets/OnSphere/magellano-penguins.wav",
+        //audio: "assets/OnSphere/magellano-penguins.wav",
         setup: (camera, dirLight) => {
             camera.position.set(-1.5, 0.0, 1.0);
             dirLight.position.set(1, 1, 1);
@@ -624,6 +625,25 @@ function oscillation1(t, m) {
     return Math.sin(phi) * t * (1 - t);
 }*/
 
+function getOrthogonalVector(v) {
+    // 1. Ensure the input is normalized
+    const vec = v.clone().normalize();
+
+    // 2. Use a stable helper constant
+    // This creates a singularity only at v = (0, 0, -1)
+    const k = Math.abs(vec.z) < 0.999 ? 0 : 1;
+    const sign = vec.z >= 0 ? 1 : -1;
+    const a = -1 / (sign + vec.z);
+    const b = vec.x * vec.y * a;
+
+    // 3. Construct the orthogonal vector
+    return new THREE.Vector3(
+        1 + sign * vec.x * vec.x * a,
+        sign * b,
+        -sign * vec.x
+    ).normalize();
+}
+
 /**
  * @param {THREE.Object3D} figure - Your character mesh/model
  * @param {number} x, y, z - Coordinates on the sphere surface
@@ -631,9 +651,10 @@ function oscillation1(t, m) {
  * @param {number} shift - Distance to offset figure so it stands on surface
  */
 function updateFigureTransform(figure, x, y, z, v1, v2, v3, shift) {
+
     // 1. Create Vectors from inputs
     const pos = new THREE.Vector3(x, y, z);
-    const vel = new THREE.Vector3(v1, v2, v3);
+    const vel = (v1 == 0 && v2 == 0 && v3 == 0 ? getOrthogonalVector(pos) : new THREE.Vector3(v1, v2, v3));
 
     // 2. Define the Basis Vectors
     // Z-axis (Normal): Points from center through the position
