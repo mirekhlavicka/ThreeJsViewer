@@ -1,7 +1,7 @@
 ﻿import { icosaVertices } from './icosa.js';
 import * as THREE from 'three';
 
-export function createPenguinScene(pcount, ecount) {
+export function createPenguinScene(pcount, ecount0, ecount1) {
 
     let vertices = structuredClone(icosaVertices);
     let eggs = [];
@@ -168,7 +168,7 @@ export function createPenguinScene(pcount, ecount) {
 
                         if (toEgg) {
                             let followEgg = false;
-                            if (vertices[toVertex].egg != -1 && !eggs[vertices[toVertex].egg].isInMove()) {
+                            if (vertices[toVertex].egg != -1 && !eggs[vertices[toVertex].egg].isInMove() && (selectedPenguin == penguin || eggs[vertices[toVertex].egg].type == 0)) {
                                 opositeVertex(fromVertex, toVertex).forEach(moveTo => {
                                     if (moveTo < 0 || !testSelected(moveTo) || followEgg) {
                                         return;
@@ -181,7 +181,7 @@ export function createPenguinScene(pcount, ecount) {
                                         nextWithEgg = true;
                                         followEgg = true;
                                         vertices[toVertex].penguin = index;
-                                        vertices[nextVertex].penguin = index;
+                                        //vertices[nextVertex].penguin = index;
                                         vertices[fromVertex].penguin = -1;
                                         eggs[vertices[toVertex].egg].initMoveTo(moveTo);
                                     }
@@ -207,7 +207,7 @@ export function createPenguinScene(pcount, ecount) {
                             let n = -1;
 
                             if (!fromEgg || selectedPenguin == penguin) {
-                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (testSelected(vi) && vertices[vi].penguin == -1 || vertices[vi].penguin == index) && (vertices[vi].egg != -1 && !eggs[vertices[vi].egg].isInMove()));
+                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (testSelected(vi) && vertices[vi].penguin == -1 || vertices[vi].penguin == index) && (vertices[vi].egg != -1 /*&& !eggs[vertices[vi].egg].isInMove()*/));
                             }
 
                             if (n < 0) {
@@ -345,7 +345,8 @@ export function createPenguinScene(pcount, ecount) {
 
 
         return {
-            path: index % 2 == 0 ? 'assets/OnSphere/openedegg.ply': 'assets/OnSphere/egg.ply',
+            type: params.type,
+            path: params.type == 0 ? 'assets/OnSphere/openedegg.ply': 'assets/OnSphere/egg.ply',
             color: params.color,
             setupMaterial: m => {
                 m.color = params.color;
@@ -559,13 +560,14 @@ export function createPenguinScene(pcount, ecount) {
         v.egg = -1;
     });
 
-    for (let i = 0; i < ecount; i++) {
+    for (let i = 0; i < ecount0 + ecount1; i++) {
 
         let startTo = randomIndexWhere(vertices, v => v.penguin == -1 && v.egg == -1);
         let startFrom = vertices[startTo].vertices[0];
         vertices[startTo].egg = i;
 
         let egg = createEgg({
+            type: i < ecount0 ? 0 : 1,
             index: i,
             startFrom,
             startTo,
