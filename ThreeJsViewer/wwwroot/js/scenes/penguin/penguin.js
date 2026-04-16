@@ -8,6 +8,12 @@ export function createPenguinScene(pcount, ecount0, ecount1) {
     let penguins = [];
     let selectedPenguin = null;
     let selectedVertex = -1;
+    let verticesHighlight = vertices.map(() => ({
+        t0: 0,
+        t1: 1,
+        wPrev: 0,
+        w: 0
+    }));
 
     function createPenguin(params = {}) {
         let index = params.index;
@@ -347,13 +353,21 @@ export function createPenguinScene(pcount, ecount0, ecount1) {
         return {
             type: params.type,
             path: params.type == 0 ? 'assets/OnSphere/openedegg.ply': 'assets/OnSphere/egg.ply',
-            color: params.color,
+            //color: params.color,
             setupMaterial: m => {
-                m.color = params.color;
-                m.vertexColors = false;
-                m.roughness = 0.1;
-                m.metalness = 0.3;
 
+                if (params.type == 1) {
+                    m.metalness = 0.7;
+                    m.roughness = 0.3;
+                    m.emissive = 0xffa500;
+                    m.emissiveIntensity = 0.1;
+                    m.color = 0xffd700;
+                } else {
+                    m.color = params.color;
+                    m.vertexColors = false;
+                    m.roughness = 0.1;
+                    m.metalness = 0.3;
+                }
             },
             //createMaterial: () => createTwistMaterial(params.color),
             prepareGeometry: g => {
@@ -521,36 +535,35 @@ export function createPenguinScene(pcount, ecount0, ecount1) {
         models: [
             {
                 path: 'assets/OnSphere/geodesicSphereIcosa.ply',
-                setupMaterial: m => {
-                    m.color = 0xffffff;
-                    m.vertexColors = true;
-                    m.roughness = 0.5;
-                    m.metalness = 0.8;
+                createMaterial: () => {
+                    let m = createHighlightMaterial(vertices.length);
+                    const pointsArray = m.userData.uHighlightPoints.value;
+                    for (var i = 0; i < pointsArray.length; i++) {                        
+                        pointsArray[i].set(vertices[i].x, vertices[i].y, vertices[i].z, 0.0);
+                    }                    
 
+                    return m;
                 },
                 prepareMesh: m => {
                     m.receiveShadow = true;
-                }/*,
-                createMaterial: () => new THREE.MeshPhysicalMaterial({
-                    vertexColors: true,
-                    //color: 0xdbf3ff,            // Very pale blue (simulates scattered light)
-                    transmission: 0.55,         // Not 1.0, to keep some surface body
-                    ior: 1.31,
+                    m.castShadow = false;
+                },
+                animate: (m, t) => {
+                    const pointsArray = m.material.userData.uHighlightPoints.value;
+                    for (var i = 0; i < pointsArray.length; i++) {
 
-                    // LIGHT SETTINGS (The "Bright" Fix)
-                    attenuationColor: 0x00abff, // The "Deep" blue
-                    attenuationDistance: 5.0,   // INCREASE THIS to let more light through
-
-                    roughness: 0.1,             // Lower roughness for clarity
-                    metalness: 0.0,
-
-                    // THE "WET/SNOW" LAYER
-                    clearcoat: 1.0,
-                    clearcoatRoughness: 0.2,    // Rougher top layer looks like melting frost
-
-                    sheen: 1.0,                 // Adds a soft "fuzzy" glow to edges
-                    sheenColor: 0xffffff,
-                })*/
+                        let w = vertices[i].penguin == -1 ? (vertices[i].egg != -1 && eggs[vertices[i].egg].isInMove() ? 0.6 : 0) : (penguins[vertices[i].penguin] == selectedPenguin ? -0.8 : 0.6);
+                        let vh = verticesHighlight[i];
+                        if (vh.w != w) {
+                            vh.wPrev = vh.w;
+                            vh.w = w
+                            vh.t0 = t;
+                            vh.t1 = t + 0.4;                            
+                        }
+                        let tt = THREE.MathUtils.smoothstep(t, vh.t0, vh.t1);
+                        pointsArray[i].w = (1 - tt) * vh.wPrev +  tt * vh.w ;
+                    }                    
+                }
             }
         ]
     };
@@ -762,6 +775,34 @@ function getGeodesicState(x1, y1, z1, x2, y2, z2, t, da1 = 0, da2 = 0, axis1 = n
     };
 }
 
+function findNearestVertex(p, vertices) {
+    let nearestIndex = -1;
+    let minDistanceSq = Infinity;
+
+    // We reuse one Vector3 object to avoid creating thousands of objects in memory
+    const tempVec = new THREE.Vector3();
+
+    for (let i = 0; i < vertices.length; i++) {
+        const v = vertices[i];
+
+        // Set our temp vector to the current vertex coordinates
+        tempVec.set(v.x, v.y, v.z);
+
+        // Calculate squared distance
+        const distSq = p.distanceToSquared(tempVec);
+
+        if (distSq < minDistanceSq) {
+            minDistanceSq = distSq;
+            nearestIndex = i;
+        }
+    }
+
+    return {
+        index: nearestIndex,
+        distance: Math.sqrt(minDistanceSq) // Square root only once at the very end
+    };
+}
+
 function createTwistMaterial(baseColorHex) {
     // 1. Create standard material (keeps your lighting/colors)
     const material = new THREE.MeshStandardMaterial({
@@ -835,30 +876,81 @@ function createTwistMaterial(baseColorHex) {
     return material;
 }
 
-function findNearestVertex(p, vertices) {
-    let nearestIndex = -1;
-    let minDistanceSq = Infinity;
-
-    // We reuse one Vector3 object to avoid creating thousands of objects in memory
-    const tempVec = new THREE.Vector3();
-
-    for (let i = 0; i < vertices.length; i++) {
-        const v = vertices[i];
-
-        // Set our temp vector to the current vertex coordinates
-        tempVec.set(v.x, v.y, v.z);
-
-        // Calculate squared distance
-        const distSq = p.distanceToSquared(tempVec);
-
-        if (distSq < minDistanceSq) {
-            minDistanceSq = distSq;
-            nearestIndex = i;
-        }
+/**
+ * Creates a MeshStandardMaterial that darkens the mesh near specific local points.
+ * @returns {THREE.MeshStandardMaterial}
+ */
+function createHighlightMaterial(n) {
+    // 1. Initialize the data structure for n points
+    // Vector4: x, y, z are local coordinates; w is the intensity (0.0 to 1.0)
+    const points = [];
+    for (let i = 0; i < n; i++) {
+        points.push(new THREE.Vector4(0, 0, 0, 0.0));
     }
 
-    return {
-        index: nearestIndex,
-        distance: Math.sqrt(minDistanceSq) // Square root only once at the very end
+    const material = new THREE.MeshStandardMaterial({
+        vertexColors: true, // Required for PLY vertex colors
+        roughness: 0.5,
+        metalness: 0.8,
+        color: 0xffffff
+    });
+
+    // 2. Store uniforms in userData for easy access later
+    material.userData = {
+        uHighlightPoints: { value: points },
+        uRadius: { value: 0.15 },
+        uMaxDarkness: { value: 0.5 } // 0.0 = no change, 1.0 = can go pitch black
     };
+
+    material.onBeforeCompile = (shader) => {
+        // Merge our custom uniforms into the shader
+        Object.assign(shader.uniforms, material.userData);
+
+        // --- VERTEX SHADER: Pass local position ---
+        shader.vertexShader = `
+      varying vec3 vLocalPosition;
+      ${shader.vertexShader}
+    `.replace(
+            '#include <begin_vertex>',
+            `
+      #include <begin_vertex>
+      vLocalPosition = position.xyz; 
+      `
+        );
+
+        // --- FRAGMENT SHADER: Calculate Darkening ---
+        shader.fragmentShader = `
+      varying vec3 vLocalPosition;
+      uniform vec4 uHighlightPoints[${n}];
+      uniform float uRadius;
+      uniform float uMaxDarkness;
+      ${shader.fragmentShader}
+    `.replace(
+            '#include <color_fragment>',
+            `
+      #include <color_fragment>
+      
+      float totalDarkening = 0.0;
+      
+      for(int i = 0; i < ${n}; i++) {
+          // Calculate distance in Local Space
+          float dist = distance(vLocalPosition, uHighlightPoints[i].xyz);
+          
+          // Smooth transition: 1.0 at center, 0.0 at uRadius
+          float mask = smoothstep(uRadius, 0.1, dist);
+          
+          // Apply individual point intensity (the .w component)
+          float pointEffect = mask * uHighlightPoints[i].w;
+          
+          // Use max() so overlapping points don't stack infinitely
+          totalDarkening += pointEffect;//max(totalDarkening, pointEffect);
+      }
+      
+      // Apply the darkening to the base color before lighting is calculated
+      diffuseColor.rgb *= (1.0 - (totalDarkening/* * uMaxDarkness*/));
+      `
+        );
+    };
+
+    return material;
 }
