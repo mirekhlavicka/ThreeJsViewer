@@ -1,7 +1,7 @@
 ﻿import { icosaVertices } from './icosa.js';
 import * as THREE from 'three';
 
-export function createPenguinScene(pcount, ecount0, ecount1) {
+export function createPenguinScene(pcount, ecount0, ecount1, name ) {
 
     let vertices = structuredClone(icosaVertices);
     let eggs = [];
@@ -213,7 +213,7 @@ export function createPenguinScene(pcount, ecount0, ecount1) {
                             let n = -1;
 
                             if (!fromEgg || selectedPenguin == penguin) {
-                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (testSelected(vi) && vertices[vi].penguin == -1 || vertices[vi].penguin == index) && (vertices[vi].egg != -1 /*&& !eggs[vertices[vi].egg].isInMove()*/));
+                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (testSelected(vi) && vertices[vi].penguin == -1 || vertices[vi].penguin == index) && (vertices[vi].egg != -1 && (selectedPenguin == penguin || eggs[vertices[vi].egg].type == 0)    /*&& !eggs[vertices[vi].egg].isInMove()*/));
                             }
 
                             if (n < 0) {
@@ -471,10 +471,20 @@ export function createPenguinScene(pcount, ecount0, ecount1) {
         return vertices[toVertex].vertices.length == 6 ? [p, p0, p1] : [p0, p];
     }
 
+    function testWin() {
+        let eggVert = vertices.filter(v => v.egg != -1 && eggs[v.egg].type == 1);
+
+        const intersection = eggVert.reduce((acc, obj) => {
+            return acc.filter(value => obj.vertices.includes(value));
+        }, eggVert[0].vertices)[0] ?? -1;
+
+        return intersection;
+    }
+
     let scene = {
         reset: () => {
             if (scene.used) {
-                return createPenguinScene(pcount, ecount);
+                return createPenguinScene(pcount, ecount0, ecount1, name);
             } else {
                 return scene;
             }
@@ -531,7 +541,7 @@ export function createPenguinScene(pcount, ecount0, ecount1) {
         },
         gameMode: true,
         //shadowMapType: THREE.VSMShadowMap, //THREE.VSMShadowMap, THREE.PCFShadowMap
-        name: "Penguin/Quo vadis penguin",
+        name: "Penguins/" + name,
         models: [
             {
                 path: 'assets/OnSphere/geodesicSphereIcosa.ply',
@@ -550,18 +560,26 @@ export function createPenguinScene(pcount, ecount0, ecount1) {
                 },
                 animate: (m, t) => {
                     const pointsArray = m.material.userData.uHighlightPoints.value;
-                    for (var i = 0; i < pointsArray.length; i++) {
 
-                        let w = vertices[i].penguin == -1 ? (vertices[i].egg != -1 && eggs[vertices[i].egg].isInMove() ? 0.6 : 0) : (penguins[vertices[i].penguin] == selectedPenguin ? -0.8 : 0.6);
-                        let vh = verticesHighlight[i];
-                        if (vh.w != w) {
-                            vh.wPrev = vh.w;
-                            vh.w = w
-                            vh.t0 = t;
-                            vh.t1 = t + 0.4;                            
+                    let win = testWin();
+
+                    for (var i = 0; i < pointsArray.length; i++) {
+                        let w = 0;
+                        if (win != - 1 && (i == win || (vertices[i].egg != -1 && eggs[vertices[i].egg].type == 1))) {
+                            w = 0.4 * Math.sin(4 * t) - 0.4;
+                            pointsArray[i].w = w;
+                        } else {
+                            w = vertices[i].penguin == -1 ? (vertices[i].egg != -1 && eggs[vertices[i].egg].isInMove() ? 0.6 : 0) : (penguins[vertices[i].penguin] == selectedPenguin ? -0.8 : 0.6);
+                            let vh = verticesHighlight[i];
+                            if (vh.w != w) {
+                                vh.wPrev = vh.w;
+                                vh.w = w
+                                vh.t0 = t;
+                                vh.t1 = t + 0.4;
+                            }
+                            let tt = THREE.MathUtils.smoothstep(t, vh.t0, vh.t1);
+                            pointsArray[i].w = (1 - tt) * vh.wPrev + tt * vh.w;
                         }
-                        let tt = THREE.MathUtils.smoothstep(t, vh.t0, vh.t1);
-                        pointsArray[i].w = (1 - tt) * vh.wPrev +  tt * vh.w ;
                     }                    
                 }
             }
