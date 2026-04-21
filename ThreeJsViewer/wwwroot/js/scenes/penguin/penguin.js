@@ -68,14 +68,20 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
 
         function setSelected(selected) {
             if (selected) {
-                penguin.mesh.material.color.set(0xffffff);
-                penguin.mesh.material.emissive?.setRGB(0.0, 0.2, 0.4);
+                //penguin.mesh.material.color.set(0xffffff);
+                //penguin.mesh.material.emissive?.setRGB(0.0, 0.2, 0.4);
+                penguin.mesh.material.color.set(0xd0d0d0);
+                penguin.mesh.material.vertexColors = false;
+
                 speed = 0.8;
             } else {
-                penguin.mesh.material.color.set(color);
-                penguin.mesh.material.emissive?.setRGB(0, 0, 0);
+                //penguin.mesh.material.color.set(color);
+                //penguin.mesh.material.emissive?.setRGB(0, 0, 0);
+                penguin.mesh.material.color.set(0xffffff)
+                penguin.mesh.material.vertexColors = true;
                 speed = initspeed;
             }
+            penguin.mesh.material.needsUpdate = true
         }
 
         let penguin = {
@@ -83,6 +89,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
             //color: 0xa0a0a0,
             createMaterial: () => createTwistMaterial(color),
             prepareGeometry: g => {
+                penguinColors(g, color)
                 g.rotateZ(Math.PI);
                 g.scale(0.07, 0.07, 0.07);
             },
@@ -534,7 +541,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
             return false;
 
         },
-        audio: "assets/OnSphere/magellano-penguins.wav",
+        //audio: "assets/OnSphere/magellano-penguins.wav",
         setup: (camera, dirLight) => {
             camera.position.set(-1.5, 0.0, 1.0);
             dirLight.position.set(1, 1, 1);
@@ -566,16 +573,16 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
                     for (var i = 0; i < pointsArray.length; i++) {
                         let w = 0;
                         if (win != - 1 && (i == win || (vertices[i].egg != -1 && eggs[vertices[i].egg].type == 1))) {
-                            w = 0.4 * Math.sin(4 * t) - 0.4;
+                            w = 1.0 * Math.sin(4 * t) - 1.0;
                             pointsArray[i].w = w;
                         } else {
-                            w = vertices[i].penguin == -1 ? (vertices[i].egg != -1 && eggs[vertices[i].egg].isInMove() ? 0.6 : 0) : (penguins[vertices[i].penguin] == selectedPenguin ? -0.8 : 0.6);
+                            w = vertices[i].penguin == -1 ? (vertices[i].egg != -1 && eggs[vertices[i].egg].isInMove() ? -1.0 : 0) : (penguins[vertices[i].penguin] == selectedPenguin ? -1.0 : 1.0);
                             let vh = verticesHighlight[i];
                             if (vh.w != w) {
                                 vh.wPrev = vh.w;
                                 vh.w = w
                                 vh.t0 = t;
-                                vh.t1 = t + 0.4;
+                                vh.t1 = t + 0.5;
                             }
                             let tt = THREE.MathUtils.smoothstep(t, vh.t0, vh.t1);
                             pointsArray[i].w = (1 - tt) * vh.wPrev + tt * vh.w;
@@ -620,7 +627,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
 
         let clrspeed = /*0.5 * */(pcount == 1 ? 1 : i / (pcount - 1));
 
-        const value = 63 + Math.floor(clrspeed * 3 * 64);
+        const value = 48 + Math.floor(clrspeed * 1 * 64);
         const grayColor = (value << 16) | (value << 8) | value;
 
         let penguin = createPenguin({
@@ -824,9 +831,9 @@ function findNearestVertex(p, vertices) {
 function createTwistMaterial(baseColorHex) {
     // 1. Create standard material (keeps your lighting/colors)
     const material = new THREE.MeshStandardMaterial({
-        color: baseColorHex,
+        color: 0xffffff, //baseColorHex,
         flatShading: false,
-        vertexColors: false,
+        vertexColors: true,
         metalness: 0.4,
         roughness: 0.5
     });
@@ -903,7 +910,7 @@ function createHighlightMaterial(n) {
     // Vector4: x, y, z are local coordinates; w is the intensity (0.0 to 1.0)
     const points = [];
     for (let i = 0; i < n; i++) {
-        points.push(new THREE.Vector4(0, 0, 0, 0.0));
+        points.push(new THREE.Vector4(0, 0, 0, 0));
     }
 
     const material = new THREE.MeshStandardMaterial({
@@ -916,8 +923,7 @@ function createHighlightMaterial(n) {
     // 2. Store uniforms in userData for easy access later
     material.userData = {
         uHighlightPoints: { value: points },
-        uRadius: { value: 0.15 },
-        uMaxDarkness: { value: 0.5 } // 0.0 = no change, 1.0 = can go pitch black
+        uRadius: { value: 0.10 }
     };
 
     material.onBeforeCompile = (shader) => {
@@ -941,7 +947,6 @@ function createHighlightMaterial(n) {
       varying vec3 vLocalPosition;
       uniform vec4 uHighlightPoints[${n}];
       uniform float uRadius;
-      uniform float uMaxDarkness;
       ${shader.fragmentShader}
     `.replace(
             '#include <color_fragment>',
@@ -954,21 +959,79 @@ function createHighlightMaterial(n) {
           // Calculate distance in Local Space
           float dist = distance(vLocalPosition, uHighlightPoints[i].xyz);
           
+          float w = uHighlightPoints[i].w;
+          float ww = min(0.5 + 0.5 * abs(w),1.0);
+
           // Smooth transition: 1.0 at center, 0.0 at uRadius
-          float mask = smoothstep(uRadius, 0.1, dist);
+          float mask = smoothstep(ww * uRadius, ww * uRadius - 0.01, dist);
           
           // Apply individual point intensity (the .w component)
-          float pointEffect = mask * uHighlightPoints[i].w;
+          float pointEffect = 0.6 * mask * w;
           
-          // Use max() so overlapping points don't stack infinitely
-          totalDarkening += pointEffect;//max(totalDarkening, pointEffect);
+          totalDarkening += pointEffect;
       }
       
       // Apply the darkening to the base color before lighting is calculated
-      diffuseColor.rgb *= (1.0 - (totalDarkening/* * uMaxDarkness*/));
+      diffuseColor.rgb *= (1.0 - totalDarkening);
       `
         );
     };
 
     return material;
+}
+
+function penguinColors(geometry, color) {
+    const pos = geometry.attributes.position;
+    const count = pos.count;
+    const newColors = new Float32Array(count * 3);
+
+
+    const colorYellow = new THREE.Color(0xffff00);
+    const colorSnow = new THREE.Color(0xffffff)
+    const tcolor = new THREE.Color(color);
+    const tempColor = new THREE.Color();
+
+    const leg1 = new THREE.Vector3(-0.38, -0.5, -1.0);
+    const leg2 = new THREE.Vector3(0.38, -0.5, -1.0);
+    const beak = new THREE.Vector3(0.0, -0.72, 0.4);
+    const navel = new THREE.Vector3(0.0, -0.8, -0.3); 
+
+    for (let i = 0; i < count; i++) {
+
+        let x = pos.getX(i);
+        let y = pos.getY(i);
+        let z = pos.getZ(i);
+
+        let dn = Math.sqrt((x - navel.x) ** 2 + (y - navel.y) ** 2 + (z - navel.z) ** 2);
+
+        if (dn < 0.35) {
+            tempColor.set(colorSnow);
+        } if (dn < 0.60) {
+            const t = (dn - 0.35) / 0.25;
+            tempColor.lerpColors(colorSnow, tcolor, t);
+        } else {
+
+            let d = Math.min(
+                Math.sqrt((x - leg1.x) ** 2 + (y - leg1.y) ** 2 + (z - leg1.z) ** 2),
+                Math.sqrt((x - leg2.x) ** 2 + (y - leg2.y) ** 2 + (z - leg2.z) ** 2),
+                Math.sqrt((x - beak.x) ** 2 + (y - beak.y) ** 2 + (z - beak.z) ** 2)
+            );
+
+            if (d < 0.22) {
+                tempColor.set(colorYellow);
+            } else if (d > 0.30) {
+                tempColor.set(tcolor);
+            } else {
+                const t = (d - 0.22) / 0.08;
+                tempColor.lerpColors(colorYellow, tcolor, t);
+            }
+        }
+
+        newColors[i * 3] = tempColor.r;
+        newColors[i * 3 + 1] = tempColor.g;
+        newColors[i * 3 + 2] = tempColor.b;
+    }
+
+    geometry.setAttribute('color', new THREE.BufferAttribute(newColors, 3));
+    geometry.attributes.color.needsUpdate = true;
 }
