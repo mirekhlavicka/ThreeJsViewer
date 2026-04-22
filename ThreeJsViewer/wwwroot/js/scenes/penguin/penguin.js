@@ -85,7 +85,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
         }
 
         let penguin = {
-            path: 'assets/OnSphere/penguin.ply',
+            path: 'assets/OnSphere/penguinEgg.ply',
             //color: 0xa0a0a0,
             createMaterial: () => createTwistMaterial(color),
             prepareGeometry: g => {
@@ -541,7 +541,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
             return false;
 
         },
-        //audio: "assets/OnSphere/magellano-penguins.wav",
+        audio: "assets/OnSphere/magellano-penguins.wav",
         setup: (camera, dirLight) => {
             camera.position.set(-1.5, 0.0, 1.0);
             dirLight.position.set(1, 1, 1);
@@ -982,19 +982,25 @@ function createHighlightMaterial(n) {
 
 function penguinColors(geometry, color) {
     const pos = geometry.attributes.position;
+    const originalColors = geometry.attributes.color;
     const count = pos.count;
     const newColors = new Float32Array(count * 3);
 
 
-    const colorYellow = new THREE.Color(0xffff00);
-    const colorSnow = new THREE.Color(0xffffff)
     const tcolor = new THREE.Color(color);
     const tempColor = new THREE.Color();
 
-    const leg1 = new THREE.Vector3(-0.38, -0.5, -1.0);
-    const leg2 = new THREE.Vector3(0.38, -0.5, -1.0);
+    const colorYellow = new THREE.Color(0xffff00);
+    const colorSnow = new THREE.Color(0xffffff);
+    const colorBlack = new THREE.Color(0x000000);
+
+    const leg1 = new THREE.Vector3(-0.38, -0.5, -1.06);
+    const leg2 = new THREE.Vector3(0.38, -0.5, -1.06);
     const beak = new THREE.Vector3(0.0, -0.72, 0.4);
     const navel = new THREE.Vector3(0.0, -0.8, -0.3); 
+    const eye1 = new THREE.Vector3(-0.3, -0.35, 0.56);
+    const eye2 = new THREE.Vector3(0.3, -0.35, 0.56);
+
 
     for (let i = 0; i < count; i++) {
 
@@ -1002,34 +1008,65 @@ function penguinColors(geometry, color) {
         let y = pos.getY(i);
         let z = pos.getZ(i);
 
-        let dn = Math.sqrt((x - navel.x) ** 2 + (y - navel.y) ** 2 + (z - navel.z) ** 2);
+        const rVal = originalColors.getX(i);
+        const gVal = originalColors.getY(i);
+        const bVal = originalColors.getZ(i);
 
-        if (dn < 0.35) {
+        // Test for pure white with a safe floating-point threshold
+        const isWhite = (rVal > 0.999 && gVal > 0.999 && bVal > 0.999);
+
+        if (isWhite) {
             tempColor.set(colorSnow);
-        } if (dn < 0.60) {
-            const t = (dn - 0.35) / 0.25;
-            tempColor.lerpColors(colorSnow, tcolor, t);
         } else {
 
-            let d = Math.min(
-                Math.sqrt((x - leg1.x) ** 2 + (y - leg1.y) ** 2 + (z - leg1.z) ** 2),
-                Math.sqrt((x - leg2.x) ** 2 + (y - leg2.y) ** 2 + (z - leg2.z) ** 2),
-                Math.sqrt((x - beak.x) ** 2 + (y - beak.y) ** 2 + (z - beak.z) ** 2)
+            let de = Math.min(
+                Math.sqrt((x - eye1.x) ** 2 + (y - eye1.y) ** 2 + (z - eye1.z) ** 2),
+                Math.sqrt((x - eye2.x) ** 2 + (y - eye2.y) ** 2 + (z - eye2.z) ** 2)
             );
 
-            if (d < 0.22) {
-                tempColor.set(colorYellow);
-            } else if (d > 0.30) {
-                tempColor.set(tcolor);
+            if (de < 0.02) {
+                tempColor.set(0x000000);
+            } else if (de < 0.04) {
+                const t = (de - 0.02) / 0.02;
+                tempColor.lerpColors(colorBlack, colorSnow, t);
+            } else if (de < 0.05) {
+                tempColor.set(colorSnow);
+            } else if (de < 0.07) {
+                const t = (de - 0.05) / 0.02;
+                tempColor.lerpColors(colorSnow, tcolor, t);
             } else {
-                const t = (d - 0.22) / 0.08;
-                tempColor.lerpColors(colorYellow, tcolor, t);
+
+                let dn = Math.sqrt((x - navel.x) ** 2 + (y - navel.y) ** 2 + (z - navel.z) ** 2);
+
+                if (dn < 0.35) {
+                    tempColor.set(colorSnow);
+                } if (dn < 0.60) {
+                    const t = (dn - 0.35) / 0.25;
+                    tempColor.lerpColors(colorSnow, tcolor, t);
+                } else {
+
+                    let d = Math.min(
+                        Math.sqrt((x - leg1.x) ** 2 + (y - leg1.y) ** 2 + (z - leg1.z) ** 2),
+                        Math.sqrt((x - leg2.x) ** 2 + (y - leg2.y) ** 2 + (z - leg2.z) ** 2),
+                        Math.sqrt((x - beak.x) ** 2 + (y - beak.y) ** 2 + (z - beak.z) ** 2)
+                    );
+
+                    if (d < 0.22) {
+                        tempColor.set(colorYellow);
+                    } else if (d > 0.30) {
+                        tempColor.set(tcolor);
+                    } else {
+                        const t = (d - 0.22) / 0.08;
+                        tempColor.lerpColors(colorYellow, tcolor, t);
+                    }
+                }
             }
         }
 
         newColors[i * 3] = tempColor.r;
         newColors[i * 3 + 1] = tempColor.g;
         newColors[i * 3 + 2] = tempColor.b;
+
     }
 
     geometry.setAttribute('color', new THREE.BufferAttribute(newColors, 3));
