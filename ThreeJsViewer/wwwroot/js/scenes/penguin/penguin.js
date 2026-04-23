@@ -70,15 +70,32 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
             if (selected) {
                 //penguin.mesh.material.color.set(0xffffff);
                 //penguin.mesh.material.emissive?.setRGB(0.0, 0.2, 0.4);
-                penguin.mesh.material.color.set(0xd0d0d0);
-                penguin.mesh.material.vertexColors = false;
+                //penguin.mesh.material.color.set(0xd0d0d0);
+                //penguin.mesh.material.vertexColors = false;
+
+                penguin.mesh.material.userData.uSelectedId.value = 1.0;
+
+                penguin.mesh.material.metalness = 0.7;
+                penguin.mesh.material.roughness = 0.3;
+                /*penguin.mesh.material.emissive = 0xffa500;
+                penguin.mesh.material.emissiveIntensity = 0.1;*/
+
+
 
                 speed = 0.8;
             } else {
                 //penguin.mesh.material.color.set(color);
                 //penguin.mesh.material.emissive?.setRGB(0, 0, 0);
-                penguin.mesh.material.color.set(0xffffff)
-                penguin.mesh.material.vertexColors = true;
+                //penguin.mesh.material.color.set(0xffffff)
+                //penguin.mesh.material.vertexColors = true;
+
+                penguin.mesh.material.userData.uSelectedId.value = -1.0;
+
+                penguin.mesh.material.roughness = 0.5;
+                penguin.mesh.material.metalness = 0.4;
+                /*penguin.mesh.material.emissive = 0.0;
+                penguin.mesh.material.emissiveIntensity = 0.0;*/
+
                 speed = initspeed;
             }
             penguin.mesh.material.needsUpdate = true
@@ -366,8 +383,8 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
                 if (params.type == 1) {
                     m.metalness = 0.7;
                     m.roughness = 0.3;
-                    m.emissive = 0xffa500;
-                    m.emissiveIntensity = 0.1;
+                    //m.emissive = 0xffa500;
+                    //m.emissiveIntensity = 0.1;
                     m.color = 0xffd700;
                 } else {
                     m.color = params.color;
@@ -627,7 +644,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
 
         let clrspeed = /*0.5 * */(pcount == 1 ? 1 : i / (pcount - 1));
 
-        const value = 48 + Math.floor(clrspeed * 1 * 64);
+        const value = 48 + Math.floor(clrspeed * (150 - 48));
         const grayColor = (value << 16) | (value << 8) | value;
 
         let penguin = createPenguin({
@@ -829,71 +846,72 @@ function findNearestVertex(p, vertices) {
 }
 
 function createTwistMaterial(baseColorHex) {
-    // 1. Create standard material (keeps your lighting/colors)
     const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff, //baseColorHex,
-        flatShading: false,
+        color: 0xffffff,
         vertexColors: true,
         metalness: 0.4,
         roughness: 0.5
     });
 
-    // 2. Define uniforms to pass data from JS to the Shader
     material.userData.uTime1 = { value: 0 };
     material.userData.uTime2 = { value: 0 };
     material.userData.uTwistStrength = { value: 0.0 };
+    material.userData.uSelectedId = { value: -1.0 }; // Start with -1 so nothing is selected
+    material.userData.uHighlightColor = { value: new THREE.Color(0xffd700) }; // Use Color Object!
 
     material.onBeforeCompile = (shader) => {
-        // Pass our JS uniforms into the shader
         shader.uniforms.uTime1 = material.userData.uTime1;
         shader.uniforms.uTime2 = material.userData.uTime2;
         shader.uniforms.uTwistStrength = material.userData.uTwistStrength;
+        shader.uniforms.uSelectedId = material.userData.uSelectedId;
+        shader.uniforms.uHighlightColor = material.userData.uHighlightColor;
 
-        // 3. Inject uniform declarations into Vertex Shader
+        // 1. Inject Declarations
         shader.vertexShader = `
             uniform float uTime1;
             uniform float uTime2;
             uniform float uTwistStrength;
+            uniform float uSelectedId;
+            uniform vec3 uHighlightColor;
+            attribute float aPartId;
         ` + shader.vertexShader;
 
-        // 4. Inject the deformation math
-        // 'transformed' is the standard Three.js variable for vertex position
+        // 2. Handle Color Selection (Replace color_vertex instead of begin_vertex)
+        shader.vertexShader = shader.vertexShader.replace(
+            `#include <color_vertex>`,
+            `
+            #include <color_vertex> 
+            // This chunk sets vColor = color; 
+            // Now we override it if the ID matches:
+            if (abs(aPartId - uSelectedId) < 0.1) {
+                vColor.rgb = uHighlightColor;
+                //float pulse = 0.5 * (sin(2.0 * uTime2 - 1.57) + 1.0);
+                //vColor.rgb = mix(uHighlightColor, vec3(1.0), pulse);
+            }
+            `
+        );
+
+        // 3. Handle Twist (In begin_vertex)
         shader.vertexShader = shader.vertexShader.replace(
             `#include <begin_vertex>`,
             `
             #include <begin_vertex>
             
-            float angle =
-                (1.0 - smoothstep(-0.005, 0.025, transformed.z)) *
-                transformed.x * uTwistStrength; 
-            
+            float angle = (1.0 - smoothstep(-0.005, 0.025, transformed.z)) * transformed.x * uTwistStrength; 
             float s = sin(angle);
             float c = cos(angle);
-            
             mat2 rotationMatrix = mat2(c, -s, s, c);
             transformed.yz = rotationMatrix * transformed.yz;
 
-
-            angle = 1.1 *
-                smoothstep(0.0, 0.03, transformed.z) *
-                sin(uTime1);
-            s = sin(angle);
-            c = cos(angle);
-
+            angle = 1.1 * smoothstep(0.0, 0.03, transformed.z) * sin(uTime1);
+            s = sin(angle); c = cos(angle);
             rotationMatrix = mat2(c, -s, s, c);
-
             transformed.xy = rotationMatrix * transformed.xy;
 
-            angle = 0.18 *
-                smoothstep(0.0, 0.03, transformed.z) *
-                (0.7 + sin(uTime2));
-            s = sin(angle);
-            c = cos(angle);
-
+            angle = 0.18 * smoothstep(0.0, 0.03, transformed.z) * (0.7 + sin(uTime2));
+            s = sin(angle); c = cos(angle);
             rotationMatrix = mat2(c, -s, s, c);
-
             transformed.yz = rotationMatrix * transformed.yz;
-
             `
         );
     };
@@ -985,6 +1003,7 @@ function penguinColors(geometry, color) {
     const originalColors = geometry.attributes.color;
     const count = pos.count;
     const newColors = new Float32Array(count * 3);
+    const partIds = new Float32Array(count);
 
 
     const tcolor = new THREE.Color(color);
@@ -998,8 +1017,8 @@ function penguinColors(geometry, color) {
     const leg2 = new THREE.Vector3(0.38, -0.5, -1.06);
     const beak = new THREE.Vector3(0.0, -0.72, 0.4);
     const navel = new THREE.Vector3(0.0, -0.8, -0.3); 
-    const eye1 = new THREE.Vector3(-0.3, -0.35, 0.56);
-    const eye2 = new THREE.Vector3(0.3, -0.35, 0.56);
+    const eye1 = new THREE.Vector3(-0.3, -0.35, 0.565);
+    const eye2 = new THREE.Vector3(0.3, -0.35, 0.565);
 
 
     for (let i = 0; i < count; i++) {
@@ -1015,6 +1034,8 @@ function penguinColors(geometry, color) {
         // Test for pure white with a safe floating-point threshold
         const isWhite = (rVal > 0.999 && gVal > 0.999 && bVal > 0.999);
 
+        partIds[i] = isWhite ? 1.0 : 0.0;
+
         if (isWhite) {
             tempColor.set(colorSnow);
         } else {
@@ -1024,15 +1045,15 @@ function penguinColors(geometry, color) {
                 Math.sqrt((x - eye2.x) ** 2 + (y - eye2.y) ** 2 + (z - eye2.z) ** 2)
             );
 
-            if (de < 0.02) {
+            if (de < 0.03) {
                 tempColor.set(0x000000);
-            } else if (de < 0.04) {
-                const t = (de - 0.02) / 0.02;
-                tempColor.lerpColors(colorBlack, colorSnow, t);
             } else if (de < 0.05) {
-                tempColor.set(colorSnow);
+                const t = (de - 0.03) / 0.02;
+                tempColor.lerpColors(colorBlack, colorSnow, t);
             } else if (de < 0.07) {
-                const t = (de - 0.05) / 0.02;
+                tempColor.set(colorSnow);
+            } else if (de < 0.08) {
+                const t = (de - 0.07) / 0.01;
                 tempColor.lerpColors(colorSnow, tcolor, t);
             } else {
 
@@ -1070,5 +1091,6 @@ function penguinColors(geometry, color) {
     }
 
     geometry.setAttribute('color', new THREE.BufferAttribute(newColors, 3));
+    geometry.setAttribute('aPartId', new THREE.BufferAttribute(partIds, 1));
     geometry.attributes.color.needsUpdate = true;
 }
