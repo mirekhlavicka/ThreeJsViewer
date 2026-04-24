@@ -34,6 +34,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
         let nextToEgg = false;
         let nextWithEgg = false;
         let lastPos = null;
+        let selectionStateChanged = false;
 
 
         function progress(t) {
@@ -68,37 +69,20 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
 
         function setSelected(selected) {
             if (selected) {
-                //penguin.mesh.material.color.set(0xffffff);
-                //penguin.mesh.material.emissive?.setRGB(0.0, 0.2, 0.4);
-                //penguin.mesh.material.color.set(0xd0d0d0);
-                //penguin.mesh.material.vertexColors = false;
-
                 penguin.mesh.material.userData.uSelectedId.value = 1.0;
-
                 penguin.mesh.material.metalness = 0.7;
                 penguin.mesh.material.roughness = 0.3;
-                /*penguin.mesh.material.emissive = 0xffa500;
-                penguin.mesh.material.emissiveIntensity = 0.1;*/
-
-
 
                 speed = 0.8;
             } else {
-                //penguin.mesh.material.color.set(color);
-                //penguin.mesh.material.emissive?.setRGB(0, 0, 0);
-                //penguin.mesh.material.color.set(0xffffff)
-                //penguin.mesh.material.vertexColors = true;
-
                 penguin.mesh.material.userData.uSelectedId.value = -1.0;
-
                 penguin.mesh.material.roughness = 0.5;
                 penguin.mesh.material.metalness = 0.4;
-                /*penguin.mesh.material.emissive = 0.0;
-                penguin.mesh.material.emissiveIntensity = 0.0;*/
 
                 speed = initspeed;
             }
-            penguin.mesh.material.needsUpdate = true
+            penguin.mesh.material.needsUpdate = true;
+            selectionStateChanged = true;
         }
 
         let penguin = {
@@ -117,6 +101,14 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
 
                 let tt = progress(t);
                 let da = 0.105;
+
+                let toZero = v => {
+
+                    if (Math.abs(v) < 0.01) {
+                        return 0;
+                    }
+                    return 0.95 * v;
+                }
 
                 if (animType == 0) {
                     if (animChange) {
@@ -157,14 +149,29 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
                     updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.043);
                     m.material.userData.uTwistStrength.value = 30.0 * oscillation1(tt, 80);
 
+                    if (selectedPenguin == penguin) {
+                        m.material.userData.uTwistStrength2.value = toZero(m.material.userData.uTwistStrength2.value);
+                    }
+
                     if (tt > 0.1 && vertices[fromVertex].penguin == index && !toEgg) {
                         vertices[fromVertex].penguin = -1;
                     }
                 }
 
                 if (animType == 1) {
+                    if (selectionStateChanged) {
+                        t0 = -1;
+                        animChange = true;
+                        selectionStateChanged = false;
+                        return;
+                    }
+
                     if (animChange) {
-                        t1 = t0 + 0.5 * (t1 - t0);
+                        if (selectedPenguin != penguin) {
+                            t1 = t0 + 0.5 * (t1 - t0);
+                        } else {
+                            t1 = t0 + 2.0 * (t1 - t0);
+                        }
                         animChange = false;
                     }
 
@@ -178,13 +185,13 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
 
                     let pos = getGeodesicState(x1, y1, z1, x2, y2, z2, 1.0, withEgg ? -da : (fromEgg ? da : 0.0), toEgg ? da : 0.0);
                     updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.043);
-                    m.material.userData.uTime1.value = (selectedPenguin == penguin ? 0 : 2 * Math.PI * tt);
-                    m.material.userData.uTime2.value = (selectedPenguin != penguin ? 0 : 2 * Math.PI * tt);
+                    m.material.userData.uTime1.value = (selectedPenguin == penguin ? toZero(m.material.userData.uTime1.value) : 2 * Math.PI * tt);
+                    m.material.userData.uTwistStrength2.value = (selectedPenguin != penguin ? toZero(m.material.userData.uTwistStrength2.value) : (Math.sin(Math.PI * tt) + 0.4 * Math.sin(2.0 * Math.PI * tt)));
                     lastPos = pos;
 
                     if (selectedPenguin == penguin && selectedVertex != -1) {
                         animType = 2;
-                        m.material.userData.uTime2.value = 0;
+                        //m.material.userData.uTwistStrength2.value = 0;
                         t0 = -1;
                         animChange = true;
                         return;
@@ -293,6 +300,8 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
 
                     m.material.userData.uTwistStrength.value = 20.0 * oscillation1(tt, 80 * (t1 - t0) * speed);
                 }
+
+                selectionStateChanged = false;
             },
             inVertex,
             setSelected
@@ -562,6 +571,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
         setup: (camera, dirLight) => {
             camera.position.set(-1.5, 0.0, 1.0);
             dirLight.position.set(1, 1, 1);
+            //dirLight.target.position.set(-1, -1, -1);
         },
         gameMode: true,
         //shadowMapType: THREE.VSMShadowMap, //THREE.VSMShadowMap, THREE.PCFShadowMap
@@ -854,14 +864,14 @@ function createTwistMaterial(baseColorHex) {
     });
 
     material.userData.uTime1 = { value: 0 };
-    material.userData.uTime2 = { value: 0 };
+    material.userData.uTwistStrength2 = { value: 0 };
     material.userData.uTwistStrength = { value: 0.0 };
     material.userData.uSelectedId = { value: -1.0 }; // Start with -1 so nothing is selected
     material.userData.uHighlightColor = { value: new THREE.Color(0xffd700) }; // Use Color Object!
 
     material.onBeforeCompile = (shader) => {
         shader.uniforms.uTime1 = material.userData.uTime1;
-        shader.uniforms.uTime2 = material.userData.uTime2;
+        shader.uniforms.uTwistStrength2 = material.userData.uTwistStrength2;
         shader.uniforms.uTwistStrength = material.userData.uTwistStrength;
         shader.uniforms.uSelectedId = material.userData.uSelectedId;
         shader.uniforms.uHighlightColor = material.userData.uHighlightColor;
@@ -869,7 +879,7 @@ function createTwistMaterial(baseColorHex) {
         // 1. Inject Declarations
         shader.vertexShader = `
             uniform float uTime1;
-            uniform float uTime2;
+            uniform float uTwistStrength2;
             uniform float uTwistStrength;
             uniform float uSelectedId;
             uniform vec3 uHighlightColor;
@@ -885,8 +895,6 @@ function createTwistMaterial(baseColorHex) {
             // Now we override it if the ID matches:
             if (abs(aPartId - uSelectedId) < 0.1) {
                 vColor.rgb = uHighlightColor;
-                //float pulse = 0.5 * (sin(2.0 * uTime2 - 1.57) + 1.0);
-                //vColor.rgb = mix(uHighlightColor, vec3(1.0), pulse);
             }
             `
         );
@@ -908,7 +916,7 @@ function createTwistMaterial(baseColorHex) {
             rotationMatrix = mat2(c, -s, s, c);
             transformed.xy = rotationMatrix * transformed.xy;
 
-            angle = 0.18 * smoothstep(0.0, 0.03, transformed.z) * (0.7 + sin(uTime2));
+            angle = 0.58 * smoothstep(0.0, 0.03, transformed.z)  * uTwistStrength2;// (0.7 + sin(uTwistStrength2) +0.4*sin(2.0 * uTwistStrength2));
             s = sin(angle); c = cos(angle);
             rotationMatrix = mat2(c, -s, s, c);
             transformed.yz = rotationMatrix * transformed.yz;
@@ -933,8 +941,8 @@ function createHighlightMaterial(n) {
 
     const material = new THREE.MeshStandardMaterial({
         vertexColors: true, // Required for PLY vertex colors
-        roughness: 0.5,
-        metalness: 0.8,
+        roughness: 0.05,
+        metalness: 0.5,
         color: 0xffffff
     });
 

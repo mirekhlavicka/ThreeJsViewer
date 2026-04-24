@@ -34,7 +34,20 @@ let audio;
 
 function setup() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x3a3a3a);
+    //scene.background = new THREE.Color(0x3a3a3a);
+
+
+    const loader = new THREE.TextureLoader();
+
+    // Look for "8k Milky Way Equirectangular" online for the best results
+    loader.load('assets/OnSphere/milky_way_penguin.png', (texture) => {
+        texture.mapping = THREE.EquirectangularReflectionMapping;
+        texture.colorSpace = THREE.SRGBColorSpace; // Keeps colors vibrant
+        scene.background = texture;
+        // Optional: This makes the space light actually reflect off your globe
+        scene.environment = texture;
+    });
+
     scene.fog = new THREE.FogExp2(0x1a1a1a, 0.002);
 
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
