@@ -70,10 +70,12 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
         function setSelected(selected) {
             if (selected) {
                 penguin.mesh.material.userData.uSelectedId.value = 1.0;
+                penguin.mesh.material.userData.uHighlightColor1.value = new THREE.Color(color);
+
                 penguin.mesh.material.metalness = 0.7;
                 penguin.mesh.material.roughness = 0.3;
 
-                speed = 0.8;
+                speed = 0.6;
             } else {
                 penguin.mesh.material.userData.uSelectedId.value = -1.0;
                 penguin.mesh.material.roughness = 0.5;
@@ -123,6 +125,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
                         toEgg = nextToEgg;
                         withEgg = nextWithEgg;
                         animChange = false;
+                        m.material.userData.uTime1.value = 0;
                     }
 
                     let x1 = vertices[fromVertex].x;
@@ -151,6 +154,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
 
                     if (selectedPenguin == penguin) {
                         m.material.userData.uTwistStrength2.value = toZero(m.material.userData.uTwistStrength2.value);
+                        m.material.userData.uSelectedId1.value = -1.0;
                     }
 
                     if (tt > 0.1 && vertices[fromVertex].penguin == index && !toEgg) {
@@ -170,7 +174,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
                         if (selectedPenguin != penguin) {
                             t1 = t0 + 0.5 * (t1 - t0);
                         } else {
-                            t1 = t0 + 2.0 * (t1 - t0);
+                            t1 = t0 + 3.0 * (t1 - t0);
                         }
                         animChange = false;
                     }
@@ -187,6 +191,8 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
                     updateFigureTransform(m, pos.x, pos.y, pos.z, pos.v1, pos.v2, pos.v3, 0.043);
                     m.material.userData.uTime1.value = (selectedPenguin == penguin ? toZero(m.material.userData.uTime1.value) : 2 * Math.PI * tt);
                     m.material.userData.uTwistStrength2.value = (selectedPenguin != penguin ? toZero(m.material.userData.uTwistStrength2.value) : (Math.sin(Math.PI * tt) + 0.4 * Math.sin(2.0 * Math.PI * tt)));
+                    m.material.userData.uSelectedId1.value = (selectedPenguin != penguin || Math.abs(tt - 0.35) > 0.25 ? -1.0 : 2.0);
+
                     lastPos = pos;
 
                     if (selectedPenguin == penguin && selectedVertex != -1) {
@@ -567,13 +573,14 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
             return false;
 
         },
-        audio: "assets/OnSphere/magellano-penguins.wav",
         setup: (camera, dirLight) => {
             camera.position.set(-1.5, 0.0, 1.0);
             dirLight.position.set(1, 1, 1);
             //dirLight.target.position.set(-1, -1, -1);
         },
-        gameMode: true,
+        gameMode: {
+            audio: "assets/OnSphere/magellano-penguins.wav"
+        },
         //shadowMapType: THREE.VSMShadowMap, //THREE.VSMShadowMap, THREE.PCFShadowMap
         name: "Penguins/" + name,
         models: [
@@ -867,7 +874,9 @@ function createTwistMaterial(baseColorHex) {
     material.userData.uTwistStrength2 = { value: 0 };
     material.userData.uTwistStrength = { value: 0.0 };
     material.userData.uSelectedId = { value: -1.0 }; // Start with -1 so nothing is selected
+    material.userData.uSelectedId1 = { value: -1.0 }; // Start with -1 so nothing is selected
     material.userData.uHighlightColor = { value: new THREE.Color(0xffd700) }; // Use Color Object!
+    material.userData.uHighlightColor1 = { value: new THREE.Color(0xffffff) }; // Use Color Object!
 
     material.onBeforeCompile = (shader) => {
         shader.uniforms.uTime1 = material.userData.uTime1;
@@ -875,6 +884,8 @@ function createTwistMaterial(baseColorHex) {
         shader.uniforms.uTwistStrength = material.userData.uTwistStrength;
         shader.uniforms.uSelectedId = material.userData.uSelectedId;
         shader.uniforms.uHighlightColor = material.userData.uHighlightColor;
+        shader.uniforms.uSelectedId1 = material.userData.uSelectedId1;
+        shader.uniforms.uHighlightColor1 = material.userData.uHighlightColor1;
 
         // 1. Inject Declarations
         shader.vertexShader = `
@@ -883,6 +894,8 @@ function createTwistMaterial(baseColorHex) {
             uniform float uTwistStrength;
             uniform float uSelectedId;
             uniform vec3 uHighlightColor;
+            uniform float uSelectedId1;
+            uniform vec3 uHighlightColor1;
             attribute float aPartId;
         ` + shader.vertexShader;
 
@@ -895,6 +908,9 @@ function createTwistMaterial(baseColorHex) {
             // Now we override it if the ID matches:
             if (abs(aPartId - uSelectedId) < 0.1) {
                 vColor.rgb = uHighlightColor;
+            }
+            if (abs(aPartId - uSelectedId1) < 0.1) {
+                vColor.rgb = uHighlightColor1;
             }
             `
         );
@@ -1052,6 +1068,10 @@ function penguinColors(geometry, color) {
                 Math.sqrt((x - eye1.x) ** 2 + (y - eye1.y) ** 2 + (z - eye1.z) ** 2),
                 Math.sqrt((x - eye2.x) ** 2 + (y - eye2.y) ** 2 + (z - eye2.z) ** 2)
             );
+
+            if (de < 0.08) {
+                partIds[i] = 2.0;
+            }
 
             if (de < 0.03) {
                 tempColor.set(0x000000);

@@ -248,14 +248,6 @@ function loadScene(reset = true) {
         });
     });
 
-    if (config.audio) {
-        document.getElementById("viewer").addEventListener('click', initAudio);
-    } else if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        audio = null;
-    }
-
     let title = config.name;
     if (title.includes('/')){
         title = title.split('/')[1];
@@ -264,25 +256,40 @@ function loadScene(reset = true) {
     document.getElementById('sceneButton').innerText = title + " ";
     document.title = title;
 
+    if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio = null;
+    }
+
     if (config.gameMode) {
         if (grid.visible) {
             document.getElementById('showGridSwitch').click();
-        }
-        /*if (!autoRotate) {
-            document.getElementById('autoRotateSwitch').click();
-        }*/        
-    }
+        }        
+
+        document.getElementById("viewer").addEventListener('click', runGame);
+    } 
 }
 
-function initAudio() {
-    if (!audio) {
-        audio = new Audio(config.audio);
+function runGame() {
+
+    if (config.gameMode.audio && !audio) {
+        audio = new Audio(config.gameMode.audio);
         audio.loop = true;
         audio.volume = 0.5;
-        audio.play();
-        document.documentElement.requestFullscreen();
+        audio.play();        
     }
-    document.getElementById("viewer").removeEventListener('click', initAudio);
+
+    document.querySelector('.ui-panel').style.display = 'none';
+    document.documentElement.requestFullscreen();
+
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement) {
+            document.querySelector('.ui-panel').style.display = 'block';
+        }
+    });
+
+    document.getElementById("viewer").removeEventListener('click', runGame);
 }
 
 function autoPositionGrid() {
