@@ -121,7 +121,16 @@
                 border: 1px solid rgba(255,255,255,0.15);
                 box-shadow: 4px 4px 10px rgba(0,0,0,0.5); /* Shadow for depth on desktop */
             }
-        }    </style>
+        }
+
+        /* Custom Transparency for the Modal */
+        .modal-content {
+            background-color: rgba(255, 255, 255, 0.65); /* Slightly transparent white */
+            backdrop-filter: blur(5px); /* Optional: adds a nice frosted glass effect */
+            border: none;
+            border-radius: 15px;
+        }   
+    </style>
 </head>
 <body>
 
@@ -258,12 +267,25 @@
 
     <div id="viewer"></div>
 
+    <!-- Start Modal -->
+    <div class="modal fade" id="startModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content shadow-lg">
+                <div class="modal-body text-center p-5">
+                    <h1 class="fw-bold mb-3" id="gameTitle"></h1>
+                    <p class="lead mb-4" id="gameDescription"></p>
+                    <button type="button" id="startBtn" class="btn btn-primary btn-lg px-5">START</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="importmap">
-                {
-                    "imports": {
-                        "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.js",
-                        "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/"            }
-                }
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@latest/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@latest/examples/jsm/"            }
+        }
     </script>
 
     <script type="module" src="js/app.js?v=1.15"></script>

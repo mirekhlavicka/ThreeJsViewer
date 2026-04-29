@@ -250,7 +250,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
                             let n = -1;
 
                             if (!fromEgg || selectedPenguin == penguin) {
-                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (testSelected(vi) && vertices[vi].penguin == -1 || vertices[vi].penguin == index) && (vertices[vi].egg != -1 && (selectedPenguin == penguin || eggs[vertices[vi].egg].type == 0)    /*&& !eggs[vertices[vi].egg].isInMove()*/));
+                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (testSelected(vi) && vertices[vi].penguin == -1 || vertices[vi].penguin == index) && (vertices[vi].egg != -1 /*&& (selectedPenguin == penguin || eggs[vertices[vi].egg].type == 0)*/));
                             }
 
                             if (n < 0) {
@@ -579,7 +579,10 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
             //dirLight.target.position.set(-1, -1, -1);
         },
         gameMode: {
-            audio: "assets/OnSphere/magellano-penguins.wav"
+            audio: "assets/OnSphere/magellano-penguins.wav",
+            sceneBackgroundTexture: "assets/OnSphere/milky_way_penguin.png",
+            title: "Penguin planet",
+            description: "Help the penguins collect the golden eggs in the hexagon. Click to choose which penguin to control. And click again to choose where to march or which egg to push. But the place may be occupied..."
         },
         //shadowMapType: THREE.VSMShadowMap, //THREE.VSMShadowMap, THREE.PCFShadowMap
         name: "Penguins/" + name,
