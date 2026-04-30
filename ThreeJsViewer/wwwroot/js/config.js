@@ -7,7 +7,7 @@ import { createEarthMold2Scene, createEarthMold4Scene } from './scenes/earthMold
 import { dogCatScene, openHeartScene, goldHeartScene, bikeHeartScene } from './scenes/heart.js?v=1.12';
 import { createBottleLidScene } from './scenes/bottle.js?v=1.01';
 
-import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.01';
+import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.02';
 
 export const sceneConfigurations = [
 
@@ -233,6 +233,6 @@ export const sceneConfigurations = [
 
     catMoldScene,
     eggEarthContainerScene,
-    createPenguinScene(10, 5, 6, "Too much penguins"),
-    createPenguinScene(2, 2, 6, "Only two penguins")
+    createPenguinScene(10, 5, 6, "Penguin planet"),
+    createPenguinScene(2, 2, 6, "Penguin planet train")
 ];

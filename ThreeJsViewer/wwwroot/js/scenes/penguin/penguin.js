@@ -85,6 +85,8 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
             }
             penguin.mesh.material.needsUpdate = true;
             selectionStateChanged = true;
+
+            selectAudio.play();
         }
 
         let penguin = {
@@ -241,6 +243,9 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
                                     animType = 1;
                                     t0 = -1;
                                     animChange = true;
+                                    if (selectedVertex != -1 && selectedPenguin == penguin) {
+                                        noAudio.play();
+                                    }
                                     selectedVertex = -1;
                                     return;
                                 }
@@ -261,6 +266,9 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
                                 animType = 1;
                                 t0 = -1;
                                 animChange = true;
+                                if (selectedVertex != -1 && selectedPenguin == penguin) {
+                                    noAudio.play();
+                                }
                                 selectedVertex = -1;
                                 return;
                             } else {
@@ -567,6 +575,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
 
             if (v != -1 && vertices[selectedPenguin.inVertex()].vertices.indexOf(v) != -1) {
                 selectedVertex = v;
+                goAudio.play();
                 //return true;
             }
 
@@ -680,6 +689,19 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
         scene.models.push(penguin);
         penguins.push(penguin);
     }
+
+    let selectAudio = new Audio('assets/OnSphere/851556__coghezzi__ui-menu-click-reverb-soft-confirm-click.wav');
+    selectAudio.loop = false;
+    selectAudio.volume = 1.0;    
+
+    let goAudio = new Audio('assets/OnSphere/21695__ice9ine__right-foot.wav');
+    goAudio.loop = false;
+    goAudio.volume = 1.0;    
+
+    let noAudio = new Audio('assets/OnSphere/771167__valhallaproject__sci-fi-grenade-launcher.ogg');
+    noAudio.loop = false;
+    noAudio.volume = 1.0;    
+
 
     return scene;
 }
