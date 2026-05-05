@@ -614,7 +614,14 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
                 animate: (m, t) => {
                     const pointsArray = m.material.userData.uHighlightPoints.value;
 
-                    let win = testWin();
+                    let win = testWin(); //t > 10 ? 0 : -1;
+
+                    if (win != -1 && !scene.gameOver) {
+                        scene.gameOver = true;
+                        setTimeout(() => {
+                            scene.showModal("So you've done some real hard work! The penguins are thrilled.");
+                        }, 5000);
+                    }
 
                     for (var i = 0; i < pointsArray.length; i++) {
                         let w = 0;

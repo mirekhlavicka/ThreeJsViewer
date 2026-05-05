@@ -31,6 +31,7 @@ const timer = new THREE.Timer();
 let animationTime = 0; // Our custom "accumulated" time
 
 let audio;
+const startModal = new bootstrap.Modal(document.getElementById('startModal'));
 
 function setup() {
     scene = new THREE.Scene();
@@ -257,6 +258,7 @@ function loadScene(reset = true) {
         bootstrap.Collapse.getOrCreateInstance(document.getElementById('panelControls')).hide();
         document.querySelector('.ui-panel').style.display = 'none';
 
+        document.getElementById('startBtn').textContent = "START";
         document.getElementById('gameTitle').textContent = config.gameMode.title;
         document.getElementById('gameDescription').textContent = config.gameMode.description;
 
@@ -272,21 +274,24 @@ function loadScene(reset = true) {
             });
         }
 
+        document.getElementById('startBtn').addEventListener('click', runGame);
 
-        const startModal = new bootstrap.Modal(document.getElementById('startModal'));
+        config.showModal = (text) => {
+            document.getElementById('startBtn').textContent = "NEW GAME";
+            document.getElementById('gameDescription').textContent = text;
+            document.getElementById('startBtn').addEventListener('click', restartGame);
+            startModal.show();
+        }
         startModal.show();
 
-        document.getElementById('startBtn').addEventListener('click', () => {
-            startModal.hide();
-            runGame();
-        });
     } else {
         scene.background = new THREE.Color(0x3a3a3a);
     } 
 }
 
 function runGame() {
-
+    startModal.hide();
+    document.getElementById('startBtn').removeEventListener('click', runGame);
     if (config.gameMode.audio && !audio) {
         audio = new Audio(config.gameMode.audio);
         audio.loop = true;
@@ -300,9 +305,18 @@ function runGame() {
         if (!document.fullscreenElement) {
             document.querySelector('.ui-panel').style.display = 'block';
         }
-    });
+    });    
+}
 
-    document.getElementById('startBtn').removeEventListener('click', runGame);
+function restartGame() {
+    startModal.hide();
+    document.getElementById('startBtn').removeEventListener('click', restartGame);
+
+    setTimeout(() => {
+        config = config.reset();
+        config.used = true;
+        loadScene();
+    }, 500);
 }
 
 function autoPositionGrid() {
