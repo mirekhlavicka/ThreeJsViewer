@@ -80,7 +80,7 @@ function setup() {
     scene.add(helper);*/
 }
 
-function loadScene(reset = true) {
+function loadScene(reset = true, runGameWithoutDialog = false) {
     // 1. Cleanup existing
     if (pivot) {
         pivot.traverse(node => {
@@ -274,15 +274,19 @@ function loadScene(reset = true) {
             });
         }
 
-        document.getElementById('startBtn').addEventListener('click', runGame);
-
         config.showModal = (text) => {
             document.getElementById('startBtn').textContent = "NEW GAME";
             document.getElementById('gameDescription').textContent = text;
             document.getElementById('startBtn').addEventListener('click', restartGame);
             startModal.show();
+        }        
+
+        if (runGameWithoutDialog) {
+            runGame();
+        } else {
+            startModal.show();
+            document.getElementById('startBtn').addEventListener('click', runGame);
         }
-        startModal.show();
 
     } else {
         scene.background = new THREE.Color(0x3a3a3a);
@@ -315,7 +319,7 @@ function restartGame() {
     setTimeout(() => {
         config = config.reset();
         config.used = true;
-        loadScene();
+        loadScene(true, true);
     }, 500);
 }
 

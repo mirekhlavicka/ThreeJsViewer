@@ -213,7 +213,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
 
                         if (toEgg) {
                             let followEgg = false;
-                            if (vertices[toVertex].egg != -1 && !eggs[vertices[toVertex].egg].isInMove() && (selectedPenguin == penguin || eggs[vertices[toVertex].egg].type == 0)) {
+                            if (vertices[toVertex].egg != -1 && !eggs[vertices[toVertex].egg].isInMove() && (selectedPenguin == penguin || eggs[vertices[toVertex].egg].type == 0 || Math.random() < 0.25)) {
                                 opositeVertex(fromVertex, toVertex).forEach(moveTo => {
                                     if (moveTo < 0 || !testSelected(moveTo) || followEgg) {
                                         return;
@@ -614,10 +614,11 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
                 animate: (m, t) => {
                     const pointsArray = m.material.userData.uHighlightPoints.value;
 
-                    let win = testWin(); //t > 10 ? 0 : -1;
+                    let win = testWin(); //t > 10 ? 0 : -1; 
 
                     if (win != -1 && !scene.gameOver) {
                         scene.gameOver = true;
+                        winAudio.play();
                         setTimeout(() => {
                             scene.showModal("So you've done some real hard work! The penguins are thrilled.");
                         }, 5000);
@@ -708,6 +709,10 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
     let noAudio = new Audio('assets/OnSphere/771167__valhallaproject__sci-fi-grenade-launcher.ogg');
     noAudio.loop = false;
     noAudio.volume = 1.0;    
+
+    let winAudio = new Audio('assets/OnSphere/456966__funwithsound__success-fanfare-trumpets.mp3');
+    winAudio.loop = false;
+    winAudio.volume = 1.0;    
 
 
     return scene;
