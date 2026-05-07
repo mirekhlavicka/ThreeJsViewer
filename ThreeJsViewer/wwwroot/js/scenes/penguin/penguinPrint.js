@@ -6,11 +6,11 @@ export function createPenguinPrintScene() {
         name: "Penguins/Penguin print",
         models: [
             {
-                path: 'assets/penguin/bottom.ply',
+                path: 'assets/Penguin/bottom.ply',
                 color: 0x808080
             },
             {
-                path: 'assets/penguin/top.ply',
+                path: 'assets/Penguin/top.ply',
                 color: 0xffffff,
                 animate: (m, t) => {
 
