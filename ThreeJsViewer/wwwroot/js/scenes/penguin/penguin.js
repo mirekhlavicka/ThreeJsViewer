@@ -239,6 +239,9 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
                                     nextFromEgg = true;
                                     nextWithEgg = false;
                                     vertices[nextVertex].penguin = index; //not needed, allready set
+                                    if (selectedPenguin == penguin && selectedVertex != fromVertex) {
+                                        painAudio.play();
+                                    }                                    
                                 } else {
                                     animType = 1;
                                     t0 = -1;
@@ -255,7 +258,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
                             let n = -1;
 
                             if (!fromEgg || selectedPenguin == penguin) {
-                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (testSelected(vi) && vertices[vi].penguin == -1 || vertices[vi].penguin == index) && (vertices[vi].egg != -1 /*&& (selectedPenguin == penguin || eggs[vertices[vi].egg].type == 0)*/));
+                                n = randomIndexWhere(vertices[toVertex].vertices, vi => (testSelected(vi) && vertices[vi].penguin == -1 || vertices[vi].penguin == index) && (vertices[vi].egg != -1 && (selectedPenguin == penguin || eggs[vertices[vi].egg].type == 0 || Math.random() < 0.25)));
                             }
 
                             if (n < 0) {
@@ -713,6 +716,10 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
     let winAudio = new Audio('assets/OnSphere/456966__funwithsound__success-fanfare-trumpets.mp3');
     winAudio.loop = false;
     winAudio.volume = 1.0;    
+
+    let painAudio = new Audio('assets/OnSphere/333265__silversatyr__awww-1.ogg');
+    painAudio.loop = false;
+    painAudio.volume = 1.0;    
 
 
     return scene;
