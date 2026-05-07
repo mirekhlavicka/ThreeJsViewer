@@ -8,6 +8,7 @@ import { dogCatScene, openHeartScene, goldHeartScene, bikeHeartScene } from './s
 import { createBottleLidScene } from './scenes/bottle.js?v=1.01';
 
 import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.02';
+import { createPenguinPrintScene } from './scenes/penguin/penguinPrint.js?v=1.02';
 
 export const sceneConfigurations = [
 
@@ -234,5 +235,6 @@ export const sceneConfigurations = [
     catMoldScene,
     eggEarthContainerScene,
     createPenguinScene(10, 5, 6, "Penguin planet"),
-    createPenguinScene(2, 2, 6, "Penguin planet train")
+    createPenguinScene(2, 2, 6, "Penguin planet train"),
+    createPenguinPrintScene(2, 2, 6, "Penguin planet train")
 ];
