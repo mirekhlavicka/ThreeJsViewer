@@ -4,6 +4,8 @@ import * as THREE from 'three';
 export function createPenguinPrintScene() {
     return {
         name: "Penguins/Penguin print",
+        sceneBackgroundTexture: "assets/OnSphere/milky_way_penguin.png",
+        hideGrid: true,
         models: [
             {
                 path: 'assets/Penguin/bottom.ply',

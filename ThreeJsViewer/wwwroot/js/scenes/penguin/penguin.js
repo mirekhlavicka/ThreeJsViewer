@@ -1,7 +1,7 @@
 ﻿import { icosaVertices } from './icosa.js';
 import * as THREE from 'three';
 
-export function createPenguinScene(pcount, ecount0, ecount1, name ) {
+export function createPenguinScene(pcount, ecount0, ecount1, name, shadow = false ) {
 
     let vertices = structuredClone(icosaVertices);
     let eggs = [];
@@ -534,7 +534,7 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
     let scene = {
         reset: () => {
             if (scene.used) {
-                return createPenguinScene(pcount, ecount0, ecount1, name);
+                return createPenguinScene(pcount, ecount0, ecount1, name, scene.shadowMapType);
             } else {
                 return scene;
             }
@@ -590,13 +590,14 @@ export function createPenguinScene(pcount, ecount0, ecount1, name ) {
             dirLight.position.set(1, 1, 1);
             //dirLight.target.position.set(-1, -1, -1);
         },
+        sceneBackgroundTexture: "assets/OnSphere/milky_way_penguin.png",
+        hideGrid: true,
         gameMode: {
             audio: "assets/OnSphere/magellano-penguins.wav",
-            sceneBackgroundTexture: "assets/OnSphere/milky_way_penguin.png",
             title: "Penguin planet",
             description: "Help the penguins collect the golden eggs in the hexagon. Click to choose which penguin to control. And click again to choose where to march or which egg to push. But the place may be occupied..."
         },
-        //shadowMapType: THREE.VSMShadowMap, //THREE.VSMShadowMap, THREE.PCFShadowMap
+        shadowMapType: shadow ? THREE.VSMShadowMap : null, //THREE.VSMShadowMap, THREE.PCFShadowMap
         name: "Penguins/" + name,
         models: [
             {

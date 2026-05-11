@@ -190,7 +190,7 @@ function loadScene(reset = true, runGameWithoutDialog = false) {
                         camera.position.set(-3, 0, 1.5);
                         dirLight.position.set(1, 1, 1);
                     }
-                    if (config.shadowMapType != undefined) {
+                    if (config.shadowMapType != undefined && config.shadowMapType != null) {
                         renderer.shadowMap.enabled = true;
                         renderer.shadowMap.type = config.shadowMapType;
                     } else {
@@ -250,29 +250,32 @@ function loadScene(reset = true, runGameWithoutDialog = false) {
         audio = null;
     }
 
-    if (config.gameMode) {
-        if (grid.visible) {
-            document.getElementById('showGridSwitch').click();
-        }
+    if (config.sceneBackgroundTexture) {
+        const loader = new THREE.TextureLoader();
+        loader.load(config.sceneBackgroundTexture, (texture) => {
+            texture.mapping = THREE.EquirectangularReflectionMapping;
+            texture.colorSpace = THREE.SRGBColorSpace; // Keeps colors vibrant
+            scene.background = texture;
+            // Optional: This makes the space light actually reflect
+            scene.environment = texture;
+        });
+    } else if (config.sceneBackgroundColor != undefined) {
+        scene.background = new THREE.Color(config.sceneBackgroundColor);
+    }  else {
+        scene.background = new THREE.Color(0x3a3a3a);
+    } 
 
+    if ((config.hideGrid && grid.visible) || (!config.hideGrid && !grid.visible)) {
+        document.getElementById('showGridSwitch').click();
+    }
+
+    if (config.gameMode) {
         bootstrap.Collapse.getOrCreateInstance(document.getElementById('panelControls')).hide();
         document.querySelector('.ui-panel').style.display = 'none';
 
         document.getElementById('startBtn').textContent = "START";
         document.getElementById('gameTitle').textContent = config.gameMode.title;
         document.getElementById('gameDescription').textContent = config.gameMode.description;
-
-
-        if (config.gameMode.sceneBackgroundTexture) {
-            const loader = new THREE.TextureLoader();
-            loader.load(config.gameMode.sceneBackgroundTexture, (texture) => {
-                texture.mapping = THREE.EquirectangularReflectionMapping;
-                texture.colorSpace = THREE.SRGBColorSpace; // Keeps colors vibrant
-                scene.background = texture;
-                // Optional: This makes the space light actually reflect off your globe
-                scene.environment = texture;
-            });
-        }
 
         config.showModal = (text) => {
             document.getElementById('startBtn').textContent = "NEW GAME";
@@ -287,10 +290,7 @@ function loadScene(reset = true, runGameWithoutDialog = false) {
             startModal.show();
             document.getElementById('startBtn').addEventListener('click', runGame);
         }
-
-    } else {
-        scene.background = new THREE.Color(0x3a3a3a);
-    } 
+    }
 }
 
 function runGame() {
@@ -552,7 +552,7 @@ function onPointerDown(event) {
             }
         } else {
             let i = loadedMeshes.indexOf(mesh);
-            if (i >= 0 /*&& i != selectedMesh*/) {
+            if (i >= 0 && i != selectedMesh) {
                 changeSelectedMesh(-1, true, loadedMeshes.indexOf(mesh));
             }
         }

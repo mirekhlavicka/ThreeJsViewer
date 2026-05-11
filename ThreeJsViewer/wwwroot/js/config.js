@@ -234,7 +234,10 @@ export const sceneConfigurations = [
 
     catMoldScene,
     eggEarthContainerScene,
+
     createPenguinScene(10, 5, 6, "Penguin planet"),
+    createPenguinScene(10, 5, 6, "Penguin planet - shadows", true),
     createPenguinScene(2, 2, 6, "Penguin planet train"),
+
     createPenguinPrintScene(2, 2, 6, "Penguin planet train")
 ];

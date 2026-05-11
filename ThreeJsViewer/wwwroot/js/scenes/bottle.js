@@ -4,6 +4,7 @@ import * as THREE from 'three';
 export function createBottleLidScene(name, f1, f2, maxShift = 0.25) {
     return {
         name: "Bottle/" + name,
+        sceneBackgroundColor: 0x000000,
         //color: 0xFFEFC1,
         setup: (camera) => {
             camera.position.set(3.5, 1.0, 2.5);

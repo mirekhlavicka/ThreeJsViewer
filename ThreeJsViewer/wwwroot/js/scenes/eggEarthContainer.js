@@ -4,6 +4,9 @@ import * as THREE from 'three';
 const eggPeriod = 11;
 export const eggEarthContainerScene = {
     name: "Earth/Dragon egg",
+    //sceneBackgroundColor: 0x000000,
+    sceneBackgroundTexture: "assets/EggEarthContainer/heic0406a.jpg",
+    hideGrid: true,
     resetTime: 3 * eggPeriod,
     shadowMapType: THREE.VSMShadowMap, //THREE.VSMShadowMap, THREE.PCFShadowMap
     setup: (camera, dirLight) => {
