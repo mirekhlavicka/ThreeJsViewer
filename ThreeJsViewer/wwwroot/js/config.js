@@ -10,6 +10,8 @@ import { createBottleLidScene } from './scenes/bottle.js?v=1.01';
 import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.02';
 import { createPenguinPrintScene } from './scenes/penguin/penguinPrint.js?v=1.02';
 
+import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.00';
+
 export const sceneConfigurations = [
 
     {
@@ -239,5 +241,9 @@ export const sceneConfigurations = [
     createPenguinScene(10, 5, 6, "Penguin planet - shadows", true),
     createPenguinScene(2, 2, 6, "Penguin planet train"),
 
-    createPenguinPrintScene(2, 2, 6, "Penguin planet train")
+    createPenguinPrintScene(2, 2, 6, "Penguin planet train"),
+
+    createGeoPenguinScene(5, "Penguins on ellipsoid", true)
+
+
 ];
