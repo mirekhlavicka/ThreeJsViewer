@@ -11,6 +11,7 @@ import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.02';
 import { createPenguinPrintScene } from './scenes/penguin/penguinPrint.js?v=1.02';
 
 import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.00';
+import { tetraFunc } from './scenes/geodesic/implicitLib.js?v=1.00';
 
 export const sceneConfigurations = [
 
@@ -243,7 +244,9 @@ export const sceneConfigurations = [
 
     createPenguinPrintScene(2, 2, 6, "Penguin planet train"),
 
-    createGeoPenguinScene(5, "Penguins on ellipsoid", true)
+    createGeoPenguinScene("Penguins on ellipsoid", "ellipsoid", (x, y, z) => (8 * x * x + 8 * y * y + z * z) - 1, 5, true),
+
+    createGeoPenguinScene("Penguins on tetra", "tetra", tetraFunc, 15, true, 0.5)
 
 
 ];

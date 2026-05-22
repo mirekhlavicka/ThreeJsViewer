@@ -417,7 +417,7 @@ function animate(timestamp) {
 function animateMeshes(delta) {
     loadedMeshes.forEach(mesh => {
         if (mesh.userData.animate) {
-            mesh.userData.animate(mesh, animationTime, animationSpeed * delta);
+            mesh.userData.animate(mesh, animationTime, delta, animationSpeed);
         }
     });        
 }

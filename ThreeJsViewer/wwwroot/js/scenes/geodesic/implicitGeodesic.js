@@ -90,6 +90,11 @@ export class ImplicitGeodesicPro {
     step(f, pos, velocity, n, stepSize) {
         const speed = velocity.length();
 
+        if (speed == 0) {
+            this.gradient(f, pos, n);
+            return;
+        }
+
         // --- 1. Euler Tangent Step ---
         _nextPos.copy(pos).addScaledVector(velocity, stepSize);
 

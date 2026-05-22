@@ -1,11 +1,17 @@
 ﻿import * as THREE from 'three';
 import { ImplicitGeodesicPro } from './implicitGeodesic.js';
 
-export function createGeoPenguinScene(pcount, name, shadow = false ) {
+export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0 ) {
 
     let penguins = [];
 
     let surfaceMesh = null;
+
+    let impFunc = impF;
+
+    if (scale != 1.0) {
+        impFunc = (x, y, z) => impF(x / scale, y / scale, z / scale);
+    }
 
     function getRandomVertex() {
         const geometry = surfaceMesh.geometry;
@@ -20,8 +26,6 @@ export function createGeoPenguinScene(pcount, name, shadow = false ) {
             originalCoordinates.fromBufferAttribute(positionAttribute, randomIndex);
 
             return originalCoordinates;
-            //console.log("Original raw coordinates:", originalCoordinates);
-            // Access individual values via originalCoordinates.x, originalCoordinates.y, originalCoordinates.z
         }
     }
 
@@ -29,20 +33,16 @@ export function createGeoPenguinScene(pcount, name, shadow = false ) {
         let color = params.color;
         let speed = params.speed;
 
-        // 1. Initialize the solver (Extended config allowed)
         const geodesicSolver = new ImplicitGeodesicPro({
             newtonIterations: 3,
             transportMethod: 'rodrigues'
         });
 
-        // 2. Define your terrain map
-        const myTerrainSurface = (x, y, z) => (8 * x * x + 8 * y * y + z * z) - 1; 
-
-        // 3. Set up the penguin
-        let penguinPosition = null;//new THREE.Vector3(0, 0, 1);
-        let penguinVelocity = null;// geodesicSolver.randomVelocity(myTerrainSurface, penguinPosition);
+        let penguinPosition = null;
+        let penguinVelocity = null;
         const penguinNormal = new THREE.Vector3(0, 0, 1);
-        //penguinVelocity.multiplyScalar(0.5 + 2.0 * Math.random()); // 3 units per second
+
+        let stepTime = 0;
 
         let penguin = {
             path: 'assets/OnSphere/penguinEgg.ply',
@@ -55,30 +55,30 @@ export function createGeoPenguinScene(pcount, name, shadow = false ) {
             prepareMesh: m => {
                 m.castShadow = true;
                 penguinPosition = getRandomVertex();
-                penguinVelocity = geodesicSolver.randomVelocity(myTerrainSurface, penguinPosition);
+                penguinVelocity = geodesicSolver.randomVelocity(impFunc, penguinPosition);
+                penguin.mesh.material.userData.uHighlightColor1.value = new THREE.Color(color);
                 penguinVelocity.multiplyScalar(speed); 
 
             },
-            animate: (m, t, delta) => {
-
-                /*if (delta > 0.1) {
-                    console.log(delta);
-                    delta = 0.1
-                }*/
+            animate: (m, t, delta, animationSpeed) => {
 
                 geodesicSolver.step(
-                    myTerrainSurface,
+                    impFunc,
                     penguinPosition,
                     penguinVelocity,
                     penguinNormal,
-                    //0.3 * 0.01 * (1.0 + Math.sin(20 * t)
-                    //0.3 * 0.02 * (1 +  (Math.random() - 0.5))
-                    //0.3 * delta
-                    0.3*0.02,
+                    animationSpeed * 0.02,
                 );                
 
                 updateFigureTransform(m, penguinPosition, penguinVelocity, penguinNormal, 0.068);
-                m.material.userData.uTwistStrength.value = 8 * Math.sin(10*speed*t); //30.0 * oscillation1((Math.sin(t) + 1) /2, 80);
+
+                stepTime += animationSpeed * speed * 0.9;
+
+                m.material.userData.uTwistStrength.value = 8 * Math.sin(stepTime);
+                m.material.userData.uTwistStrength2.value = 0.5 *(1 + Math.sin(0.1 * stepTime)) + 0.4 * Math.sin(0.1 * 2.0 * stepTime);
+                m.material.userData.uTime1.value = 0.2 * stepTime;
+
+                m.material.userData.uSelectedId1.value = (Math.abs(Math.sin(0.3 * stepTime)) < 0.8 ? -1.0 : 2.0);
             }
         }
 
@@ -88,22 +88,34 @@ export function createGeoPenguinScene(pcount, name, shadow = false ) {
     let scene = {
         reset: () => {
             if (scene.used) {
-                return createGeoPenguinScene(pcount, name, scene.shadowMapType);
+                return createGeoPenguinScene(name, model, impF, pcount, shadow, scale);
             } else {
                 return scene;
             }
         },
         setup: (camera, dirLight) => {
-            camera.position.set(-1.5, 0.0, 1.0);
+            camera.position.set(-2.5, 0.0, 1.0);
             dirLight.position.set(1, 1, 1);
         },
         hideGrid: true,
         sceneBackgroundTexture: "assets/OnSphere/milky_way_penguin.png",
         shadowMapType: shadow ? THREE.VSMShadowMap : null, 
-        name: "Penguins/" + name,
+        name: "Geodesic/" + name,
         models: [
             {
-                path: 'assets/Geodesic/ellipsoid.ply',
+                path: `assets/Geodesic/${model}.ply`,
+                setupMaterial: m => {
+                    m.color = 0xffffff;
+                    m.vertexColors = false;
+                    m.roughness = 0.05;
+                    m.metalness = 0.5;
+
+                },
+                prepareGeometry: g => {
+                    if (scale != 1.0) {
+                        g.scale(scale, scale, scale);
+                    }
+                },
                 prepareMesh: m => {
                     m.receiveShadow = true;
                     m.castShadow = false;
@@ -116,7 +128,6 @@ export function createGeoPenguinScene(pcount, name, shadow = false ) {
 
     for (let i = 0; i < pcount; i++) {
 
-
         let clrspeed = (pcount == 1 ? 1 : i / (pcount - 1));
 
         const value = 48 + Math.floor(clrspeed * (150 - 48));
@@ -124,7 +135,7 @@ export function createGeoPenguinScene(pcount, name, shadow = false ) {
 
         let penguin = createPenguin({
             color: grayColor,
-            speed: 0.5 * (i + 1)
+            speed: 0.1 + 0.5 * clrspeed
         });
 
         scene.models.push(penguin);
@@ -132,11 +143,6 @@ export function createGeoPenguinScene(pcount, name, shadow = false ) {
     }
 
     return scene;
-}
-
-function oscillation1(t, m) {
-    const phi = m * (1 - Math.cos(Math.PI * t)) / Math.PI;
-    return Math.sin(phi) * t * (1 - t);
 }
 
 function getOrthogonalVector(v) {
@@ -158,15 +164,11 @@ function getOrthogonalVector(v) {
     ).normalize();
 }
 
-function updateFigureTransform(figure, /*x, y, z, v1, v2, v3*/pos, vel, newZ, shift) {
+function updateFigureTransform(figure, pos, vel, newZ, shift) {
 
-    /*// 1. Create Vectors from inputs
-    const pos = new THREE.Vector3(x, y, z);
-    const vel = (v1 == 0 && v2 == 0 && v3 == 0 ? getOrthogonalVector(pos) : new THREE.Vector3(v1, v2, v3));
-
-    // 2. Define the Basis Vectors
-    // Z-axis (Normal): Points from center through the position
-    const newZ = pos.clone().normalize();*/
+    if (vel.x == 0 && vel.y == 0 & vel.z == 0) {
+        vel = getOrthogonalVector(newZ)
+    }
 
     // X-axis (Side): Perpendicular to both Velocity and the Normal
     // We calculate this first to ensure a perfect 90-degree system
