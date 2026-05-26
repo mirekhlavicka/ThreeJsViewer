@@ -180,6 +180,14 @@ function loadScene(reset = true, runGameWithoutDialog = false) {
             loadedCount++;
 
             if (loadedCount === config.models.length) {
+
+                config.models.forEach((modelData, i) => {
+                    if (modelData.meshesLoaded) {
+                        modelData.meshesLoaded();
+                    }
+                });
+
+
                 autoPositionGrid();
                 if (reset) {
                     controls.reset();

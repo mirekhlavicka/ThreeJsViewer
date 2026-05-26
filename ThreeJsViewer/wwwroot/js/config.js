@@ -244,9 +244,9 @@ export const sceneConfigurations = [
 
     createPenguinPrintScene(2, 2, 6, "Penguin planet train"),
 
-    createGeoPenguinScene("Penguins on ellipsoid", "ellipsoid", (x, y, z) => (8 * x * x + 8 * y * y + z * z) - 1, 5, true),
+    createGeoPenguinScene("Penguins on ellipsoid", "ellipsoid", (x, y, z) => (8 * x * x + 8 * y * y + z * z) - 1, 10, true),
 
-    createGeoPenguinScene("Penguins on tetra", "tetra", tetraFunc, 15, true, 0.5)
+    createGeoPenguinScene("Penguins on tetra", "tetra", tetraFunc, 15, true, 0.4)
 
 
 ];

@@ -9,6 +9,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
     let impFunc = impF;
 
+    const geodesicSolver = new ImplicitGeodesicPro({
+        newtonIterations: 3,
+        transportMethod: 'rodrigues'
+    });
+
     if (scale != 1.0) {
         impFunc = (x, y, z) => impF(x / scale, y / scale, z / scale);
     }
@@ -33,14 +38,9 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         let color = params.color;
         let speed = params.speed;
 
-        const geodesicSolver = new ImplicitGeodesicPro({
-            newtonIterations: 3,
-            transportMethod: 'rodrigues'
-        });
-
-        let penguinPosition = null;
-        let penguinVelocity = null;
-        const penguinNormal = new THREE.Vector3(0, 0, 1);
+        const penguinPosition = new THREE.Vector3(1000, 1000, 1000);
+        const penguinVelocity = new THREE.Vector3();
+        const penguinNormal = new THREE.Vector3();
 
         let stepTime = 0;
 
@@ -54,11 +54,20 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             },
             prepareMesh: m => {
                 m.castShadow = true;
-                penguinPosition = getRandomVertex();
-                penguinVelocity = geodesicSolver.randomVelocity(impFunc, penguinPosition);
-                penguin.mesh.material.userData.uHighlightColor1.value = new THREE.Color(color);
-                penguinVelocity.multiplyScalar(speed); 
+                m.material.userData.uHighlightColor1.value = new THREE.Color(color);
+            },
+            meshesLoaded: () => {
 
+                let p = getRandomVertex();
+
+                while (penguins.some(pp => pp.position.distanceTo(p) < 0.3)) {
+                    p = getRandomVertex();
+                    console.log("next pos");
+                }
+
+                penguinPosition.copy(p);
+                penguinVelocity.copy(geodesicSolver.randomVelocity(impFunc, penguinPosition));
+                penguinVelocity.multiplyScalar(speed); 
             },
             animate: (m, t, delta, animationSpeed) => {
 
@@ -70,6 +79,10 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     animationSpeed * 0.02,
                 );                
 
+                if (penguins.some(pp => pp != penguin && pp.position.distanceTo(penguinPosition) < 0.1)) {
+                    penguinVelocity.multiplyScalar(-1); 
+                }
+
                 updateFigureTransform(m, penguinPosition, penguinVelocity, penguinNormal, 0.068);
 
                 stepTime += animationSpeed * speed * 0.9;
@@ -79,7 +92,9 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 m.material.userData.uTime1.value = 0.2 * stepTime;
 
                 m.material.userData.uSelectedId1.value = (Math.abs(Math.sin(0.3 * stepTime)) < 0.8 ? -1.0 : 2.0);
-            }
+            },
+
+            position: penguinPosition
         }
 
         return penguin;
