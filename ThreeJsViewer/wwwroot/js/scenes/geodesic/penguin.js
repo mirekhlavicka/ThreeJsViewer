@@ -1,5 +1,5 @@
 ﻿import * as THREE from 'three';
-import { ImplicitGeodesicPro } from './implicitGeodesic.js';
+import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js';
 
 export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0 ) {
 
@@ -9,14 +9,14 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
     let impFunc = impF;
 
-    const geodesicSolver = new ImplicitGeodesicPro({
-        newtonIterations: 3,
-        transportMethod: 'rodrigues'
-    });
-
     if (scale != 1.0) {
         impFunc = (x, y, z) => impF(x / scale, y / scale, z / scale);
     }
+
+    const geodesicSolver = new ImplicitGeodesicPro({
+        newtonIterations: 5,
+        transportMethod: 'rodrigues'
+    });
 
     function getRandomVertex() {
         const geometry = surfaceMesh.geometry;
@@ -79,17 +79,23 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     animationSpeed * 0.02,
                 );                
 
-                if (penguins.some(pp => pp != penguin && pp.position.distanceTo(penguinPosition) < 0.1)) {
+                /*if (penguins.some(pp => pp != penguin && pp.position.distanceTo(penguinPosition) < 0.1)) {
                     penguinVelocity.multiplyScalar(-1); 
-                }
+                }*/
 
                 updateFigureTransform(m, penguinPosition, penguinVelocity, penguinNormal, 0.068);
+
+                let f = calculateRepulsiveForce(penguinPosition, penguins.filter(pp => pp != penguin).map(pp => pp.position), penguinNormal);
+                //f.projectOnPlane(penguinNormal);
+                penguinVelocity.addScaledVector(f, animationSpeed * 0.003).normalize().multiplyScalar(speed);
+
+                //speed = penguinVelocity.length();
 
                 stepTime += animationSpeed * speed * 0.9;
 
                 m.material.userData.uTwistStrength.value = 8 * Math.sin(stepTime);
-                m.material.userData.uTwistStrength2.value = 0.5 *(1 + Math.sin(0.1 * stepTime)) + 0.4 * Math.sin(0.1 * 2.0 * stepTime);
                 m.material.userData.uTime1.value = 0.2 * stepTime;
+                m.material.userData.uTwistStrength2.value = 0.5 *(1 + Math.sin(0.1 * stepTime)) + 0.4 * Math.sin(0.1 * 2.0 * stepTime);
 
                 m.material.userData.uSelectedId1.value = (Math.abs(Math.sin(0.3 * stepTime)) < 0.8 ? -1.0 : 2.0);
             },
