@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
-import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
+//import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { sceneConfigurations } from './config.js?v=1.16';
 
 // --- State Variables ---
@@ -11,7 +12,7 @@ const blinkDuration = 2000; // Blink for 2 seconds
 
 let controls, renderer, scene, camera, dirLight, grid, pivot;
 
-let autoRotate = false;
+//let autoRotate = false;
 let useVertexColors = false;
 let useflatShading = false;
 let doubleSide = false;
@@ -19,7 +20,7 @@ let showWire = false;
 let isPaused = false;
 
 let animationSpeed = 1.2;
-let autoRotateSpeed = 0.0025;
+let autoRotateSpeed = 1.0; //0.0025;
 let materialRoughness = 0.3;
 let materialMetalness = 0.2;
     
@@ -47,11 +48,17 @@ function setup() {
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.getElementById('viewer').appendChild(renderer.domElement);
 
-    controls = new TrackballControls(camera, renderer.domElement);
+    controls = new OrbitControls(camera, renderer.domElement);
     controls.rotateSpeed = 2.5;
     controls.zoomSpeed = 1.2;
     controls.panSpeed = 0.8;
-    controls.staticMoving = false; 
+
+    //controls.staticMoving = false; 
+    controls.enableDamping = true;      // Aktivuje plynulé dojíždění pohybu
+    controls.dampingFactor = 0.05;      // Nižší číslo = delší a hladší dojezd (výchozí je 0.05)
+
+    controls.autoRotate = false;
+    controls.autoRotateSpeed = autoRotateSpeed;
 
     // Lighting
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
@@ -381,9 +388,9 @@ function animate(timestamp) {
     }
 
     if (!isPaused) {
-        if (autoRotate) {
+        /*if (autoRotate) {
             pivot.rotation.z += autoRotateSpeed;
-        }
+        }*/
 
         animateMeshes(delta);
     }
@@ -628,7 +635,8 @@ if (groups["_root"]) {
 }
 
 document.getElementById('autoRotateSwitch').addEventListener('change', (e) => {
-    autoRotate = e.target.checked;
+    //autoRotate = e.target.checked;
+    controls.autoRotate = e.target.checked;
 });
 
 document.getElementById('vertexColorsSwitch').addEventListener('change', (e) => {
@@ -796,6 +804,7 @@ const rotValLabel = document.getElementById('rotSpeedVal');
 rotRange.addEventListener('input', (e) => {
     autoRotateSpeed = parseFloat(e.target.value);
     rotValLabel.innerText = autoRotateSpeed.toFixed(4);
+    controls.autoRotateSpeed = autoRotateSpeed;
 });
 
 // Roughness Slider

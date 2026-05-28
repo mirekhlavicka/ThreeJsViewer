@@ -87,7 +87,14 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 let f = calculateRepulsiveForce(penguinPosition, penguins.filter(pp => pp != penguin).map(pp => pp.position), penguinNormal);
                 //f.projectOnPlane(penguinNormal);
-                penguinVelocity.addScaledVector(f, animationSpeed * 0.003).normalize().multiplyScalar(speed);
+
+                penguinVelocity.normalize();
+
+                let pf = f.clone().projectOnVector(penguinVelocity);
+                let nf = f.length();
+                f.sub(pf).setLength(nf);
+
+                penguinVelocity.addScaledVector(f, animationSpeed * 0.005).setLength(speed);
 
                 //speed = penguinVelocity.length();
 
