@@ -1,7 +1,7 @@
 ﻿import * as THREE from 'three';
-import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js';
+import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.01';
 
-export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0 ) {
+export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0 ) {
 
     let penguins = [];
 
@@ -42,6 +42,8 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         const penguinVelocity = new THREE.Vector3();
         const penguinNormal = new THREE.Vector3();
 
+        let otherPos = [];
+
         let stepTime = 0;
 
         let penguin = {
@@ -62,12 +64,14 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 while (penguins.some(pp => pp.position.distanceTo(p) < 0.3)) {
                     p = getRandomVertex();
-                    console.log("next pos");
+                    //console.log("next pos");
                 }
 
                 penguinPosition.copy(p);
                 penguinVelocity.copy(geodesicSolver.randomVelocity(impFunc, penguinPosition));
-                penguinVelocity.multiplyScalar(speed); 
+                penguinVelocity.multiplyScalar(speed);
+
+                otherPos = penguins.filter(pp => pp != penguin).map(pp => pp.position);
             },
             animate: (m, t, delta, animationSpeed) => {
 
@@ -85,7 +89,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 updateFigureTransform(m, penguinPosition, penguinVelocity, penguinNormal, 0.068);
 
-                let f = calculateRepulsiveForce(penguinPosition, penguins.filter(pp => pp != penguin).map(pp => pp.position), penguinNormal);
+                let f = calculateRepulsiveForce(penguinPosition, otherPos, penguinNormal);
                 //f.projectOnPlane(penguinNormal);
 
                 penguinVelocity.normalize();
@@ -122,10 +126,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             }
         },
         setup: (camera, dirLight) => {
-            camera.position.set(-2.5, 0.0, 1.0);
+            camera.position.set(-1.5, 0.0, -1.0);
             dirLight.position.set(1, 1, 1);
         },
         hideGrid: true,
+        autoRotate: true,
         sceneBackgroundTexture: "assets/OnSphere/milky_way_penguin.png",
         shadowMapType: shadow ? THREE.VSMShadowMap : null, 
         name: "Geodesic/" + name,
@@ -158,12 +163,12 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
         let clrspeed = (pcount == 1 ? 1 : i / (pcount - 1));
 
-        const value = 48 + Math.floor(clrspeed * (150 - 48));
+        const value = 30 + Math.floor(clrspeed * (200 - 30));
         const grayColor = (value << 16) | (value << 8) | value;
 
         let penguin = createPenguin({
             color: grayColor,
-            speed: 0.1 + 0.5 * clrspeed
+            speed: speedFactor * (0.2 + 0.2 * clrspeed)
         });
 
         scene.models.push(penguin);

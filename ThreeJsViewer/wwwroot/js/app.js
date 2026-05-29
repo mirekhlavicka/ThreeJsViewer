@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 //import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { sceneConfigurations } from './config.js?v=1.16';
+import { sceneConfigurations } from './config.js?v=1.17';
 
 // --- State Variables ---
 let config;
@@ -282,6 +282,10 @@ function loadScene(reset = true, runGameWithoutDialog = false) {
 
     if ((config.hideGrid && grid.visible) || (!config.hideGrid && !grid.visible)) {
         document.getElementById('showGridSwitch').click();
+    }
+
+    if (config.autoRotate && !controls.autoRotate) {
+        document.getElementById('autoRotateSwitch').click();
     }
 
     if (config.gameMode) {
@@ -839,7 +843,7 @@ window.addEventListener('resize', () => {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
-    controls.handleResize();
+    //controls.handleResize();
 });
 
 window.addEventListener('keydown', (e) => {
