@@ -42,6 +42,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         const penguinVelocity = new THREE.Vector3();
         const penguinNormal = new THREE.Vector3();
 
+        const penguinPositionGeo = new THREE.Vector3(1000, 1000, 1000);
+        const penguinVelocityGeo = new THREE.Vector3();
+        const penguinNormalGeo = new THREE.Vector3();
+
+
         let otherPos = [];
 
         let stepTime = 0;
@@ -71,6 +76,10 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 penguinVelocity.copy(geodesicSolver.randomVelocity(impFunc, penguinPosition));
                 penguinVelocity.multiplyScalar(speed);
 
+                penguinPositionGeo.copy(penguinPosition);
+                penguinVelocityGeo.copy(penguinVelocity);
+
+
                 otherPos = penguins.filter(pp => pp != penguin).map(pp => pp.position);
             },
             animate: (m, t, delta, animationSpeed) => {
@@ -83,22 +92,45 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     animationSpeed * 0.02,
                 );                
 
-                /*if (penguins.some(pp => pp != penguin && pp.position.distanceTo(penguinPosition) < 0.1)) {
-                    penguinVelocity.multiplyScalar(-1); 
-                }*/
+                geodesicSolver.step(
+                    impFunc,
+                    penguinPositionGeo,
+                    penguinVelocityGeo,
+                    penguinNormalGeo,
+                    animationSpeed * 0.02,
+                );                
 
                 updateFigureTransform(m, penguinPosition, penguinVelocity, penguinNormal, 0.068);
 
                 let f = calculateRepulsiveForce(penguinPosition, otherPos, penguinNormal);
-                //f.projectOnPlane(penguinNormal);
 
                 penguinVelocity.normalize();
-
                 let pf = f.clone().projectOnVector(penguinVelocity);
                 let nf = f.length();
                 f.sub(pf).setLength(nf);
-
                 penguinVelocity.addScaledVector(f, animationSpeed * 0.005).setLength(speed);
+
+
+                if (nf < 0.00001) {
+                    let d = penguinPosition.distanceTo(penguinPositionGeo);
+
+                    if (d > 0.35 || d < 0.001) {
+                        penguinPositionGeo.copy(penguinPosition);
+                        penguinVelocityGeo.copy(penguinVelocity);
+                    } else {
+                        f.subVectors(penguinPositionGeo, penguinPosition).projectOnPlane(penguinNormal);
+
+                        pf = f.clone().projectOnVector(penguinVelocity);
+                        f.sub(pf);
+
+                        if (f.length < 0.00001) {
+                            penguinPositionGeo.copy(penguinPosition);
+                            penguinVelocityGeo.copy(penguinVelocity);
+                        } else {
+                            penguinVelocity.normalize().addScaledVector(f, animationSpeed * 0.4).setLength(speed);
+                        }                      
+                    }
+                }
 
                 //speed = penguinVelocity.length();
 

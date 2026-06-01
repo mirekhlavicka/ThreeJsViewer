@@ -185,7 +185,7 @@ export function calculateRepulsiveForce(p0, p, n) {
         // 3. Divide by distance squared: (p[i] - p0) / distance^2
         //_diff.divideScalar(distance * distance);
 
-        _diff.multiplyScalar(500 * bump(distance, 0.2));
+        _diff.multiplyScalar(350 * bump(distance, 0.2));
 
         // 4. Accumulate into the total force
         totalForce.add(_diff);
