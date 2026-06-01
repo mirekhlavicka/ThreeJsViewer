@@ -177,17 +177,30 @@ export function calculateRepulsiveForce(p0, p, n) {
         const distance = p0.distanceTo(pi);
 
         // Guard against division by zero if two particles occupy the exact same space
-        if (distance === 0) continue;
+        //if (distance === 0) continue;
 
         // 2. Calculate the direction vector: ( p0 - p[i])
         _diff.subVectors(p0, pi).projectOnPlane(n);
 
         // 3. Divide by distance squared: (p[i] - p0) / distance^2
-        _diff.divideScalar(distance * distance);
+        //_diff.divideScalar(distance * distance);
+
+        _diff.multiplyScalar(500 * bump(distance, 0.2));
 
         // 4. Accumulate into the total force
         totalForce.add(_diff);
     }
 
     return totalForce;
+}
+
+function bump(r, R) {
+    const r2 = r * r;
+    const R2 = R * R;
+
+    if (r2 >= R2) {
+        return 0.0;
+    }
+
+    return Math.exp(-r2 / (R2 - r2));
 }
