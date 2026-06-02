@@ -1,7 +1,7 @@
 ﻿import * as THREE from 'three';
 import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.01';
 
-export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0 ) {
+export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false ) {
 
     let penguins = [];
 
@@ -103,32 +103,23 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 updateFigureTransform(m, penguinPosition, penguinVelocity, penguinNormal, 0.068);
 
                 let f = calculateRepulsiveForce(penguinPosition, otherPos, penguinNormal);
-
-                penguinVelocity.normalize();
                 let pf = f.clone().projectOnVector(penguinVelocity);
                 let nf = f.length();
                 f.sub(pf).setLength(nf);
-                penguinVelocity.addScaledVector(f, animationSpeed * 0.005).setLength(speed);
+                penguinVelocity.normalize().addScaledVector(f, animationSpeed * 0.15).setLength(speed);
 
 
-                if (nf < 0.00001) {
+                if (nf < 0.3) {
                     let d = penguinPosition.distanceTo(penguinPositionGeo);
 
-                    if (d > 0.35 || d < 0.001) {
+                    if (d > 0.5 /*|| d < 0.001*/) {
                         penguinPositionGeo.copy(penguinPosition);
                         penguinVelocityGeo.copy(penguinVelocity);
                     } else {
-                        f.subVectors(penguinPositionGeo, penguinPosition).projectOnPlane(penguinNormal);
-
+                        f.subVectors(penguinPositionGeo, penguinPosition).normalize().projectOnPlane(penguinNormal).multiplyScalar(d * d);
                         pf = f.clone().projectOnVector(penguinVelocity);
                         f.sub(pf);
-
-                        if (f.length < 0.00001) {
-                            penguinPositionGeo.copy(penguinPosition);
-                            penguinVelocityGeo.copy(penguinVelocity);
-                        } else {
-                            penguinVelocity.normalize().addScaledVector(f, animationSpeed * 0.4).setLength(speed);
-                        }                      
+                        penguinVelocity.normalize().addScaledVector(f, animationSpeed * 0.8).setLength(speed);
                     }
                 }
 
@@ -152,7 +143,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
     let scene = {
         reset: () => {
             if (scene.used) {
-                return createGeoPenguinScene(name, model, impF, pcount, shadow, scale);
+                return createGeoPenguinScene(name, model, impF, pcount, shadow, scale, speedFactor, vertexColors);
             } else {
                 return scene;
             }
@@ -171,7 +162,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 path: `assets/Geodesic/${model}.ply`,
                 setupMaterial: m => {
                     m.color = 0xffffff;
-                    m.vertexColors = false;
+                    m.vertexColors = vertexColors;
                     m.roughness = 0.05;
                     m.metalness = 0.5;
 

@@ -180,12 +180,12 @@ export function calculateRepulsiveForce(p0, p, n) {
         //if (distance === 0) continue;
 
         // 2. Calculate the direction vector: ( p0 - p[i])
-        _diff.subVectors(p0, pi).projectOnPlane(n);
+        _diff.subVectors(p0, pi).normalize().projectOnPlane(n);
 
         // 3. Divide by distance squared: (p[i] - p0) / distance^2
         //_diff.divideScalar(distance * distance);
 
-        _diff.multiplyScalar(350 * bump(distance, 0.2));
+        _diff.multiplyScalar(bump(distance, 0.2));
 
         // 4. Accumulate into the total force
         totalForce.add(_diff);
