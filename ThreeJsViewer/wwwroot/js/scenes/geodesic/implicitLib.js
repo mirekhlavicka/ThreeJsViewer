@@ -18,16 +18,44 @@ function smoothMin(a, b, k) {
 function smoothMax(a, b, k) {
     if (k <= 0) return Math.max(a, b);
 
-    h = Math.max(k - Math.abs(a - b), 0.0) / k;
+    let h = Math.max(k - Math.abs(a - b), 0.0) / k;
 
     // For max, we add the correction instead of subtracting it
     return Math.max(a, b) + h * h * k * 0.25;
 }
 
-export function ORFuncs(l, r, eps) {
+export function ORFuncs(l, r, eps = 0.2) {
     return (x, y, z) => {
         let a = l(x, y, z);
         let b = r(x, y, z);
         return smoothMin(a, b, eps)
     }
+}
+
+export function ORManyFuncs(f, eps = 0.2) {
+    let res = f[0];
+
+    for (var i = 1; i < f.length; i++) {
+        res = ORFuncs(res, f[i], eps);
+    }
+
+    return res;
+}
+
+export function ANDFuncs(l, r, eps = 0.2) {
+    return (x, y, z) => {
+        let a = l(x, y, z);
+        let b = r(x, y, z);
+        return smoothMax(a, b, eps)
+    }
+}
+
+export function ANDManyFuncs(f, eps = 0.2) {
+    let res = f[0];
+
+    for (var i = 1; i < f.length; i++) {
+        res = ANDFuncs(res, f[i], eps);
+    }
+
+    return res;
 }

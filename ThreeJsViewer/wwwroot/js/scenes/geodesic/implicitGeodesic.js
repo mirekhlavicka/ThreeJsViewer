@@ -16,6 +16,7 @@ const _k = new THREE.Vector3();
 const _crossKV = new THREE.Vector3();
 const _rawGrad = new THREE.Vector3();
 const _randVec = new THREE.Vector3();
+const _diff = new THREE.Vector3();
 
 export class ImplicitGeodesicPro {
     /**
@@ -158,29 +159,40 @@ export class ImplicitGeodesicPro {
 
 }
 
-// A reusable scratch vector to prevent memory allocation / GC overhead in loops
-const _diff = new THREE.Vector3();
-
 /**
  * Calculates the total force vector exerted on particle p0 by an array of particles p.
  * @param {THREE.Vector3} p0 - The position of the target particle.
  * @param {THREE.Vector3[]} p - An array of positions of the other particles.
  * @returns {THREE.Vector3} The accumulated force vector.
  */
-export function calculateRepulsiveForce(p0, p, n) {
+export function calculateRepulsiveForce(p0, p, n0, n, shift) {
     const totalForce = new THREE.Vector3(0, 0, 0);
 
     for (let i = 0; i < p.length; i++) {
         const pi = p[i];
+        const ni = n[i];
 
         // 1. Calculate the distance between p0 and p[i]
-        const distance = p0.distanceTo(pi);
+        //const distance = p0.distanceTo(pi);
+
+        // Set _tempVec to (pi - p0). 
+        // .subVectors reads the two inputs but only mutates the calling object (_tempVec)
+        _diff.subVectors(pi, p0);
+
+        // Add (shift * ni)
+        _diff.addScaledVector(ni, shift);
+
+        // Subtract (shift * n0) by adding it with a negative shift
+        _diff.addScaledVector(n0, -shift);
+
+        // The distance is simply the length of this resulting difference vector
+        const distance = _diff.length();
 
         // Guard against division by zero if two particles occupy the exact same space
         //if (distance === 0) continue;
 
         // 2. Calculate the direction vector: ( p0 - p[i])
-        _diff.subVectors(p0, pi).normalize().projectOnPlane(n);
+        _diff.subVectors(p0, pi).normalize().projectOnPlane(n0);
 
         // 3. Divide by distance squared: (p[i] - p0) / distance^2
         //_diff.divideScalar(distance * distance);

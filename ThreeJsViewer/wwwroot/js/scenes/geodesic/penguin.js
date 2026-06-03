@@ -48,6 +48,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
 
         let otherPos = [];
+        let otherNormals = [];
 
         let stepTime = 0;
 
@@ -81,6 +82,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
 
                 otherPos = penguins.filter(pp => pp != penguin).map(pp => pp.position);
+                otherNormals = penguins.filter(pp => pp != penguin).map(pp => pp.normal);
             },
             animate: (m, t, delta, animationSpeed) => {
 
@@ -102,7 +104,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 updateFigureTransform(m, penguinPosition, penguinVelocity, penguinNormal, 0.068);
 
-                let f = calculateRepulsiveForce(penguinPosition, otherPos, penguinNormal);
+                let f = calculateRepulsiveForce(penguinPosition, otherPos, penguinNormal, otherNormals, 0.068);
                 let pf = f.clone().projectOnVector(penguinVelocity);
                 let nf = f.length();
                 f.sub(pf).setLength(nf);
@@ -134,7 +136,8 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 m.material.userData.uSelectedId1.value = (Math.abs(Math.sin(0.3 * stepTime)) < 0.8 ? -1.0 : 2.0);
             },
 
-            position: penguinPosition
+            position: penguinPosition,
+            normal: penguinNormal
         }
 
         return penguin;
