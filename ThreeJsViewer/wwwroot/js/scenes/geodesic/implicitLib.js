@@ -3,6 +3,27 @@ export function tetraFunc(x, y, z) {
     const sumOfSquares = x * x + y * y + z * z;
     return (sumOfSquares * sumOfSquares) + (8 * x * y * z) - (10 * sumOfSquares) + 20;
 }
+export function balls(count, R, r, p = 2, eps = 0.2) {
+    let res = null;
+
+    for (var i = 0; i < count; i++) {
+        let x0 = R * Math.cos(i * 2 * Math.PI / count);
+        let y0 = R * Math.sin(i * 2 * Math.PI / count);
+
+        let f = (x, y, z) =>
+            Math.abs(x - x0) ** p +
+            Math.abs(y - y0) ** p +
+            Math.abs(z) ** p -
+            r ** p;
+        if (res == null) {
+            res = f
+        } else {
+            res = ORFuncs(res, f, eps);
+        }
+    }
+
+    return res;
+}
 
 function smoothMin(a, b, k) {
     // If k is 0, return the sharp minimum to avoid division by zero

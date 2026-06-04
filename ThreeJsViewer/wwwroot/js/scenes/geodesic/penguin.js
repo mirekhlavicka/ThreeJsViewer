@@ -152,7 +152,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             }
         },
         setup: (camera, dirLight) => {
-            camera.position.set(-1.5, 0.0, -1.0);
+            camera.position.set(-1.5, -1.5, -1.0);
             dirLight.position.set(1, 1, 1);
         },
         hideGrid: true,

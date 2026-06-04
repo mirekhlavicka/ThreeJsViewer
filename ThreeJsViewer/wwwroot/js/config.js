@@ -11,7 +11,7 @@ import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.02';
 import { createPenguinPrintScene } from './scenes/penguin/penguinPrint.js?v=1.02';
 
 import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.02';
-import { tetraFunc, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.02';
+import { tetraFunc, balls, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.02';
 
 export const sceneConfigurations = [
 
@@ -281,6 +281,15 @@ export const sceneConfigurations = [
 
     createGeoPenguinScene("Penguins on torus", "torus", (x, y, z) => (x ** 2 + y ** 2 + z ** 2 + (0.7) ** 2 - (0.3) ** 2) ** 2 - 4 * (0.7) ** 2 * (x ** 2 + y ** 2), 10, true, 0.8),
 
+    createGeoPenguinScene("On torus with balls", "torusballs",
+        ORFuncs(
+            (x, y, z) => (Math.sqrt(x * x + y * y) - 0.70) ** 2 + z * z - 0.0315,
+            balls(6, 0.7, Math.sqrt(0.1), 2, 0.01),
+            0.02
+        )
+        , 20, true, 1.2, 0.8, true),
+
+
     createGeoPenguinScene("Penguins on tetra", "tetra", tetraFunc, 20, true, 0.3),
 
     createGeoPenguinScene("Penguins on cos-ball", "ballcos", (x, y, z) => x * x + y * y + z * z - ((Math.cos(16 * x) + Math.cos(16 * y) + Math.cos(16 * z)) / 8.0 + 0.8), 20, true, 0.8, 0.65),
@@ -293,5 +302,18 @@ export const sceneConfigurations = [
         ), 20, true, 0.8, 0.8, true),
 
     createGeoPenguinScene("Penguins on heart", "heart", (x, y, z) => (2 * x ** 2 + y ** 2 + z ** 2 - 1) ** 3 - (0.1 * x ** 2 + y ** 2) * z ** 3, 20, true, 0.8),
+
+    createGeoPenguinScene("Penguins on logo", "logo",
+        ANDManyFuncs([
+            (x, y, z) => Math.abs(x) - 1,
+            (x, y, z) => Math.abs(y) - 1,
+            (x, y, z) => Math.abs(z) - 1,
+            (x, y, z) => x ** 2 + y ** 2 + z ** 2 - 1.25 ** 2,
+            (x, y, z) => 0.49 ** 2 - x ** 2 - y ** 2,
+            (x, y, z) => 0.49 ** 2 - x ** 2 - z ** 2,
+            (x, y, z) => 0.49 ** 2 - z ** 2 - y ** 2
+        ], 0.05),
+        20, true, 0.8, 0.8, true),
+
 
 ];
