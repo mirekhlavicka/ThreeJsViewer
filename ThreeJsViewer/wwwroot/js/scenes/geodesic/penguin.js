@@ -4,6 +4,7 @@ import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic
 export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false ) {
 
     let penguins = [];
+    let selectedPenguin = null;
 
     let surfaceMesh = null;
 
@@ -37,6 +38,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
     function createPenguin(params = {}) {
         let color = params.color;
         let speed = params.speed;
+        let initspeed = params.speed;
 
         const penguinPosition = new THREE.Vector3(1000, 1000, 1000);
         const penguinVelocity = new THREE.Vector3();
@@ -51,6 +53,34 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         let otherNormals = [];
 
         let stepTime = 0;
+
+        function setSelected(selected) {
+            if (selected) {
+                penguin.mesh.material.userData.uSelectedId.value = 1.0;
+                //penguin.mesh.material.userData.uHighlightColor1.value = new THREE.Color(color);
+
+                penguin.mesh.material.metalness = 0.7;
+                penguin.mesh.material.roughness = 0.3;
+
+                speed = 0.4;
+            } else {
+                penguin.mesh.material.userData.uSelectedId.value = -1.0;
+                penguin.mesh.material.roughness = 0.5;
+                penguin.mesh.material.metalness = 0.4;
+
+                speed = initspeed;
+            }
+
+            penguinVelocity.setLength(speed);
+            penguinPositionGeo.copy(penguinPosition);
+            penguinVelocityGeo.copy(penguinVelocity);
+
+            penguin.mesh.material.needsUpdate = true;
+            //selectionStateChanged = true;
+
+            //selectAudio.play();
+        }
+
 
         let penguin = {
             path: 'assets/OnSphere/penguinEgg.ply',
@@ -104,24 +134,26 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 updateFigureTransform(m, penguinPosition, penguinVelocity, penguinNormal, 0.068);
 
-                let f = calculateRepulsiveForce(penguinPosition, otherPos, penguinNormal, otherNormals, 0.068);
-                let pf = f.clone().projectOnVector(penguinVelocity);
-                let nf = f.length();
-                f.sub(pf).setLength(nf);
-                penguinVelocity.normalize().addScaledVector(f, animationSpeed * 0.15).setLength(speed);
+                if (penguin != selectedPenguin) {
+                    let f = calculateRepulsiveForce(penguinPosition, otherPos, penguinNormal, otherNormals, 0.068, selectedPenguin?.position);
+                    let pf = f.clone().projectOnVector(penguinVelocity);
+                    let nf = f.length();
+                    f.sub(pf)/*.setLength(nf)*/;
+                    penguinVelocity.normalize().addScaledVector(f, animationSpeed * 0.15).setLength(speed);
 
 
-                if (nf < 0.3) {
-                    let d = penguinPosition.distanceTo(penguinPositionGeo);
+                    if (nf < 0.3) {
+                        let d = penguinPosition.distanceTo(penguinPositionGeo);
 
-                    if (d > 0.5 /*|| d < 0.001*/) {
-                        penguinPositionGeo.copy(penguinPosition);
-                        penguinVelocityGeo.copy(penguinVelocity);
-                    } else {
-                        f.subVectors(penguinPositionGeo, penguinPosition).normalize().projectOnPlane(penguinNormal).multiplyScalar(d * d);
-                        pf = f.clone().projectOnVector(penguinVelocity);
-                        f.sub(pf);
-                        penguinVelocity.normalize().addScaledVector(f, animationSpeed * 0.8).setLength(speed);
+                        if (d > 0.5 ) {
+                            penguinPositionGeo.copy(penguinPosition);
+                            penguinVelocityGeo.copy(penguinVelocity);
+                        } else {
+                            f.subVectors(penguinPositionGeo, penguinPosition).normalize().projectOnPlane(penguinNormal).multiplyScalar(d * d);
+                            pf = f.clone().projectOnVector(penguinVelocity);
+                            f.sub(pf);
+                            penguinVelocity.normalize().addScaledVector(f, animationSpeed * 0.8).setLength(speed);
+                        }
                     }
                 }
 
@@ -134,10 +166,14 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 m.material.userData.uTwistStrength2.value = 0.5 *(1 + Math.sin(0.1 * stepTime)) + 0.4 * Math.sin(0.1 * 2.0 * stepTime);
 
                 m.material.userData.uSelectedId1.value = (Math.abs(Math.sin(0.3 * stepTime)) < 0.8 ? -1.0 : 2.0);
+
+
             },
 
             position: penguinPosition,
-            normal: penguinNormal
+            normal: penguinNormal,
+
+            setSelected
         }
 
         return penguin;
@@ -149,6 +185,22 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 return createGeoPenguinScene(name, model, impF, pcount, shadow, scale, speedFactor, vertexColors);
             } else {
                 return scene;
+            }
+        },
+        onPointerDown: (m, p) => {
+            let i = penguins.indexOf(m.userData);
+            if (i >= 0) {
+                if (selectedPenguin == m.userData) {
+                    selectedPenguin.setSelected(false);
+                    selectedPenguin = null;
+                } else {
+                    if (selectedPenguin != null) {
+                        selectedPenguin.setSelected(false);
+                    }
+                    selectedPenguin = m.userData;
+                    selectedPenguin.setSelected(true);
+                }
+                return true;
             }
         },
         setup: (camera, dirLight) => {

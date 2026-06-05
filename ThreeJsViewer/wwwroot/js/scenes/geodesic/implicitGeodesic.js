@@ -165,7 +165,7 @@ export class ImplicitGeodesicPro {
  * @param {THREE.Vector3[]} p - An array of positions of the other particles.
  * @returns {THREE.Vector3} The accumulated force vector.
  */
-export function calculateRepulsiveForce(p0, p, n0, n, shift) {
+export function calculateRepulsiveForce(p0, p, n0, n, shift, selected) {
     const totalForce = new THREE.Vector3(0, 0, 0);
 
     for (let i = 0; i < p.length; i++) {
@@ -197,7 +197,7 @@ export function calculateRepulsiveForce(p0, p, n0, n, shift) {
         // 3. Divide by distance squared: (p[i] - p0) / distance^2
         //_diff.divideScalar(distance * distance);
 
-        _diff.multiplyScalar(bump(distance, 0.2));
+        _diff.multiplyScalar(bump(distance, 0.25 * (pi == selected ? 1.5 : 1.0))) * (pi == selected ? 1.5 : 1.0);
 
         // 4. Accumulate into the total force
         totalForce.add(_diff);
