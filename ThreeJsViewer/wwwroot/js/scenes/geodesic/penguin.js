@@ -43,6 +43,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         const penguinPosition = new THREE.Vector3(1000, 1000, 1000);
         const penguinVelocity = new THREE.Vector3();
         const penguinNormal = new THREE.Vector3();
+        const penguinForce = new THREE.Vector3(0, 0, 0);
 
         const penguinPositionGeo = new THREE.Vector3(1000, 1000, 1000);
         const penguinVelocityGeo = new THREE.Vector3();
@@ -57,12 +58,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         function setSelected(selected) {
             if (selected) {
                 penguin.mesh.material.userData.uSelectedId.value = 1.0;
-                //penguin.mesh.material.userData.uHighlightColor1.value = new THREE.Color(color);
 
                 penguin.mesh.material.metalness = 0.7;
                 penguin.mesh.material.roughness = 0.3;
 
-                speed = 0.4;
+                speed = 0.3;
             } else {
                 penguin.mesh.material.userData.uSelectedId.value = -1.0;
                 penguin.mesh.material.roughness = 0.5;
@@ -76,9 +76,6 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             penguinVelocityGeo.copy(penguinVelocity);
 
             penguin.mesh.material.needsUpdate = true;
-            //selectionStateChanged = true;
-
-            //selectAudio.play();
         }
 
 
@@ -100,7 +97,6 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 while (penguins.some(pp => pp.position.distanceTo(p) < 0.3)) {
                     p = getRandomVertex();
-                    //console.log("next pos");
                 }
 
                 penguinPosition.copy(p);
@@ -138,14 +134,17 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     let f = calculateRepulsiveForce(penguinPosition, otherPos, penguinNormal, otherNormals, 0.068, selectedPenguin?.position);
                     let pf = f.clone().projectOnVector(penguinVelocity);
                     let nf = f.length();
-                    f.sub(pf)/*.setLength(nf)*/;
-                    penguinVelocity.normalize().addScaledVector(f, animationSpeed * 0.15).setLength(speed);
+                    f.sub(pf).setLength(nf);
+
+                    penguinForce.projectOnPlane(penguinNormal);
+                    penguinForce.multiplyScalar(0.6).addScaledVector(f, 0.4);
+                    penguinVelocity.normalize().addScaledVector(penguinForce, animationSpeed * 0.15).setLength(speed);
 
 
                     if (nf < 0.3) {
                         let d = penguinPosition.distanceTo(penguinPositionGeo);
 
-                        if (d > 0.5 ) {
+                        if (d > 0.5) {
                             penguinPositionGeo.copy(penguinPosition);
                             penguinVelocityGeo.copy(penguinVelocity);
                         } else {
@@ -154,6 +153,28 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                             f.sub(pf);
                             penguinVelocity.normalize().addScaledVector(f, animationSpeed * 0.8).setLength(speed);
                         }
+                    }
+                } else {
+                    if ((scene.keyboardState['w'] || scene.keyboardState['W'] || scene.keyboardState['ArrowUp']) && speed < 0.8) {
+                        speed += 0.01;
+                        penguinVelocity.setLength(speed);
+                    }
+                    if ((scene.keyboardState['s'] || scene.keyboardState['S'] || scene.keyboardState['ArrowDown']) && speed > 0.001) {
+                        speed -= 0.01;
+                        if (speed < 0.001) {
+                            speed = 0.001;
+                        }
+                        penguinVelocity.setLength(speed);
+                    }
+
+                    if (scene.keyboardState['a'] || scene.keyboardState['A'] || scene.keyboardState['ArrowLeft']) {
+                        const f = new THREE.Vector3().crossVectors(penguinVelocity, penguinNormal).normalize();
+                        penguinVelocity.normalize().addScaledVector(f, -animationSpeed * 0.09).setLength(speed);
+                    }
+
+                    if (scene.keyboardState['d'] || scene.keyboardState['D'] || scene.keyboardState['ArrowRight']) {
+                        const f = new THREE.Vector3().crossVectors(penguinVelocity, penguinNormal).normalize();
+                        penguinVelocity.normalize().addScaledVector(f, animationSpeed * 0.09).setLength(speed);
                     }
                 }
 

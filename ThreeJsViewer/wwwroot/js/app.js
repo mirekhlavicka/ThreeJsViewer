@@ -34,6 +34,9 @@ let animationTime = 0; // Our custom "accumulated" time
 let audio;
 const startModal = new bootstrap.Modal(document.getElementById('startModal'));
 
+// Object to store the current state of keys
+const keyboardState = {};
+
 function setup() {
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0x3a3a3a);
@@ -85,6 +88,15 @@ function setup() {
 
     /*const helper = new THREE.CameraHelper(dirLight.shadow.camera);
     scene.add(helper);*/
+
+    // Track key states
+    window.addEventListener('keydown', function (event) {
+        keyboardState[event.key] = true;
+    });
+
+    window.addEventListener('keyup', function (event) {
+        keyboardState[event.key] = false;
+    });
 }
 
 function loadScene(reset = true, runGameWithoutDialog = false) {
@@ -187,6 +199,8 @@ function loadScene(reset = true, runGameWithoutDialog = false) {
             loadedCount++;
 
             if (loadedCount === config.models.length) {
+
+                config.keyboardState = keyboardState;
 
                 config.models.forEach((modelData, i) => {
                     if (modelData.meshesLoaded) {
