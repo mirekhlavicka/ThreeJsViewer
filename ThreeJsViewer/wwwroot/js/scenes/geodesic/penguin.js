@@ -43,12 +43,18 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         const penguinPosition = new THREE.Vector3(1000, 1000, 1000);
         const penguinVelocity = new THREE.Vector3();
         const penguinNormal = new THREE.Vector3();
+        //const penguinNormalPrev = new THREE.Vector3();
         const penguinForce = new THREE.Vector3(0, 0, 0);
 
         const penguinPositionGeo = new THREE.Vector3(1000, 1000, 1000);
         const penguinVelocityGeo = new THREE.Vector3();
         const penguinNormalGeo = new THREE.Vector3();
 
+        //const deltaRotation = new THREE.Quaternion();
+
+        const tempForward = new THREE.Vector3(0, 0, -1); // Tracks last known forward direction
+        const cameraTarget = new THREE.Vector3();
+        const targetPosition = new THREE.Vector3();
 
         let otherPos = [];
         let otherNormals = [];
@@ -110,7 +116,9 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 otherPos = penguins.filter(pp => pp != penguin).map(pp => pp.position);
                 otherNormals = penguins.filter(pp => pp != penguin).map(pp => pp.normal);
             },
-            animate: (m, t, delta, animationSpeed) => {
+            animate: (m, t, delta, animationSpeed, pivot, camera) => {
+
+                //penguinNormalPrev.copy(penguinNormal);
 
                 geodesicSolver.step(
                     impFunc,
@@ -138,7 +146,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                     penguinForce.projectOnPlane(penguinNormal);
                     penguinForce.multiplyScalar(0.6).addScaledVector(f, 0.4);
-                    penguinVelocity.normalize().addScaledVector(penguinForce, animationSpeed * 0.15).setLength(speed);
+                    penguinVelocity.normalize().addScaledVector(penguinForce, 5 * speed *  animationSpeed * 0.15).setLength(speed);
 
 
                     if (nf < 0.3) {
@@ -151,16 +159,16 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                             f.subVectors(penguinPositionGeo, penguinPosition).normalize().projectOnPlane(penguinNormal).multiplyScalar(d * d);
                             pf = f.clone().projectOnVector(penguinVelocity);
                             f.sub(pf);
-                            penguinVelocity.normalize().addScaledVector(f, animationSpeed * 0.8).setLength(speed);
+                            penguinVelocity.normalize().addScaledVector(f, 5 * speed * animationSpeed * 0.8).setLength(speed);
                         }
                     }
                 } else {
                     if ((scene.keyboardState['w'] || scene.keyboardState['W'] || scene.keyboardState['ArrowUp']) && speed < 0.8) {
-                        speed += 0.01;
+                        speed += 0.005;
                         penguinVelocity.setLength(speed);
                     }
                     if ((scene.keyboardState['s'] || scene.keyboardState['S'] || scene.keyboardState['ArrowDown']) && speed > 0.001) {
-                        speed -= 0.01;
+                        speed -= 0.005;
                         if (speed < 0.001) {
                             speed = 0.001;
                         }
@@ -169,13 +177,41 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                     if (scene.keyboardState['a'] || scene.keyboardState['A'] || scene.keyboardState['ArrowLeft']) {
                         const f = new THREE.Vector3().crossVectors(penguinVelocity, penguinNormal).normalize();
-                        penguinVelocity.normalize().addScaledVector(f, -animationSpeed * 0.09).setLength(speed);
+                        penguinVelocity.normalize().addScaledVector(f, -speed * animationSpeed * 0.15).setLength(speed);
                     }
 
                     if (scene.keyboardState['d'] || scene.keyboardState['D'] || scene.keyboardState['ArrowRight']) {
                         const f = new THREE.Vector3().crossVectors(penguinVelocity, penguinNormal).normalize();
-                        penguinVelocity.normalize().addScaledVector(f, animationSpeed * 0.09).setLength(speed);
+                        penguinVelocity.normalize().addScaledVector(f, speed * animationSpeed * 0.15).setLength(speed);
                     }
+
+                    // 2. Calculate Forward Direction
+                    if (penguinVelocity.lengthSq() > 0.001) {
+                        tempForward.copy(penguinVelocity).normalize();
+                    }
+
+                    // 3. Orient Camera Up
+                    camera.up.copy(penguinNormal);
+
+                    // 4. Camera spacing variables (Adjust these to fit your game's scale)
+                    const followDistance = 1.5; // How far behind the penguin
+                    const followHeight = 0.3;   // How high above the penguin's feet
+                    const eyeHeight = 0.1;      // Target height for the camera to look at
+
+                    // Calculate Camera position behind and above the penguin
+                    targetPosition.copy(penguinPosition)
+                        .addScaledVector(tempForward, -followDistance) // Move backward
+                        .addScaledVector(penguinNormal, followHeight);  // Move up
+
+                    // Smoothly interpolate (lerp) camera position
+                    camera.position.lerp(targetPosition, 0.2);
+
+                    // 5. Look at the penguin's upper body/head instead of its feet
+                    cameraTarget.copy(penguinPosition).addScaledVector(penguinNormal, eyeHeight);
+                    camera.lookAt(cameraTarget);
+
+                    /*deltaRotation.setFromUnitVectors(penguinNormal, penguinNormalPrev);
+                    pivot.quaternion.multiply(deltaRotation);*/
                 }
 
                 //speed = penguinVelocity.length();
@@ -229,7 +265,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             dirLight.position.set(1, 1, 1);
         },
         hideGrid: true,
-        autoRotate: true,
+        autoRotate: false,
         sceneBackgroundTexture: "assets/OnSphere/milky_way_penguin.png",
         shadowMapType: shadow ? THREE.VSMShadowMap : null, 
         name: "Geodesic/" + name,
