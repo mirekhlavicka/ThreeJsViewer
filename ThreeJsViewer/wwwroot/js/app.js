@@ -11,6 +11,7 @@ let blinkStartTime = 0;
 const blinkDuration = 2000; // Blink for 2 seconds
 
 let controls, renderer, scene, camera, dirLight, grid, pivot;
+let isUserOrbiting = false;
 
 //let autoRotate = false;
 let useVertexColors = false;
@@ -62,6 +63,14 @@ function setup() {
 
     controls.autoRotate = false;
     controls.autoRotateSpeed = autoRotateSpeed;
+
+    controls.addEventListener('start', () => {
+        isUserOrbiting = true;
+    });
+
+    controls.addEventListener('end', () => {
+        isUserOrbiting = false;
+    });
 
     // Lighting
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
@@ -201,6 +210,7 @@ function loadScene(reset = true, runGameWithoutDialog = false) {
             if (loadedCount === config.models.length) {
 
                 config.keyboardState = keyboardState;
+                config.resetCamera = resetCamera;
 
                 config.models.forEach((modelData, i) => {
                     if (modelData.meshesLoaded) {
@@ -450,7 +460,7 @@ function animate(timestamp) {
 function animateMeshes(delta) {
     loadedMeshes.forEach(mesh => {
         if (mesh.userData.animate) {
-            mesh.userData.animate(mesh, animationTime, delta, animationSpeed, pivot, camera);
+            mesh.userData.animate(mesh, animationTime, delta, animationSpeed, pivot, camera, controls, isUserOrbiting);
         }
     });        
 }
@@ -698,14 +708,22 @@ document.getElementById('showWireSwitch').addEventListener('change', (e) => {
 document.getElementById('showGridSwitch').addEventListener('change', (e) => {
     grid.visible = e.target.checked;
 });
-
-
-document.getElementById('btnResetCamera').addEventListener('click', (e) => {
+function resetCamera() {
     controls.reset();
+
+    camera.up.set(0, 0, 1);
+    camera.position.set(-3, 0, 1.5);
+    //camera.lookAt(0, 0, 0);
+
     if (config.setup) {
         config.setup(camera, dirLight);
     }
+
     pivot.rotation.z = 0;
+}
+
+document.getElementById('btnResetCamera').addEventListener('click', (e) => {
+    resetCamera();
 });
 
 document.getElementById('btnPause').addEventListener('click', (e) => {

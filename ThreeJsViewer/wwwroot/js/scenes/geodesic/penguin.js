@@ -55,11 +55,18 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         const tempForward = new THREE.Vector3(0, 0, -1); // Tracks last known forward direction
         const cameraTarget = new THREE.Vector3();
         const targetPosition = new THREE.Vector3();
+        const currentLookTarget = new THREE.Vector3();
 
         let otherPos = [];
         let otherNormals = [];
 
         let stepTime = 0;
+
+        // 4. Camera spacing variables (Adjust these to fit your game's scale)
+        let followDistance = 0.8; // How far behind the penguin
+        let followHeight = 0.3;   // How high above the penguin's feet
+        let eyeHeight = 0.1;      // Target height for the camera to look at
+
 
         function setSelected(selected) {
             if (selected) {
@@ -75,6 +82,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 penguin.mesh.material.metalness = 0.4;
 
                 speed = initspeed;
+                scene.resetCamera();
             }
 
             penguinVelocity.setLength(speed);
@@ -116,7 +124,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 otherPos = penguins.filter(pp => pp != penguin).map(pp => pp.position);
                 otherNormals = penguins.filter(pp => pp != penguin).map(pp => pp.normal);
             },
-            animate: (m, t, delta, animationSpeed, pivot, camera) => {
+            animate: (m, t, delta, animationSpeed, pivot, camera, controls, isUserOrbiting) => {
 
                 //penguinNormalPrev.copy(penguinNormal);
 
@@ -145,7 +153,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     f.sub(pf).setLength(nf);
 
                     penguinForce.projectOnPlane(penguinNormal);
-                    penguinForce.multiplyScalar(0.6).addScaledVector(f, 0.4);
+                    penguinForce.lerp(f, 0.2); //multiplyScalar(0.6).addScaledVector(f, 0.4);
                     penguinVelocity.normalize().addScaledVector(penguinForce, 5 * speed *  animationSpeed * 0.15).setLength(speed);
 
 
@@ -185,30 +193,45 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                         penguinVelocity.normalize().addScaledVector(f, speed * animationSpeed * 0.15).setLength(speed);
                     }
 
-                    // 2. Calculate Forward Direction
-                    if (penguinVelocity.lengthSq() > 0.001) {
-                        tempForward.copy(penguinVelocity).normalize();
+                    if (scene.keyboardState['+']) {
+                        followDistance -= 0.05;
                     }
 
-                    // 3. Orient Camera Up
-                    camera.up.copy(penguinNormal);
+                    if (scene.keyboardState['-']) {
+                        followDistance += 0.05;
+                    }
 
-                    // 4. Camera spacing variables (Adjust these to fit your game's scale)
-                    const followDistance = 1.5; // How far behind the penguin
-                    const followHeight = 0.3;   // How high above the penguin's feet
-                    const eyeHeight = 0.1;      // Target height for the camera to look at
+                    if (isUserOrbiting) {
+                        // A. If the user is actively dragging the mouse, let OrbitControls rule.
+                        // Make sure the orbit center stays locked to the moving penguin.
+                        //controls.target.copy(penguinPosition).addScaledVector(penguinNormal, eyeHeight);
+                        //controls.update();
+                    } else {
 
-                    // Calculate Camera position behind and above the penguin
-                    targetPosition.copy(penguinPosition)
-                        .addScaledVector(tempForward, -followDistance) // Move backward
-                        .addScaledVector(penguinNormal, followHeight);  // Move up
+                        // 2. Calculate Forward Direction
+                        if (penguinVelocity.lengthSq() > 0.001) {
+                            tempForward.copy(penguinVelocity).normalize();
+                        }
 
-                    // Smoothly interpolate (lerp) camera position
-                    camera.position.lerp(targetPosition, 0.2);
+                        // 3. Orient Camera Up
+                        //camera.up.copy(penguinNormal);
+                        camera.up.lerp(penguinNormal, 0.05);
 
-                    // 5. Look at the penguin's upper body/head instead of its feet
-                    cameraTarget.copy(penguinPosition).addScaledVector(penguinNormal, eyeHeight);
-                    camera.lookAt(cameraTarget);
+                        // Calculate Camera position behind and above the penguin
+                        targetPosition.copy(penguinPosition)
+                            .addScaledVector(tempForward, -followDistance) // Move backward
+                            .addScaledVector(penguinNormal, followHeight);  // Move up
+
+                        // Smoothly interpolate (lerp) camera position
+                        camera.position.lerp(targetPosition, 0.05);
+
+                        // 5. Look at the penguin's upper body/head instead of its feet
+                        cameraTarget.copy(penguinPosition).addScaledVector(penguinNormal, eyeHeight);
+                        //camera.lookAt(cameraTarget);
+                        currentLookTarget.lerp(cameraTarget, 0.05); 
+                        camera.lookAt(currentLookTarget);
+
+                    }
 
                     /*deltaRotation.setFromUnitVectors(penguinNormal, penguinNormalPrev);
                     pivot.quaternion.multiply(deltaRotation);*/
