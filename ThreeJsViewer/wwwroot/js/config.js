@@ -11,7 +11,7 @@ import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.02';
 import { createPenguinPrintScene } from './scenes/penguin/penguinPrint.js?v=1.02';
 
 import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.02';
-import { tetraFunc, balls, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.02';
+import { tetraFunc, balls, ballMinusBalls, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.02';
 
 export const sceneConfigurations = [
 
@@ -278,6 +278,12 @@ export const sceneConfigurations = [
             (x, y, z) => -(z - 16.0 / 25.0) * (z - 16.0 / 25.0) - (x - 16.0 / 25.0) * (x - 16.0 / 25.0) + 0.23
         ], 0.1),
         20, true, 1.0, 0.8, true),
+
+
+    createGeoPenguinScene("On ball minus balls", "ballminusballs1",
+        ballMinusBalls()
+        , 20, true, 1.0, 0.8, true),
+
 
     createGeoPenguinScene("Penguins on torus", "torus", (x, y, z) => (x ** 2 + y ** 2 + z ** 2 + (0.7) ** 2 - (0.3) ** 2) ** 2 - 4 * (0.7) ** 2 * (x ** 2 + y ** 2), 10, true, 0.8),
 

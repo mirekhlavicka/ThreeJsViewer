@@ -64,8 +64,8 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
         // 4. Camera spacing variables (Adjust these to fit your game's scale)
         let followDistance = 0.8; // How far behind the penguin
-        let followHeight = 0.3;   // How high above the penguin's feet
-        let eyeHeight = 0.1;      // Target height for the camera to look at
+        let followHeight = 0.8;   // How high above the penguin's feet
+        let eyeHeight = -0.65;      // Target height for the camera to look at
 
 
         function setSelected(selected) {
@@ -194,18 +194,35 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     }
 
                     if (scene.keyboardState['+']) {
-                        followDistance -= 0.05;
+                        followDistance -= 0.025;
                     }
 
                     if (scene.keyboardState['-']) {
-                        followDistance += 0.05;
+                        followDistance += 0.025;
                     }
+
+                    if (!scene.keyboardState['Shift'] && scene.keyboardState['*']) {
+                        followHeight -= 0.025;
+                    }
+
+                    if (!scene.keyboardState['Shift'] && scene.keyboardState['/']) {
+                        followHeight += 0.025;
+                    }
+
+                    if (scene.keyboardState['Shift'] && scene.keyboardState['*']) {
+                        eyeHeight -= 0.025;
+                    }
+
+                    if (scene.keyboardState['Shift'] && scene.keyboardState['/']) {
+                        eyeHeight += 0.025;
+                    }
+
 
                     if (isUserOrbiting) {
                         // A. If the user is actively dragging the mouse, let OrbitControls rule.
                         // Make sure the orbit center stays locked to the moving penguin.
-                        //controls.target.copy(penguinPosition).addScaledVector(penguinNormal, eyeHeight);
-                        //controls.update();
+                        controls.target.copy(penguinPosition).addScaledVector(penguinNormal, eyeHeight);
+                        controls.update();
                     } else {
 
                         // 2. Calculate Forward Direction

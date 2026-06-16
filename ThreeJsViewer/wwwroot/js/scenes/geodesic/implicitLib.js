@@ -1,4 +1,6 @@
 ﻿import * as THREE from 'three';
+import { icosaVertices } from '../penguin/icosa.js';
+
 export function tetraFunc(x, y, z) {
     const sumOfSquares = x * x + y * y + z * z;
     return (sumOfSquares * sumOfSquares) + (8 * x * y * z) - (10 * sumOfSquares) + 20;
@@ -76,6 +78,19 @@ export function ANDManyFuncs(f, eps = 0.2) {
 
     for (var i = 1; i < f.length; i++) {
         res = ANDFuncs(res, f[i], eps);
+    }
+
+    return res;
+}
+
+export function ballMinusBalls(r = 0.295, eps = 0.08) {
+    let res = (x, y, z) => x * x + y * y + z * z - 1.02;
+
+    for (let i = 0; i < icosaVertices.length; i++) {
+        const v = icosaVertices[i];
+
+        res = ANDFuncs(res, (x, y, z) => - ((x - 1.2 * v.x) ** 2 + (y - 1.2 * v.y) ** 2 + (z - 1.2 * v.z) ** 2) + r * r , eps);
+
     }
 
     return res;
