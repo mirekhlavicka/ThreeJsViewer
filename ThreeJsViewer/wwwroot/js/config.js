@@ -282,7 +282,7 @@ export const sceneConfigurations = [
 
     createGeoPenguinScene("On ball minus balls", "ballminusballs1",
         ballMinusBalls()
-        , 20, true, 1.0, 0.8, true),
+        , 20, true, 1.3, 0.8, true),
 
 
     createGeoPenguinScene("Penguins on torus", "torus", (x, y, z) => (x ** 2 + y ** 2 + z ** 2 + (0.7) ** 2 - (0.3) ** 2) ** 2 - 4 * (0.7) ** 2 * (x ** 2 + y ** 2), 10, true, 0.8),

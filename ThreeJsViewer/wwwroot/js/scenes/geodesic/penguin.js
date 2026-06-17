@@ -154,7 +154,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                     penguinForce.projectOnPlane(penguinNormal);
                     penguinForce.lerp(f, 0.2); //multiplyScalar(0.6).addScaledVector(f, 0.4);
-                    penguinVelocity.normalize().addScaledVector(penguinForce, 5 * speed *  animationSpeed * 0.15).setLength(speed);
+                    penguinVelocity.normalize().addScaledVector(penguinForce, 1.5 * speed *  animationSpeed).setLength(speed);
 
 
                     if (nf < 0.3) {
@@ -167,7 +167,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                             f.subVectors(penguinPositionGeo, penguinPosition).normalize().projectOnPlane(penguinNormal).multiplyScalar(d * d);
                             pf = f.clone().projectOnVector(penguinVelocity);
                             f.sub(pf);
-                            penguinVelocity.normalize().addScaledVector(f, 5 * speed * animationSpeed * 0.8).setLength(speed);
+                            penguinVelocity.normalize().addScaledVector(f, 4 * speed * animationSpeed).setLength(speed);
                         }
                     }
                 } else {
@@ -194,27 +194,27 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     }
 
                     if (scene.keyboardState['+']) {
-                        followDistance -= 0.025;
+                        followDistance -= 0.01;
                     }
 
                     if (scene.keyboardState['-']) {
-                        followDistance += 0.025;
+                        followDistance += 0.01;
                     }
 
                     if (!scene.keyboardState['Shift'] && scene.keyboardState['*']) {
-                        followHeight -= 0.025;
+                        followHeight -= 0.01;
                     }
 
                     if (!scene.keyboardState['Shift'] && scene.keyboardState['/']) {
-                        followHeight += 0.025;
+                        followHeight += 0.01;
                     }
 
                     if (scene.keyboardState['Shift'] && scene.keyboardState['*']) {
-                        eyeHeight -= 0.025;
+                        eyeHeight -= 0.01;
                     }
 
                     if (scene.keyboardState['Shift'] && scene.keyboardState['/']) {
-                        eyeHeight += 0.025;
+                        eyeHeight += 0.01;
                     }
 
 
