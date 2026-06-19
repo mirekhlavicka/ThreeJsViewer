@@ -43,7 +43,7 @@ function setup() {
     scene.background = new THREE.Color(0x3a3a3a);
     scene.fog = new THREE.FogExp2(0x1a1a1a, 0.002);
 
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 20);
     camera.up.set(0, 0, 1);
     camera.position.set(-3, 0 , 1.5);
 

@@ -83,8 +83,8 @@ export function ANDManyFuncs(f, eps = 0.2) {
     return res;
 }
 
-export function ballMinusBalls(r = 0.295, eps = 0.08) {
-    let res = (x, y, z) => x * x + y * y + z * z - 1.02;
+export function ballMinusBalls(r = 0.295, eps = 0.04) {
+    let res = (x, y, z) => x * x + y * y + z * z - 1.005;
 
     for (let i = 0; i < icosaVertices.length; i++) {
         const v = icosaVertices[i];
