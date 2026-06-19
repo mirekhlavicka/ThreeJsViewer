@@ -1,5 +1,6 @@
 ﻿import * as THREE from 'three';
 import { icosaVertices } from '../penguin/icosa.js';
+import { geoPlanes } from './geoplanes.js';
 
 export function tetraFunc(x, y, z) {
     const sumOfSquares = x * x + y * y + z * z;
@@ -90,6 +91,25 @@ export function ballMinusBalls(r = 0.295, eps = 0.04) {
         const v = icosaVertices[i];
 
         res = ANDFuncs(res, (x, y, z) => - ((x - 1.2 * v.x) ** 2 + (y - 1.2 * v.y) ** 2 + (z - 1.2 * v.z) ** 2) + r * r , eps);
+
+    }
+
+    return res;
+}
+
+export function geodesicSphere(eps = 0.004) {
+    let res = null;
+
+    for (let i = 0; i < geoPlanes.length; i++) {
+        const p = geoPlanes[i];
+
+        let f = (x, y, z) => (x - p.v.x) * p.n.x + (y - p.v.y) * p.n.y + (z - p.v.z) * p.n.z;
+
+        if (res == null) {
+            res = f
+        } else {
+            res = ANDFuncs(res, f, eps);
+        }
 
     }
 
