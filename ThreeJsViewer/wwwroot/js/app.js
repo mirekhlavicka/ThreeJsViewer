@@ -463,6 +463,10 @@ function animateMeshes(delta) {
             mesh.userData.animate(mesh, animationTime, delta, animationSpeed, pivot, camera, controls, isUserOrbiting);
         }
     });        
+
+    if (config.animate) {
+        config.animate(animationTime, delta, animationSpeed, pivot, camera, controls, isUserOrbiting);
+    }
 }
 
 // --- UI & Event Listeners ---

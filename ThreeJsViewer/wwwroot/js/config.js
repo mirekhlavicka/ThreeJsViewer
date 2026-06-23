@@ -245,18 +245,18 @@ export const sceneConfigurations = [
     createPenguinPrintScene(2, 2, 6, "Penguin planet train"),
 
 
-    createGeoPenguinScene("Penguins on ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1, 10, true, 0.4),
+    createGeoPenguinScene("Penguins on ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1, 5, true, 0.4, 1.0, false, 5),
 
-    createGeoPenguinScene("Penguins on 4-ball", "ball4", (x, y, z) => (x ** 4 + y ** 4 + z ** 4) - 1, 10, true, 0.6),
+    createGeoPenguinScene("Penguins on 4-ball", "ball4", (x, y, z) => (x ** 4 + y ** 4 + z ** 4) - 1, 10, true, 0.6, 1.0, false, 5),
 
-    createGeoPenguinScene("Penguins on 8-ball", "ball8", (x, y, z) => (x ** 8 + y ** 8 + z ** 8) - 1, 20, true, 0.6),
+    createGeoPenguinScene("Penguins on 8-ball", "ball8", (x, y, z) => (x ** 8 + y ** 8 + z ** 8) - 1, 1, true, 0.4/* 1.0*/, 1.0, false, 20),
 
     createGeoPenguinScene("Penguins on 6-ball", "ball6minuscylinder",
         ANDFuncs(
             (x, y, z) => (x ** 6 + y ** 6 + z ** 6) - 1,
             (x, y, z) => -x * x - y * y + 0.19,
             0.2
-        ), 20, true, 0.6, 0.8, true),
+        ), 10, true, 0.6, 0.8, true, 10),
 
     createGeoPenguinScene("Penguins on ellipsoid", "ellipsoid", (x, y, z) => (8 * x * x + 8 * y * y + z * z) - 1, 10, true),
 
@@ -266,7 +266,7 @@ export const sceneConfigurations = [
                 (x, y, z) => (8 * x * x + y * y + 8 * z * z) - 1,
                 (x, y, z) => (x * x + 8 * y * y + 8 * z * z) - 1
             ], 0.2),
-        20, true, 1.0, 0.8, true),
+        10, true, 1.0, 0.8, true, 10),
 
 
     createGeoPenguinScene("On ball minus cylinders", "ballminuscylinders",
@@ -282,11 +282,11 @@ export const sceneConfigurations = [
 
     createGeoPenguinScene("On ball minus balls", "ballminusballs1",
         ballMinusBalls()
-        , 20, true, 1.3, 0.8, true),
+        , 10, true, 1.3, 0.8, true, 10),
 
     createGeoPenguinScene("On geodesic sphere", "geodesicsphere",
         geodesicSphere()
-        , 20, true, 1.3, 0.8, true),
+        , 10, true, 1.3, 0.8, true, 10),
 
 
 
@@ -298,7 +298,7 @@ export const sceneConfigurations = [
             balls(6, 0.7, Math.sqrt(0.1), 2, 0.01),
             0.02
         )
-        , 20, true, 1.2, 0.8, true),
+        , 10, true, 1.2, 0.8, true, 10),
 
 
     createGeoPenguinScene("Penguins on tetra", "tetra", tetraFunc, 20, true, 0.3),

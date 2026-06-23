@@ -1,9 +1,11 @@
 ﻿import * as THREE from 'three';
 import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.02';
 
-export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false ) {
+export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0 ) {
 
     let penguins = [];
+    let balls = [];
+
     let selectedPenguin = null;
 
     let surfaceMesh = null;
@@ -109,7 +111,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 let p = getRandomVertex();
 
-                while (penguins.some(pp => pp.position.distanceTo(p) < 0.3)) {
+                while (penguins.some(pp => pp.position.distanceTo(p) < 0.3) || balls.some(pp => pp.position.distanceTo(p) < 0.3)) {
                     p = getRandomVertex();
                 }
 
@@ -275,11 +277,86 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
         return penguin;
     }
+
+    function createBall(params = {}) {
+        let speed = params.speed;
+
+        const ballPosition = new THREE.Vector3(1000, 1000, 1000);
+        const ballVelocity = new THREE.Vector3();
+        const ballNormal = new THREE.Vector3();
+
+        let ball = {
+            path: 'assets/Geodesic/icosahedron.ply',
+            prepareGeometry: g => {               
+
+                const positionAttribute = g.attributes.position;
+                const vertex = new THREE.Vector3();
+
+                for (let i = 0; i < positionAttribute.count; i++) {
+                    // Read x, y, z into the vector
+                    vertex.fromBufferAttribute(positionAttribute, i);
+
+                    // Normalizes the vector (sets length/norm to 1)
+                    vertex.normalize();
+
+                    // Write the normalized values back
+                    positionAttribute.setXYZ(i, vertex.x, vertex.y, vertex.z);
+                }
+
+                // Tell Three.js to send the updated data to the GPU
+                positionAttribute.needsUpdate = true;
+
+                g.scale(0.05, 0.05, 0.05);
+            },
+            prepareMesh: m => {
+                m.castShadow = true;
+            },
+            setupMaterial: m => {
+                m.color = 0xffffff;
+                m.vertexColors = true;
+                //m.roughness = 0.05;
+                //m.metalness = 0.5;
+
+            },
+            meshesLoaded: () => {
+
+                let p = getRandomVertex();
+
+                while (penguins.some(pp => pp.position.distanceTo(p) < 0.3 || balls.some(pp => pp.position.distanceTo(p) < 0.3))) {
+                    p = getRandomVertex();
+                }
+
+                ballPosition.copy(p);
+                ballVelocity.copy(geodesicSolver.randomVelocity(impFunc, ballPosition));
+                ballVelocity.multiplyScalar(speed);
+
+            },
+            animate: (m, t, delta, animationSpeed, pivot, camera, controls, isUserOrbiting) => {
+
+                geodesicSolver.step(
+                    impFunc,
+                    ballPosition,
+                    ballVelocity,
+                    ballNormal,
+                    animationSpeed * 0.02,
+                );
+
+                updateBallTransform(m, ballPosition, ballVelocity, animationSpeed * 0.02, ballNormal, 0.05);
+            },
+
+            position: ballPosition,
+            velocity: ballVelocity,
+            normal: ballNormal
+
+        }
+
+        return ball;
+    }
     
     let scene = {
         reset: () => {
             if (scene.used) {
-                return createGeoPenguinScene(name, model, impF, pcount, shadow, scale, speedFactor, vertexColors);
+                return createGeoPenguinScene(name, model, impF, pcount, shadow, scale, speedFactor, vertexColors, bcount);
             } else {
                 return scene;
             }
@@ -303,6 +380,46 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         setup: (camera, dirLight) => {
             camera.position.set(-1.5, -1.5, -1.0);
             dirLight.position.set(1, 1, 1);
+        },
+        animate: (t) => {
+            //balls.forEach(b => b.velocity.normalize().multiplyScalar(0.2 + 0.15*Math.sin(t)));
+
+            for (let i = 0; i < bcount - 1; i++) {
+                for (let j = i + 1; j < bcount; j++) {
+
+
+                    const b1 = balls[i];
+                    const b2 = balls[j];
+
+                    const pos1 = b1.position;
+                    const pos2 = b2.position;
+
+                    // Spočítáme vzdálenost středů
+                    const distance = pos1.distanceTo(pos2);
+                    const minDistance = 0.1; // Součet poloměrů 
+
+                    if (distance <= minDistance) {
+                        // Vytvoříme směrový vektor z pos2 do pos1
+                        const normal = new THREE.Vector3().subVectors(pos1, pos2);
+                        normal.normalize(); // Převod na jednotkový vektor
+
+                        // Spuštění fyzikálního výpočtu, který přímo upraví .velocity objekty
+                        resolveElasticCollision3D(
+                            b1.velocity,
+                            b2.velocity,
+                            100,
+                            100,
+                            normal
+                        );
+
+                        const v1 = b1.velocity.length();
+                        const v2 = b2.velocity.length();
+
+                        b1.velocity.projectOnPlane(b1.normal).setLength(v1);
+                        b2.velocity.projectOnPlane(b2.normal).setLength(v2);
+                    }
+                }
+            }
         },
         hideGrid: true,
         autoRotate: false,
@@ -333,7 +450,6 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         ]
     };
 
-
     for (let i = 0; i < pcount; i++) {
 
         let clrspeed = (pcount == 1 ? 1 : i / (pcount - 1));
@@ -348,6 +464,19 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
         scene.models.push(penguin);
         penguins.push(penguin);
+    }
+
+    for (let i = 0; i < bcount; i++) {
+
+        let speed = (bcount == 1 ? 1 : i / (bcount - 1));
+
+
+        let ball = createBall({
+            speed: speedFactor * (0.2 + 0.2 * speed)
+        });
+
+        scene.models.push(ball);
+        balls.push(ball);
     }
 
     return scene;
@@ -399,6 +528,149 @@ function updateFigureTransform(figure, pos, vel, newZ, shift) {
         pos.z + (newZ.z * shift)
     );
 }
+
+
+/**
+ * @param {THREE.Mesh} figure - Your single ball mesh
+ * @param {THREE.Vector3} pos - Current position vector
+ * @param {THREE.Vector3} vel - Current velocity vector
+ * @param {number} stepSize - euler method step 
+ * @param {THREE.Vector3} newZ - Surface normal (Up)
+ * @param {number} r - Radius of the ball
+ */
+function updateBallTransform1(figure, pos, vel, stepSize, newZ, r) {
+
+    // 1. Calculate speed
+    const speed = vel.length();
+
+    // 2. Handle zero velocity case
+    let targetVel = vel.clone();
+    if (speed < 0.0001) {
+        targetVel = getOrthogonalVector(newZ); // Using your existing fallback
+    }
+
+    // 3. Create the Basis vectors for Alignment
+    const newX = new THREE.Vector3().crossVectors(targetVel, newZ).normalize();
+    const newY = new THREE.Vector3().crossVectors(newZ, newX).normalize();
+
+    // 4. Calculate the "Alignment Quaternion" (Orientation on the sphere)
+    const alignMatrix = new THREE.Matrix4();
+    alignMatrix.makeBasis(newX, newY, newZ);
+
+    const alignQuat = new THREE.Quaternion();
+    alignQuat.setFromRotationMatrix(alignMatrix);
+
+    // 5. Track and accumulate the rolling angle inside 'userData'
+    if (figure.userData.cumulativeRoll === undefined) {
+        figure.userData.cumulativeRoll = 0;
+    }
+
+    if (speed > 0.0001) {
+        const distanceCovered = speed * stepSize;
+        const rollAngle = distanceCovered / r;
+
+        // Note: Depending on your geometry's default orientation, 
+        // you might need to change this to `-= rollAngle` to roll forward instead of backward.
+        figure.userData.cumulativeRoll -= rollAngle;
+    }
+
+    // 6. Calculate the "Roll Quaternion" (Local rotation around X-axis)
+    const rollQuat = new THREE.Quaternion();
+    rollQuat.setFromAxisAngle(new THREE.Vector3(1, 0, 0), figure.userData.cumulativeRoll);
+
+    // 7. Combine the Quaternions!
+    // The order is crucial: multiplyQuaternions(A, B) applies B first, then A.
+    // We want to roll the ball in its local space (rollQuat) THEN align it to the world (alignQuat).
+    figure.quaternion.multiplyQuaternions(alignQuat, rollQuat);
+
+    // 8. Set Position
+    figure.position.set(
+        pos.x + (newZ.x * r),
+        pos.y + (newZ.y * r),
+        pos.z + (newZ.z * r)
+    );
+}
+
+/**
+ * @param {THREE.Mesh} figure - Your single ball mesh
+ * @param {THREE.Vector3} pos - Current position vector
+ * @param {THREE.Vector3} vel - Current velocity vector (can change instantly!)
+ * @param {THREE.Vector3} newZ - Surface normal (Up)
+ * @param {number} r - Radius of the ball
+ * @param {number} deltaTime - Time passed since last frame (seconds)
+ */
+function updateBallTransform(figure, pos, vel, stepSize, newZ, r) {
+
+    // 1. Always set the correct position on the sphere surface first
+    figure.position.set(
+        pos.x + (newZ.x * r),
+        pos.y + (newZ.y * r),
+        pos.z + (newZ.z * r)
+    );
+
+    // 2. Calculate current speed
+    const speed = vel.length();
+    if (speed < 0.0001) return; // If standing still, do nothing
+
+    // 3. Calculate the physical rolling axis in WORLD space
+    // A ball rolls around an axis perpendicular to its velocity and the surface normal
+    const rollAxis = new THREE.Vector3().crossVectors(vel, newZ).normalize();
+
+    // 4. Calculate how much it rolled during this specific frame
+    // Angular distance (radians) = linear distance / radius
+    const deltaAngle = (speed * stepSize) / r;
+
+
+    // 5. Create a small delta quaternion for just this frame's rotation
+    const deltaQuat = new THREE.Quaternion().setFromAxisAngle(rollAxis, -deltaAngle);
+
+    // 6. Combine this delta with the ball's EXISTING rotation
+    // CRITICAL: We use 'premultiply' because our rollAxis is in WORLD coordinates.
+    figure.quaternion.premultiply(deltaQuat);
+
+    // 7. Prevent floating-point drift
+    // Successive quaternion multiplications introduce tiny mathematical errors over time.
+    // Normalizing it every frame keeps the rotation matrix perfect.
+    figure.quaternion.normalize();
+}
+
+/**
+ * Vypočítá 3D pružnou srážku dvou koulí a modifikuje jejich vektory rychlostí.
+ * 
+ * @param {THREE.Vector3} v1 - Vektor rychlosti první koule (bude modifikován)
+ * @param {THREE.Vector3} v2 - Vektor rychlosti druhé koule (bude modifikován)
+ * @param {number} m1 - Hmotnost první koule
+ * @param {number} m2 - Hmotnost druhé koule
+ * @param {THREE.Vector3} normal - Jednotkový vektor směřující ze středu koule 2 do středu koule 1
+ */
+function resolveElasticCollision3D(v1, v2, m1, m2, normal) {
+    // 1. Výpočet celkové hmotnosti systému
+    const totalMass = m1 + m2;
+
+    // 2. Výpočet relativní rychlosti (v1 - v2)
+    const relVelocity = new THREE.Vector3().subVectors(v1, v2);
+
+    // 3. Skalární součin relativní rychlosti a normály: (v1 - v2) . n
+    const speedAlongNormal = relVelocity.dot(normal);
+
+    // Pokud se koule pohybují od sebe, srážku netřeba řešit (zamezí zásekům)
+    if (speedAlongNormal > 0) return;
+
+    // 4. Výpočet skalárního impulsu podle odvozeného vzorce
+    // Pro v1: - (2 * m2 / totalMass) * speedAlongNormal
+    // Pro v2: - (2 * m1 / totalMass) * (-speedAlongNormal) -> znaménko se otočí
+    const impulseScalar1 = - (2 * m2 / totalMass) * speedAlongNormal;
+    const impulseScalar2 = - (2 * m1 / totalMass) * (-speedAlongNormal);
+
+    // 5. Vytvoření vektorů impulsů ve směru normály
+    const impulseVector1 = normal.clone().multiplyScalar(impulseScalar1);
+    const impulseVector2 = normal.clone().multiplyScalar(impulseScalar2);
+
+    // 6. Přímá modifikace původních vektorů rychlostí (přičtení impulsu)
+    v1.add(impulseVector1);
+    v2.add(impulseVector2);
+}
+
 
 function createTwistMaterial(baseColorHex) {
     const material = new THREE.MeshStandardMaterial({
