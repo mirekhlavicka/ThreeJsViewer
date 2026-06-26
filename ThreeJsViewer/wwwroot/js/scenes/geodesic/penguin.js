@@ -282,11 +282,13 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         let speed = params.speed;
 
         const ballPosition = new THREE.Vector3(1000, 1000, 1000);
+        const ballCenterPosition = new THREE.Vector3(1000, 1000, 1000);
+        const ballCenterPositionPrev = new THREE.Vector3(1000, 1000, 1000);
         const ballVelocity = new THREE.Vector3();
         const ballNormal = new THREE.Vector3();
 
         let ball = {
-            path: 'assets/Geodesic/icosahedron.ply',
+            path: Math.random() < 0.33 ? 'assets/Geodesic/icosahedron.ply' : (Math.random() < 0.66 ? 'assets/Geodesic/geoball.ply' : 'assets/Geodesic/dodecahedron.ply'),
             prepareGeometry: g => {               
 
                 const positionAttribute = g.attributes.position;
@@ -333,18 +335,27 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             },
             animate: (m, t, delta, animationSpeed, pivot, camera, controls, isUserOrbiting) => {
 
-                geodesicSolver.step(
-                    impFunc,
-                    ballPosition,
-                    ballVelocity,
-                    ballNormal,
-                    animationSpeed * 0.02,
-                );
+                while (ballCenterPositionPrev.distanceTo(ballCenterPosition) < ballVelocity.length() * animationSpeed * 0.019)
+                {
+                    geodesicSolver.step(
+                        impFunc,
+                        ballPosition,
+                        ballVelocity,
+                        ballNormal,
+                        animationSpeed * 0.02,
+                    );
+                    ballCenterPosition.copy(ballPosition).addScaledVector(ballNormal, 0.05);
+                }
+
+                ballCenterPositionPrev.copy(ballCenterPosition);
 
                 updateBallTransform(m, ballPosition, ballVelocity, animationSpeed * 0.02, ballNormal, 0.05);
+
+                
             },
 
             position: ballPosition,
+            centerPosition: ballCenterPosition,
             velocity: ballVelocity,
             normal: ballNormal
 
@@ -391,8 +402,8 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     const b1 = balls[i];
                     const b2 = balls[j];
 
-                    const pos1 = b1.position;
-                    const pos2 = b2.position;
+                    const pos1 = b1.centerPosition;
+                    const pos2 = b2.centerPosition;
 
                     // Spočítáme vzdálenost středů
                     const distance = pos1.distanceTo(pos2);
