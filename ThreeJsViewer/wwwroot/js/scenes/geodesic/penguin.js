@@ -43,6 +43,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         let initspeed = params.speed;
 
         const penguinPosition = new THREE.Vector3(1000, 1000, 1000);
+        const penguinCenterPosition = new THREE.Vector3(1000, 1000, 1000);
         const penguinVelocity = new THREE.Vector3();
         const penguinNormal = new THREE.Vector3();
         //const penguinNormalPrev = new THREE.Vector3();
@@ -145,6 +146,8 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     penguinNormalGeo,
                     animationSpeed * 0.02,
                 );                
+
+                penguinCenterPosition.copy(penguinPosition).addScaledVector(penguinNormal, 0.05);
 
                 updateFigureTransform(m, penguinPosition, penguinVelocity, penguinNormal, 0.068);
 
@@ -270,7 +273,9 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             },
 
             position: penguinPosition,
+            centerPosition: penguinCenterPosition,
             normal: penguinNormal,
+            velocity: penguinVelocity,
 
             setSelected
         }
@@ -352,6 +357,8 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 updateBallTransform(m, ballPosition, ballVelocity, animationSpeed * 0.02, ballNormal, radius);
 
+                ballVelocity.multiplyScalar(0.995);
+
                 
             },
 
@@ -399,8 +406,6 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
             for (let i = 0; i < bcount - 1; i++) {
                 for (let j = i + 1; j < bcount; j++) {
-
-
                     const b1 = balls[i];
                     const b2 = balls[j];
 
@@ -430,6 +435,37 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                         b1.velocity.projectOnPlane(b1.normal).setLength(v1);
                         b2.velocity.projectOnPlane(b2.normal).setLength(v2);
+                    }
+                }
+
+                for (let j = 0; j < pcount; j++) {
+                    const b = balls[i];
+                    const p = penguins[j];
+
+                    const pos1 = b.centerPosition;
+                    const pos2 = p.centerPosition;
+
+                    // Spočítáme vzdálenost středů
+                    const distance = pos1.distanceTo(pos2);
+                    const minDistance = b.radius + 0.05; // Součet poloměrů 
+
+                    if (distance <= minDistance) {
+                        // Vytvoříme směrový vektor z pos2 do pos1
+                        const normal = new THREE.Vector3().subVectors(pos1, pos2);
+                        normal.normalize(); // Převod na jednotkový vektor
+
+                        // Spuštění fyzikálního výpočtu, který přímo upraví .velocity objekty
+                        resolveElasticCollision3D(
+                            b.velocity,
+                            p.velocity,
+                            b.radius ** 3,
+                            4 * 0.07 ** 3,
+                            normal,
+                            true
+                        );
+                        
+                        const v = b.velocity.length();
+                        b.velocity.projectOnPlane(b.normal).setLength(v);
                     }
                 }
             }
@@ -657,7 +693,7 @@ function updateBallTransform(figure, pos, vel, stepSize, newZ, r) {
  * @param {number} m2 - Hmotnost druhé koule
  * @param {THREE.Vector3} normal - Jednotkový vektor směřující ze středu koule 2 do středu koule 1
  */
-function resolveElasticCollision3D(v1, v2, m1, m2, normal) {
+function resolveElasticCollision3D(v1, v2, m1, m2, normal, penguin = false) {
     // 1. Výpočet celkové hmotnosti systému
     const totalMass = m1 + m2;
 
@@ -682,7 +718,10 @@ function resolveElasticCollision3D(v1, v2, m1, m2, normal) {
 
     // 6. Přímá modifikace původních vektorů rychlostí (přičtení impulsu)
     v1.add(impulseVector1);
-    v2.add(impulseVector2);
+
+    if (!penguin) {
+        v2.add(impulseVector2);
+    }
 }
 
 
