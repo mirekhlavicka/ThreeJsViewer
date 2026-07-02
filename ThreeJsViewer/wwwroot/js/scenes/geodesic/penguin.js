@@ -1,5 +1,5 @@
 ﻿import * as THREE from 'three';
-import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.04';
+import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.05';
 
 export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0 ) {
 
@@ -404,7 +404,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         animate: (t) => {
             //balls.forEach(b => b.velocity.normalize().multiplyScalar(0.2 + 0.15*Math.sin(t)));
 
-            for (let i = 0; i < bcount - 1; i++) {
+            for (let i = 0; i < bcount/* - 1*/; i++) {
                 for (let j = i + 1; j < bcount; j++) {
                     const b1 = balls[i];
                     const b2 = balls[j];
