@@ -1,7 +1,7 @@
 ﻿import * as THREE from 'three';
-import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.05';
+import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.06';
 
-export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0 ) {
+export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0, friction = 0.998, gravity = 0.01 ) {
 
     let penguins = [];
     let balls = [];
@@ -357,7 +357,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 updateBallTransform(m, ballPosition, ballVelocity, animationSpeed * 0.02, ballNormal, radius);
 
-                ballVelocity.multiplyScalar(0.995);
+
+                let gravForce = ballPosition.clone().multiplyScalar(-1).projectOnPlane(ballNormal);
+                ballVelocity.addScaledVector(gravForce, gravity * animationSpeed);
+
+                ballVelocity.multiplyScalar(friction);
 
                 
             },
