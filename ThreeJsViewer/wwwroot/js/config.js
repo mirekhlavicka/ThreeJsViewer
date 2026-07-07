@@ -282,7 +282,7 @@ export const sceneConfigurations = [
 
     createGeoPenguinScene("On ball minus balls", "ballminusballs1",
         ballMinusBalls()
-        , 10, true, 1.3, 0.8, true, 10, 0.998, 0.01),
+        , 10, true, 1.3, 0.8, true, 25, 0.998, 0.01),
 
     createGeoPenguinScene("On geodesic sphere", "geodesicsphere",
         geodesicSphere()

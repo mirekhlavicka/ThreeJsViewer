@@ -341,7 +341,13 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             },
             animate: (m, t, delta, animationSpeed, pivot, camera, controls, isUserOrbiting) => {
 
-                while (ballCenterPositionPrev.distanceTo(ballCenterPosition) < ballVelocity.length() * animationSpeed * 0.019)
+                if (!ball.afterCollision) {
+                    let gravForce = ballPosition.clone().multiplyScalar(-1).projectOnPlane(ballNormal);
+                    ballVelocity.addScaledVector(gravForce, gravity * animationSpeed);
+                    ballVelocity.multiplyScalar(friction);
+                }
+
+                while (ballVelocity.length() > 0.000001 && ballCenterPositionPrev.distanceTo(ballCenterPosition) < ballVelocity.length() * animationSpeed * 0.019)
                 {
                     geodesicSolver.step(
                         impFunc,
@@ -356,13 +362,6 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 ballCenterPositionPrev.copy(ballCenterPosition);
 
                 updateBallTransform(m, ballPosition, ballVelocity, animationSpeed * 0.02, ballNormal, radius);
-
-
-                let gravForce = ballPosition.clone().multiplyScalar(-1).projectOnPlane(ballNormal);
-                ballVelocity.addScaledVector(gravForce, gravity * animationSpeed);
-
-                ballVelocity.multiplyScalar(friction);
-
                 
             },
 
@@ -370,7 +369,8 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             radius: radius,
             centerPosition: ballCenterPosition,
             velocity: ballVelocity,
-            normal: ballNormal
+            normal: ballNormal,
+            afterCollision: false
 
         }
 
@@ -406,9 +406,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             dirLight.position.set(1, 1, 1);
         },
         animate: (t) => {
-            //balls.forEach(b => b.velocity.normalize().multiplyScalar(0.2 + 0.15*Math.sin(t)));
+            for (let i = 0; i < bcount; i++) {
+                balls[i].afterCollision = false;
+            }
 
-            for (let i = 0; i < bcount/* - 1*/; i++) {
+            for (let i = 0; i < bcount; i++) {
                 for (let j = i + 1; j < bcount; j++) {
                     const b1 = balls[i];
                     const b2 = balls[j];
@@ -437,8 +439,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                         const v1 = b1.velocity.length();
                         const v2 = b2.velocity.length();
 
-                        b1.velocity.projectOnPlane(b1.normal).setLength(v1);
-                        b2.velocity.projectOnPlane(b2.normal).setLength(v2);
+                        b1.velocity.projectOnPlane(b1.normal).setLength(v1).multiplyScalar(0.95);
+                        b2.velocity.projectOnPlane(b2.normal).setLength(v2).multiplyScalar(0.95);
+
+                        b1.afterCollision = true;
+                        b2.afterCollision = true;
                     }
                 }
 
@@ -470,6 +475,8 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                         
                         const v = b.velocity.length();
                         b.velocity.projectOnPlane(b.normal).setLength(v);
+
+                        b.afterCollision = true;
                     }
                 }
             }
