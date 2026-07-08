@@ -1,7 +1,7 @@
 ﻿import * as THREE from 'three';
 import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.06';
 
-export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0, friction = 0.998, gravity = 0.01 ) {
+export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0, friction = 0.999, gravity = 0.01 ) {
 
     let penguins = [];
     let balls = [];
@@ -347,7 +347,9 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     ballVelocity.multiplyScalar(friction);
                 }
 
-                while (ballVelocity.length() > 0.000001 && ballCenterPositionPrev.distanceTo(ballCenterPosition) < ballVelocity.length() * animationSpeed * 0.019)
+                let counter = 0;
+
+                while (ballVelocity.length() > 0.000001 && counter < 20 && ballCenterPositionPrev.distanceTo(ballCenterPosition) < ballVelocity.length() * animationSpeed * 0.019)
                 {
                     geodesicSolver.step(
                         impFunc,
@@ -357,6 +359,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                         animationSpeed * 0.02,
                     );
                     ballCenterPosition.copy(ballPosition).addScaledVector(ballNormal, radius);
+                    counter++;
                 }
 
                 ballCenterPositionPrev.copy(ballCenterPosition);
@@ -428,22 +431,25 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                         normal.normalize(); // Převod na jednotkový vektor
 
                         // Spuštění fyzikálního výpočtu, který přímo upraví .velocity objekty
-                        resolveElasticCollision3D(
+                        if (resolveElasticCollision3D(
                             b1.velocity,
                             b2.velocity,
                             b1.radius ** 3,
                             b2.radius ** 3,
                             normal
-                        );
+                        )) {
 
-                        const v1 = b1.velocity.length();
-                        const v2 = b2.velocity.length();
 
-                        b1.velocity.projectOnPlane(b1.normal).setLength(v1).multiplyScalar(0.95);
-                        b2.velocity.projectOnPlane(b2.normal).setLength(v2).multiplyScalar(0.95);
+                            const v1 = b1.velocity.length();
+                            const v2 = b2.velocity.length();
 
-                        b1.afterCollision = true;
-                        b2.afterCollision = true;
+                            b1.velocity.projectOnPlane(b1.normal).setLength(v1).multiplyScalar(0.95);
+                            b2.velocity.projectOnPlane(b2.normal).setLength(v2).multiplyScalar(0.95);
+
+                            b1.afterCollision = true;
+                            b2.afterCollision = true;
+                            b2.afterCollision = true;
+                        }
                     }
                 }
 
@@ -464,23 +470,24 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                         normal.normalize(); // Převod na jednotkový vektor
 
                         // Spuštění fyzikálního výpočtu, který přímo upraví .velocity objekty
-                        resolveElasticCollision3D(
+                        if (resolveElasticCollision3D(
                             b.velocity,
                             p.velocity,
                             b.radius ** 3,
                             4 * 0.07 ** 3,
                             normal,
                             true
-                        );
-                        
-                        const v = b.velocity.length();
-                        b.velocity.projectOnPlane(b.normal).setLength(v);
+                        )) {
+                            const v = b.velocity.length();
+                            b.velocity.projectOnPlane(b.normal).setLength(v);
 
-                        b.afterCollision = true;
+                            b.afterCollision = true;
+                        }
                     }
                 }
             }
         },
+        subSteps: 5,
         hideGrid: true,
         autoRotate: false,
         sceneBackgroundTexture: "assets/OnSphere/milky_way_penguin.png",
@@ -715,7 +722,7 @@ function resolveElasticCollision3D(v1, v2, m1, m2, normal, penguin = false) {
     const speedAlongNormal = relVelocity.dot(normal);
 
     // Pokud se koule pohybují od sebe, srážku netřeba řešit (zamezí zásekům)
-    if (speedAlongNormal > 0) return;
+    if (speedAlongNormal > 0) return false;
 
     // 4. Výpočet skalárního impulsu podle odvozeného vzorce
     // Pro v1: - (2 * m2 / totalMass) * speedAlongNormal
@@ -733,6 +740,8 @@ function resolveElasticCollision3D(v1, v2, m1, m2, normal, penguin = false) {
     if (!penguin) {
         v2.add(impulseVector2);
     }
+
+    return true;
 }
 
 

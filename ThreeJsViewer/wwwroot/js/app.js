@@ -458,14 +458,20 @@ function animate(timestamp) {
 }
 
 function animateMeshes(delta) {
-    loadedMeshes.forEach(mesh => {
-        if (mesh.userData.animate) {
-            mesh.userData.animate(mesh, animationTime, delta, animationSpeed, pivot, camera, controls, isUserOrbiting);
-        }
-    });        
 
-    if (config.animate) {
-        config.animate(animationTime, delta, animationSpeed, pivot, camera, controls, isUserOrbiting);
+    let subSteps = config.subSteps ?? 1;
+
+    for (let i = 0; i < subSteps; i++) {
+
+        loadedMeshes.forEach(mesh => {
+            if (mesh.userData.animate) {
+                mesh.userData.animate(mesh, animationTime, delta, animationSpeed / subSteps, pivot, camera, controls, isUserOrbiting);
+            }
+        });
+
+        if (config.animate) {
+            config.animate(animationTime, delta, animationSpeed / subSteps, pivot, camera, controls, isUserOrbiting);
+        }
     }
 }
 
