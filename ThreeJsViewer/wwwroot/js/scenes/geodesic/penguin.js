@@ -1,5 +1,5 @@
 ﻿import * as THREE from 'three';
-import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.06';
+import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.07';
 
 export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0, friction = 0.999, gravity = 0.01 ) {
 

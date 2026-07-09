@@ -1,6 +1,7 @@
 ﻿import * as THREE from 'three';
 import { icosaVertices } from '../penguin/icosa.js';
 import { geoPlanes } from './geoplanes.js';
+import { geosphereVertices } from './geosphere.js';
 
 export function tetraFunc(x, y, z) {
     const sumOfSquares = x * x + y * y + z * z;
@@ -93,6 +94,44 @@ export function ballMinusBalls(r = 0.295, eps = 0.04) {
         res = ANDFuncs(res, (x, y, z) => - ((x - 1.2 * v.x) ** 2 + (y - 1.2 * v.y) ** 2 + (z - 1.2 * v.z) ** 2) + r * r , eps);
 
     }
+
+    return res;
+}
+
+export function ballPlusMinusBalls(r = 0.3, eps = 0.04) {
+    let res = (x, y, z) => x * x + y * y + z * z - 1.005;
+
+    let balls = null;
+    let notballs = null;
+
+    for (let i = 0; i < geosphereVertices.length; i++) {
+        const v = geosphereVertices[i];
+
+        if (v.tag == 0) {
+
+            let b = (x, y, z) => (x - 0.8 * v.x) ** 2 + (y - 0.8 * v.y) ** 2 + (z - 0.8 * v.z) ** 2 - (r + 0.005) ** 2;
+
+            if (balls == null) {
+                balls = b;
+            } else {
+                balls = ORFuncs(balls, b, eps);
+            }
+
+        } else {
+
+            let b = (x, y, z) => - ((x - 1.2 * v.x) ** 2 + (y - 1.2 * v.y) ** 2 + (z - 1.2 * v.z) ** 2) + (r - 0.005) ** 2;
+
+            if (notballs == null) {
+                notballs = b;
+            } else {
+                notballs = ANDFuncs(notballs, b, eps);
+            }
+
+        }
+    }
+
+    res = ORFuncs(res, balls, eps);
+    res = ANDFuncs(res, notballs, eps);
 
     return res;
 }

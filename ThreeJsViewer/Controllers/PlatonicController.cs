@@ -49,7 +49,7 @@ namespace ThreeJsViewer.Controllers
             var res = p.Vertices.Select((v, i) => new
             {
                 pos = i, 
-                v.X, v.Y, v.Z,
+                v.X, v.Y, v.Z, v.Tag,
                 vertices = p.Edges.Where(e => e.Item1 == i || e.Item2 == i).Select(e => e.Item1 == i ? e.Item2 : e.Item1)
             });
 

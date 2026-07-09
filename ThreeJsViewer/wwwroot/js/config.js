@@ -10,8 +10,8 @@ import { createBottleLidScene } from './scenes/bottle.js?v=1.01';
 import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.02';
 import { createPenguinPrintScene } from './scenes/penguin/penguinPrint.js?v=1.02';
 
-import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.06';
-import { tetraFunc, balls, ballMinusBalls, geodesicSphere, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.06';
+import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.07';
+import { tetraFunc, balls, ballMinusBalls, ballPlusMinusBalls, geodesicSphere, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.07';
 
 export const sceneConfigurations = [
 
@@ -245,22 +245,22 @@ export const sceneConfigurations = [
     createPenguinPrintScene(2, 2, 6, "Penguin planet train"),
 
 
-    createGeoPenguinScene("Penguins on ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1, 5, true, 0.4, 1.0, false, 5),
+    createGeoPenguinScene("Ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1, 5, true, 0.4, 1.0, false, 5),
 
-    createGeoPenguinScene("Penguins on 4-ball", "ball4", (x, y, z) => (x ** 4 + y ** 4 + z ** 4) - 1, 10, true, 0.6, 1.0, false, 5),
+    createGeoPenguinScene("4-ball", "ball4", (x, y, z) => (x ** 4 + y ** 4 + z ** 4) - 1, 10, true, 0.6, 1.0, false, 5),
 
-    createGeoPenguinScene("Penguins on 8-ball", "ball8", (x, y, z) => (x ** 8 + y ** 8 + z ** 8) - 1, 8, true, 0.4/* 1.0*/, 0.8, false, 8),
+    createGeoPenguinScene("8-ball", "ball8", (x, y, z) => (x ** 8 + y ** 8 + z ** 8) - 1, 8, true, 0.4/* 1.0*/, 0.8, false, 8),
 
-    createGeoPenguinScene("Penguins on 6-ball", "ball6minuscylinder",
+    createGeoPenguinScene("6-ball", "ball6minuscylinder",
         ANDFuncs(
             (x, y, z) => (x ** 6 + y ** 6 + z ** 6) - 1,
             (x, y, z) => -x * x - y * y + 0.19,
             0.2
-        ), 10, true, 0.6, 0.8, true, 10),
+        ), 10, true, 0.6, 0.8, true, 10, 0.9999, 0),
 
-    createGeoPenguinScene("Penguins on ellipsoid", "ellipsoid", (x, y, z) => (8 * x * x + 8 * y * y + z * z) - 1, 10, true),
+    createGeoPenguinScene("Ellipsoid", "ellipsoid", (x, y, z) => (8 * x * x + 8 * y * y + z * z) - 1, 10, true),
 
-    createGeoPenguinScene("Penguins on ellipsoids", "ellipsoidsSharpBlue",
+    createGeoPenguinScene("Ellipsoids", "ellipsoidsSharpBlue",
         ORManyFuncs([
                 (x, y, z) => (8 * x * x + 8 * y * y + z * z) - 1,
                 (x, y, z) => (8 * x * x + y * y + 8 * z * z) - 1,
@@ -269,7 +269,7 @@ export const sceneConfigurations = [
         10, true, 1.0, 0.8, true, 10),
 
 
-    createGeoPenguinScene("On ball minus cylinders", "ballminuscylinders",
+    createGeoPenguinScene("Ball minus cylinders", "ballminuscylinders",
         ANDManyFuncs([
             (x, y, z) => x * x + y * y + z * z - 1,
             (x, y, z) => -x * x - y * y - z * z + 23.0 / 64.0,
@@ -277,44 +277,49 @@ export const sceneConfigurations = [
             (x, y, z) => -(y + 16.0 / 25.0) * (y + 16.0 / 25.0) - (z + 16.0 / 25.0) * (z + 16.0 / 25.0) + 0.23,
             (x, y, z) => -(z - 16.0 / 25.0) * (z - 16.0 / 25.0) - (x - 16.0 / 25.0) * (x - 16.0 / 25.0) + 0.23
         ], 0.1),
-        10, true, 1.0, 0.8, true, 10),
+        10, true, 1.0, 0.8, true, 10, 0.9999, 0),
 
 
-    createGeoPenguinScene("On ball minus balls", "ballminusballs1",
+    createGeoPenguinScene("Ball minus balls", "ballminusballs1",
         ballMinusBalls()
         , 10, true, 1.3, 0.8, true, 30, 0.999, 0.01),
 
-    createGeoPenguinScene("On geodesic sphere", "geodesicsphere",
+    createGeoPenguinScene("Ball plus-minus balls", "ballplusminusballs",
+        ballPlusMinusBalls()
+        , 10, true, 1.3, 0.8, true, 30, 0.9995, 0.008),
+
+
+    createGeoPenguinScene("Geodesic sphere", "geodesicsphere",
         geodesicSphere()
         , 10, true, 1.3, 0.8, true, 10),
 
 
 
-    createGeoPenguinScene("Penguins on torus", "torus", (x, y, z) => (x ** 2 + y ** 2 + z ** 2 + (0.7) ** 2 - (0.3) ** 2) ** 2 - 4 * (0.7) ** 2 * (x ** 2 + y ** 2), 10, true, 0.8),
+    createGeoPenguinScene("Torus", "torus", (x, y, z) => (x ** 2 + y ** 2 + z ** 2 + (0.7) ** 2 - (0.3) ** 2) ** 2 - 4 * (0.7) ** 2 * (x ** 2 + y ** 2), 10, true, 0.8),
 
-    createGeoPenguinScene("On torus with balls", "torusballs",
+    createGeoPenguinScene("Torus with balls", "torusballs",
         ORFuncs(
             (x, y, z) => (Math.sqrt(x * x + y * y) - 0.70) ** 2 + z * z - 0.0315,
             balls(6, 0.7, Math.sqrt(0.1), 2, 0.01),
             0.02
         )
-        , 10, true, 1.2, 0.8, true, 10),
+        , 10, true, 1.2, 0.8, true, 10, 0.9999, 0),
 
 
-    createGeoPenguinScene("Penguins on tetra", "tetra", tetraFunc, 10, true, 0.3, 1.0, false, 10),
+    createGeoPenguinScene("Tetra", "tetra", tetraFunc, 10, true, 0.3, 1.0, false, 10, 0.9999, 0),
 
-    createGeoPenguinScene("Penguins on cos-ball", "ballcos", (x, y, z) => x * x + y * y + z * z - ((Math.cos(16 * x) + Math.cos(16 * y) + Math.cos(16 * z)) / 8.0 + 0.8), 10, true, 0.8, 0.65, true, 10, 0.998, 0.01),
+    createGeoPenguinScene("cos-ball", "ballcos", (x, y, z) => x * x + y * y + z * z - ((Math.cos(16 * x) + Math.cos(16 * y) + Math.cos(16 * z)) / 8.0 + 0.8), 10, true, 0.8, 0.65, true, 10, 0.999, 0.008),
 
-    createGeoPenguinScene("Penguins on sin-cos", "sincos",
+    createGeoPenguinScene("sin-cos", "sincos",
         ORFuncs(
             (x, y, z) => x * x + y * y + z * z - ((Math.cos(9 * x) + Math.cos(9 * y) + Math.cos(9 * z)) / 9.0 + 0.8),
             (x, y, z) => x * x + y * y + z * z - ((Math.sin(9 * x) + Math.sin(9 * y) + Math.sin(9 * z)) / 9.0 + 0.8),
             0.075
-        ), 10, true, 0.8, 0.8, true, 10, 0.998, 0.01),
+        ), 10, true, 0.8, 0.8, true, 10, 0.999, 0.008),
 
-    createGeoPenguinScene("Penguins on heart", "heart", (x, y, z) => (2 * x ** 2 + y ** 2 + z ** 2 - 1) ** 3 - (0.1 * x ** 2 + y ** 2) * z ** 3, 10, true, 0.8, 0.8, true, 10),
+    createGeoPenguinScene("Heart", "heart", (x, y, z) => (2 * x ** 2 + y ** 2 + z ** 2 - 1) ** 3 - (0.1 * x ** 2 + y ** 2) * z ** 3, 10, true, 0.8, 0.8, true, 10, 0.9999, 0),
 
-    createGeoPenguinScene("Penguins on logo", "logo",
+    createGeoPenguinScene("Logo", "logo",
         ANDManyFuncs([
             (x, y, z) => Math.abs(x) - 1,
             (x, y, z) => Math.abs(y) - 1,
@@ -324,7 +329,7 @@ export const sceneConfigurations = [
             (x, y, z) => 0.49 ** 2 - x ** 2 - z ** 2,
             (x, y, z) => 0.49 ** 2 - z ** 2 - y ** 2
         ], 0.05),
-        10, true, 0.8, 0.8, true, 10),
+        10, true, 0.8, 0.8, true, 10, 0.9999, 0),
 
 
 ];

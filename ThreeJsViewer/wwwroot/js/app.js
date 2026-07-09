@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 //import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { sceneConfigurations } from './config.js?v=1.20';
+import { sceneConfigurations } from './config.js?v=1.21';
 
 // --- State Variables ---
 let config;
