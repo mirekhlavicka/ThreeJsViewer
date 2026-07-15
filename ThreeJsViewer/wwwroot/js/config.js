@@ -10,8 +10,8 @@ import { createBottleLidScene } from './scenes/bottle.js?v=1.01';
 import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.02';
 import { createPenguinPrintScene } from './scenes/penguin/penguinPrint.js?v=1.02';
 
-import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.07';
-import { tetraFunc, balls, ballMinusBalls, ballPlusMinusBalls, geodesicSphere, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.07';
+import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.08';
+import { tetraFunc, balls, ballMinusBalls, ballPlusMinusBalls, torusPlusMinusBalls, geodesicSphere, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.08';
 
 export const sceneConfigurations = [
 
@@ -303,14 +303,26 @@ export const sceneConfigurations = [
             balls(6, 0.7, Math.sqrt(0.1), 2, 0.01),
             0.02
         )
-        , 10, true, 1.0, 0.8, true, 10, 0.9995, 0.008, p => {
+        , 10, true, 1.2, 0.8, true, 10, 0.9995, 0.008, p => {
             let r = p.clone();
             r.z = 0;
-            r.setLength(0.70);
+            r.setLength(1.2 * 0.70);
             r.sub(p).normalize();
 
             return r;
         }),
+
+    createGeoPenguinScene("Torus plus-minus balls", "torusplusminusballs",
+        torusPlusMinusBalls()
+        , 10, true, 1.2, 0.8, true, 15, 0.9995, 0.008, p => {
+            let r = p.clone();
+            r.z = 0;
+            r.setLength(1.2 * 0.70);
+            r.sub(p).normalize();
+
+            return r;
+        }),
+
 
 
     createGeoPenguinScene("Tetra", "tetra", tetraFunc, 10, true, 0.3, 1.0, false, 10, 0.9999, 0),

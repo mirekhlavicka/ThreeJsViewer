@@ -136,6 +136,52 @@ export function ballPlusMinusBalls(r = 0.3, eps = 0.04) {
     return res;
 }
 
+export function torusPlusMinusBalls(count1 = 8, count2 = 4, R = 0.7, r = 0.3, eps = 0.02) {
+    let res = (x, y, z) => (Math.sqrt(x * x + y * y) - R) ** 2 + z * z - (r /*+ 0.005*/) ** 2;
+
+    let balls = null;
+    let notballs = null;
+
+    for (let i = 0; i < count1; i++)
+        for (let j = 0; j < count2; j++) {
+            let fi = i * 2 * Math.PI / count1;
+            let psi = j * 2 * Math.PI / count2;
+            let r0 = 0.125 + 0.1 * Math.abs(psi - Math.PI) / Math.PI;
+            let rr = r + (((i + j) % 2 == 0) ? -0.5 * r0 : 0.5 * r0);
+            let x0 = (R + rr * Math.cos(psi)) * Math.cos(fi);
+            let y0 = (R + rr * Math.cos(psi)) * Math.sin(fi);
+            let z0 = rr * Math.sin(psi);
+
+            if ((i + j) % 2 == 0) {
+
+                let b = (x, y, z) => (x - x0) ** 2 + (y - y0) ** 2 + (z - z0) ** 2 - (r0 /*+ 0.005*/) ** 2;
+
+                if (balls == null) {
+                    balls = b;
+                } else {
+                    balls = ORFuncs(balls, b, eps);
+                }
+
+            } else {
+
+                let b = (x, y, z) => - ((x - x0) ** 2 + (y - y0) ** 2 + (z - z0) ** 2) + (r0/* - 0.005*/) ** 2;
+
+                if (notballs == null) {
+                    notballs = b;
+                } else {
+                    notballs = ANDFuncs(notballs, b, eps);
+                }
+
+            }
+        }
+
+    res = ORFuncs(res, balls, eps);
+    res = ANDFuncs(res, notballs, eps);
+
+    return res;
+}
+
+
 export function geodesicSphere(eps = 0.004) {
     let res = null;
 
