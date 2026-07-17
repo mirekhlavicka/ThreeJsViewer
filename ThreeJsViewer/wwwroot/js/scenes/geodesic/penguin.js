@@ -177,11 +177,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     }
                 } else {
                     if ((scene.keyboardState['w'] || scene.keyboardState['W'] || scene.keyboardState['ArrowUp']) && speed < 0.8) {
-                        speed += 0.005;
+                        speed += 0.001;
                         penguinVelocity.setLength(speed);
                     }
                     if ((scene.keyboardState['s'] || scene.keyboardState['S'] || scene.keyboardState['ArrowDown']) && speed > 0.001) {
-                        speed -= 0.005;
+                        speed -= 0.001;
                         if (speed < 0.001) {
                             speed = 0.001;
                         }
@@ -190,12 +190,12 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                     if (scene.keyboardState['a'] || scene.keyboardState['A'] || scene.keyboardState['ArrowLeft']) {
                         const f = new THREE.Vector3().crossVectors(penguinVelocity, penguinNormal).normalize();
-                        penguinVelocity.normalize().addScaledVector(f, -speed * animationSpeed * 0.15).setLength(speed);
+                        penguinVelocity.normalize().addScaledVector(f, -/*speed * */animationSpeed * 0.05).setLength(speed);
                     }
 
                     if (scene.keyboardState['d'] || scene.keyboardState['D'] || scene.keyboardState['ArrowRight']) {
                         const f = new THREE.Vector3().crossVectors(penguinVelocity, penguinNormal).normalize();
-                        penguinVelocity.normalize().addScaledVector(f, speed * animationSpeed * 0.15).setLength(speed);
+                        penguinVelocity.normalize().addScaledVector(f, /*speed * */animationSpeed * 0.05).setLength(speed);
                     }
 
                     if (scene.keyboardState['+']) {
@@ -231,7 +231,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     } else {
 
                         // 2. Calculate Forward Direction
-                        if (penguinVelocity.lengthSq() > 0.001) {
+                        if (penguinVelocity.lengthSq() > 0.0000001) {
                             tempForward.copy(penguinVelocity).normalize();
                         }
 

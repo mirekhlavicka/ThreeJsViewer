@@ -200,3 +200,54 @@ export function geodesicSphere(eps = 0.004) {
 
     return res;
 }
+
+export function dice(eps = 0.15) {
+    // Total of 21 points mapped to the 6 faces of a [-d, d] 3D cube.
+    // Arranged sequentially from Face 1 to Face 6.
+    const d = 1.15;
+    const dicePips = [
+        // --- Side 1 (1 point) on Z = 1 (Front) ---
+        [0.0, 0.0, d],
+
+        // --- Side 2 (2 points) on X = -1 (Left) ---
+        [-d, -0.5, -0.5],
+        [-d, 0.5, 0.5],
+
+        // --- Side 3 (3 points) on Y = -1 (Bottom) ---
+        [-0.5, -d, -0.5],
+        [0.0, -d, 0.0],
+        [0.5, -d, 0.5],
+
+        // --- Side 4 (4 points) on Y = 1 (Top) ---
+        [-0.5, d, -0.5],
+        [-0.5, d, 0.5],
+        [0.5, d, -0.5],
+        [0.5, d, 0.5],
+
+        // --- Side 5 (5 points) on X = 1 (Right) ---
+        [d, -0.5, -0.5],
+        [d, -0.5, 0.5],
+        [d, 0.0, 0.0],
+        [d, 0.5, -0.5],
+        [d, 0.5, 0.5],
+
+        // --- Side 6 (6 points) on Z = -1 (Back) ---
+        [-0.5, -0.5, -d],
+        [-0.5, 0.0, -d],
+        [-0.5, 0.5, -d],
+        [0.5, -0.5, -d],
+        [0.5, 0.0, -d],
+        [0.5, 0.5, -d]
+    ];
+
+    let res = (x, y, z) => x ** 8 + y ** 8 + z ** 8 - 1.005;
+
+    for (let i = 0; i < dicePips.length; i++) {
+        const p = dicePips[i];
+
+        res = ANDFuncs(res, (x, y, z) => - ((x - p[0]) ** 2 + (y - p[1]) ** 2 + (z - p[2]) ** 2) + 0.055, eps);
+
+    }
+
+    return res;
+}
