@@ -408,7 +408,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             }
         },
         setup: (camera, dirLight) => {
-            camera.position.set(-1.5, -1.5, -1.0);
+            camera.position.set(-2.0, -2.0, -1.4);
             dirLight.position.set(1, 1, 1);
         },
         animate: (t) => {
@@ -421,11 +421,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     const b1 = balls[i];
                     const b2 = balls[j];
 
-                    const pos1 = b1.centerPosition;
-                    const pos2 = b2.centerPosition;
+                    let pos1 = b1.centerPosition;
+                    let pos2 = b2.centerPosition;
 
                     // Spočítáme vzdálenost středů
-                    const distance = pos1.distanceTo(pos2);
+                    let distance = pos1.distanceTo(pos2);
                     const minDistance = b1.radius + b2.radius; // Součet poloměrů 
 
                     if (distance <= minDistance) {
@@ -451,7 +451,27 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                             b1.afterCollision = true;
                             b2.afterCollision = true;
-                            b2.afterCollision = true;
+
+                            /*let counter = 0;
+
+                            while (distance <= 0.8 * minDistance && counter < 100) {
+
+                                b1.animate(b1.mesh, null, null, 0.02);
+                                b2.animate(b2.mesh, null, null, 0.02);
+
+                                pos1 = b1.centerPosition;
+                                pos2 = b2.centerPosition;
+                                distance = pos1.distanceTo(pos2);
+
+                                counter++;
+                            }
+                            b1.afterCollision = false;
+                            b2.afterCollision = false;
+
+
+                            if (counter > 20) {
+                                console.log(counter);
+                            }*/
                         }
                     }
                 }

@@ -325,7 +325,7 @@ export const sceneConfigurations = [
 
     createGeoPenguinScene("Dice", "dice",
         dice()
-        , 6, true, 0.8, 0.8, true, 21, 0.9995, 0.008, p => {
+        , 8, true, 1.0, 0.8, true, 32, 0.9995, 0.008, p => {
             let r = p.clone();
             r.x = - 8 * r.x ** 7;
             r.y = - 8 * r.y ** 7;
