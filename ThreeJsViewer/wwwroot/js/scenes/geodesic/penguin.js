@@ -1,5 +1,5 @@
 ﻿import * as THREE from 'three';
-import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.08';
+import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.09';
 
 export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0, friction = 0.999, gravity = 0.01, gravField = null ) {
 
@@ -152,7 +152,29 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 updateFigureTransform(m, penguinPosition, penguinVelocity, penguinNormal, 0.068);
 
                 if (penguin != selectedPenguin) {
+
+                    const ballForce = new THREE.Vector3(0, 0, 0);
+                    let nearestBall = null;
+                    let minDistanceSq = Infinity;
+
+                    for (const ball of balls) {
+                        // Calculate squared distance to avoid expensive Math.sqrt()
+                        const distSq = ball.position.distanceToSquared(penguinPosition);
+
+                        if (distSq < minDistanceSq) {
+                            minDistanceSq = distSq;
+                            nearestBall = ball;
+                        }
+                    }
+
+                    if (minDistanceSq < 0.5 ** 2) {
+                        ballForce.subVectors(nearestBall.position, penguinPosition).normalize().projectOnPlane(penguinNormal);
+                    }
+
                     let f = calculateRepulsiveForce(penguinPosition, otherPos, penguinNormal, otherNormals, 0.068, selectedPenguin?.position);
+
+                    f.addScaledVector(ballForce, 0.5);
+
                     let pf = f.clone().projectOnVector(penguinVelocity);
                     let nf = f.length();
                     f.sub(pf).setLength(nf);
