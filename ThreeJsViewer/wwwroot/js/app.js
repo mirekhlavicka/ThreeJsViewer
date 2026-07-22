@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 //import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { sceneConfigurations } from './config.js?v=1.23';
+import { sceneConfigurations } from './config.js?v=1.24';
 
 // --- State Variables ---
 let config;
@@ -319,7 +319,7 @@ function loadScene(reset = true, runGameWithoutDialog = false) {
 
         document.getElementById('startBtn').textContent = "START";
         document.getElementById('gameTitle').textContent = config.gameMode.title;
-        document.getElementById('gameDescription').textContent = config.gameMode.description;
+        document.getElementById('gameDescription').innerHTML = config.gameMode.description;
 
         config.showModal = (text) => {
             document.getElementById('startBtn').textContent = "NEW GAME";

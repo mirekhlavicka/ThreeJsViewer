@@ -10,8 +10,8 @@ import { createBottleLidScene } from './scenes/bottle.js?v=1.01';
 import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.02';
 import { createPenguinPrintScene } from './scenes/penguin/penguinPrint.js?v=1.02';
 
-import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.09';
-import { tetraFunc, balls, ballMinusBalls, ballPlusMinusBalls, torusPlusMinusBalls, geodesicSphere, dice, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.09';
+import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.10';
+import { tetraFunc, balls, ballMinusBalls, ballPlusMinusBalls, torusPlusMinusBalls, geodesicSphere, dice, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.10';
 
 export const sceneConfigurations = [
 
@@ -245,11 +245,11 @@ export const sceneConfigurations = [
     createPenguinPrintScene(2, 2, 6, "Penguin planet train"),
 
 
-    createGeoPenguinScene("Ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1, 5, true, 0.4, 1.0, false, 5),
+    createGeoPenguinScene("Ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1, 5, true, 0.6, 1.0, false, 5),
 
     createGeoPenguinScene("4-ball", "ball4", (x, y, z) => (x ** 4 + y ** 4 + z ** 4) - 1, 10, true, 0.6, 1.0, false, 5),
 
-    createGeoPenguinScene("8-ball", "ball8", (x, y, z) => (x ** 8 + y ** 8 + z ** 8) - 1, 8, true, 0.4/* 1.0*/, 0.8, false, 8),
+    createGeoPenguinScene("8-ball", "ball8", (x, y, z) => (x ** 8 + y ** 8 + z ** 8) - 1, 8, true, 0.6, 0.8, false, 8),
 
     createGeoPenguinScene("6-ball", "ball6minuscylinder",
         ANDFuncs(
