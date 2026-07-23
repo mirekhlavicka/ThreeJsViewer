@@ -502,11 +502,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     const b = balls[i];
                     const p = penguins[j];
 
-                    const pos1 = b.centerPosition;
-                    const pos2 = p.centerPosition;
+                    let pos1 = b.centerPosition;
+                    let pos2 = p.centerPosition;
 
                     // Spočítáme vzdálenost středů
-                    const distance = pos1.distanceTo(pos2);
+                    let distance = pos1.distanceTo(pos2);
                     const minDistance = b.radius + 0.05; // Součet poloměrů 
 
                     if (distance <= minDistance) {
@@ -519,7 +519,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                             b.velocity,
                             p.velocity,
                             b.radius ** 3,
-                            1.0 * 0.07 ** 3,
+                            0.5 * 0.07 ** 3,
                             normal,
                             true
                         )) {
@@ -527,6 +527,29 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                             b.velocity.projectOnPlane(b.normal).setLength(v);
 
                             b.afterCollision = true;
+
+                            let counter = 0;
+
+                            while (distance <= 0.9 * minDistance && counter < 100) {
+
+                                b.animate(b.mesh, null, null, 0.02);
+
+                                pos1 = b.centerPosition;
+                                distance = pos1.distanceTo(pos2);
+
+                                counter++;
+                            }
+
+                            /*if (counter > 20) {
+                                console.log(counter);
+                            }*/
+
+                            //b.afterCollision = false;
+
+                            if (counter > 20) {
+                                console.log(counter);
+                            }
+
                         }
                     }
                 }
@@ -536,7 +559,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         hideGrid: true,
         gameMode: {
             audio: "assets/OnSphere/magellano-penguins.wav",
-            title: "Penguins on a Dice",
+            title: "Penguins & Balloons",
             description: "No goals. No scores. No danger. Just enjoy playing with balloons alongside the other penguins. Click on a penguin to become them and join the fun! <br/><br/> <b>Controls:</b> Use the arrow keys to move your penguin. <b>Left/Right</b> to steer, <b>Up</b> to accelerate, <b>Down</b> to slow down. Use the mouse to rotate and explore the world."
         },
         autoRotate: false,
