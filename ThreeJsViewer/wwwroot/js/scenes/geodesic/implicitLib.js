@@ -1,6 +1,7 @@
 ﻿import * as THREE from 'three';
 import { icosaVertices } from '../penguin/icosa.js';
 import { geoPlanes } from './geoplanes.js';
+import { dodecaPlanes } from './dodecaplanes.js';
 import { geosphereVertices } from './geosphere.js';
 
 export function tetraFunc(x, y, z) {
@@ -200,6 +201,28 @@ export function geodesicSphere(eps = 0.004) {
 
     return res;
 }
+
+export function dodecaMinusBalls(eps = 0.02) {
+    let res = null;
+
+    for (let i = 0; i < dodecaPlanes.length; i++) {
+        const p = dodecaPlanes[i];
+
+        let f = (x, y, z) => (x - p.v.x) * p.n.x + (y - p.v.y) * p.n.y + (z - p.v.z) * p.n.z;
+        let b = (x, y, z) => -((x - p.c.x) ** 2 + (y - p.c.y) ** 2 + (z - p.c.z) ** 2) + 0.35 ** 2;
+
+        if (res == null) {
+            res = f
+        } else {
+            res = ANDFuncs(res, f, eps);
+        }
+
+        res = ANDFuncs(res, b, eps);
+    }
+
+    return res;
+}
+
 
 export function dice(eps = 0.02) {
     // Total of 21 points mapped to the 6 faces of a [-d, d] 3D cube.

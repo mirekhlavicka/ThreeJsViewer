@@ -83,5 +83,49 @@ namespace ThreeJsViewer.Controllers
 
             return Ok(res);
         }
+
+        [HttpGet("dodecaplanes")]
+        public ActionResult GetDodecaPlanes()
+        {
+            var p = Polyhedron.CreateDodecahedron();
+
+            var res = p.Faces.Select(face =>
+            {
+                var v0 = p.Vertices[face[0]];
+
+                var n = Vec3.Cross(p.Vertices[face[1]] - p.Vertices[face[0]], p.Vertices[face[2]] - p.Vertices[face[0]]);
+
+                if (Vec3.Dot(new Vec3(0, 0, 0) - v0, n) > 0)
+                {
+                    n = new Vec3(0, 0, 0) - n;
+                }
+
+                double x = 0;
+                double y = 0;
+                double z = 0;
+
+                foreach (var i in face)
+                {
+                    x += p.Vertices[i].X;
+                    y += p.Vertices[i].Y;
+                    z += p.Vertices[i].Z;
+                }
+
+                x /= 5; y /= 5; z /= 5;
+                double len = Math.Sqrt(x * x + y * y + z * z);
+                x /= len; y /= len; z /= len;
+
+                return new
+                {
+                    v = new { v0.X, v0.Y, v0.Z },
+                    n = new { n.X, n.Y, n.Z },
+                    c = new { x, y, z}
+                };
+
+            });
+
+            return Ok(res);
+        }
+
     }
 }
