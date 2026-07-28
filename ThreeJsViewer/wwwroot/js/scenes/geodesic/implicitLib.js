@@ -223,6 +223,23 @@ export function dodecaMinusBalls(eps = 0.02) {
     return res;
 }
 
+export const dodecaFunc = (function (eps = 0.02) {
+    let res = null;
+
+    for (let i = 0; i < dodecaPlanes.length; i++) {
+        const p = dodecaPlanes[i];
+
+        let f = (x, y, z) => (x - p.v.x) * p.n.x + (y - p.v.y) * p.n.y + (z - p.v.z) * p.n.z;
+
+        if (res == null) {
+            res = f
+        } else {
+            res = ANDFuncs(res, f, eps);
+        }
+    }
+
+    return res;
+})();
 
 export function dice(eps = 0.02) {
     // Total of 21 points mapped to the 6 faces of a [-d, d] 3D cube.

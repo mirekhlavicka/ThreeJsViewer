@@ -11,7 +11,7 @@ import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.02';
 import { createPenguinPrintScene } from './scenes/penguin/penguinPrint.js?v=1.02';
 
 import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.10';
-import { tetraFunc, balls, ballMinusBalls, ballPlusMinusBalls, torusPlusMinusBalls, geodesicSphere, dodecaMinusBalls, dice, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.10';
+import { tetraFunc, balls, ballMinusBalls, ballPlusMinusBalls, torusPlusMinusBalls, geodesicSphere, dodecaMinusBalls, dodecaFunc, dice, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.10';
 
 export const sceneConfigurations = [
 
@@ -296,7 +296,20 @@ export const sceneConfigurations = [
 
     createGeoPenguinScene("Dodecahedron", "dodecahedronminusballs",
         dodecaMinusBalls()
-        , 8, true, 1.3, 0.8, true, 32),
+        , 8, true, 1.2, 0.8, true, 32, 0.9995, 0.008, p => {
+            const scale = 1.2;
+            const x = p.x / scale;
+            const y = p.y / scale;
+            const z = p.z / scale;
+            const eps = 1e-5;
+            const f = dodecaFunc;
+            const fx = (f(x + eps, y, z) - f(x - eps, y, z)) / (2 * eps);
+            const fy = (f(x, y + eps, z) - f(x, y - eps, z)) / (2 * eps);
+            const fz = (f(x, y, z + eps) - f(x, y, z - eps)) / (2 * eps);
+
+            return new THREE.Vector3(-fx, -fy, -fz).normalize();
+
+        }),
 
 
     createGeoPenguinScene("Torus", "torus", (x, y, z) => (x ** 2 + y ** 2 + z ** 2 + (0.7) ** 2 - (0.3) ** 2) ** 2 - 4 * (0.7) ** 2 * (x ** 2 + y ** 2), 10, true, 1.0, 0.8, false, 10, 0.999, 0),
