@@ -1,10 +1,13 @@
 ﻿import * as THREE from 'three';
 import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.10';
 
-export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0, friction = 0.999, gravity = 0.01, gravField = null ) {
+export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0, friction = 0.999, gravity = 0.01, gravField = null, bocount = 0 ) {
 
     let penguins = [];
     let balls = [];
+    let bollards = [];
+    let bollardsPositions = [];
+    let bollardsNormals = [];
 
     let selectedPenguin = null;
 
@@ -112,7 +115,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 let p = getRandomVertex();
 
-                while (penguins.some(pp => pp.position.distanceTo(p) < 0.3) || balls.some(pp => pp.position.distanceTo(p) < 0.3)) {
+                while (penguins.some(pp => pp.position.distanceTo(p) < 0.3) || balls.some(pp => pp.position.distanceTo(p) < 0.3) || bollards.some(pp => pp.position.distanceTo(p) < 0.3)) {
                     p = getRandomVertex();
                 }
 
@@ -125,7 +128,9 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
 
                 otherPos = penguins.filter(pp => pp != penguin).map(pp => pp.position);
+                otherPos.push(...bollardsPositions);
                 otherNormals = penguins.filter(pp => pp != penguin).map(pp => pp.normal);
+                otherNormals.push(...bollardsNormals);
             },
             animate: (m, t, delta, animationSpeed, pivot, camera, controls, isUserOrbiting) => {
 
@@ -151,9 +156,8 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 updateFigureTransform(m, penguinPosition, penguinVelocity, penguinNormal, 0.068);
 
+                const ballForce = new THREE.Vector3(0, 0, 0);
                 if (penguin != selectedPenguin) {
-
-                    const ballForce = new THREE.Vector3(0, 0, 0);
                     let nearestBall = null;
                     let minDistanceSq = Infinity;
 
@@ -184,34 +188,36 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                         }
                         penguinVelocity.setLength(speed);
                     }
+                }
 
-                    let f = calculateRepulsiveForce(penguinPosition, otherPos, penguinNormal, otherNormals, 0.068, selectedPenguin?.position);
+                let f = calculateRepulsiveForce(penguinPosition, penguin == selectedPenguin ? bollardsPositions : otherPos, penguinNormal, penguin == selectedPenguin ? bollardsNormals : otherNormals, 0.068, selectedPenguin?.position);
 
-                    f.addScaledVector(ballForce, 0.5);
+                f.addScaledVector(ballForce, 0.5);
 
-                    let pf = f.clone().projectOnVector(penguinVelocity);
-                    let nf = f.length();
-                    f.sub(pf).setLength(nf);
+                let pf = f.clone().projectOnVector(penguinVelocity);
+                let nf = f.length();
+                f.sub(pf).setLength(nf);
 
-                    penguinForce.projectOnPlane(penguinNormal);
-                    penguinForce.lerp(f, 0.2); //multiplyScalar(0.6).addScaledVector(f, 0.4);
-                    penguinVelocity.normalize().addScaledVector(penguinForce, 1.5 * speed *  animationSpeed).setLength(speed);
+                penguinForce.projectOnPlane(penguinNormal);
+                penguinForce.lerp(f, 0.1); //multiplyScalar(0.6).addScaledVector(f, 0.4);
+                penguinVelocity.normalize().addScaledVector(penguinForce, 1.5 * speed *  animationSpeed).setLength(speed);
 
 
-                    if (nf < 0.3) {
-                        let d = penguinPosition.distanceTo(penguinPositionGeo);
+                if (nf < 0.3 && penguin != selectedPenguin) {
+                    let d = penguinPosition.distanceTo(penguinPositionGeo);
 
-                        if (d > 0.5) {
-                            penguinPositionGeo.copy(penguinPosition);
-                            penguinVelocityGeo.copy(penguinVelocity);
-                        } else {
-                            f.subVectors(penguinPositionGeo, penguinPosition).normalize().projectOnPlane(penguinNormal).multiplyScalar(d * d);
-                            pf = f.clone().projectOnVector(penguinVelocity);
-                            f.sub(pf);
-                            penguinVelocity.normalize().addScaledVector(f, 4 * speed * animationSpeed).setLength(speed);
-                        }
+                    if (d > 0.5) {
+                        penguinPositionGeo.copy(penguinPosition);
+                        penguinVelocityGeo.copy(penguinVelocity);
+                    } else {
+                        f.subVectors(penguinPositionGeo, penguinPosition).normalize().projectOnPlane(penguinNormal).multiplyScalar(d * d);
+                        pf = f.clone().projectOnVector(penguinVelocity);
+                        f.sub(pf);
+                        penguinVelocity.normalize().addScaledVector(f, 4 * speed * animationSpeed).setLength(speed);
                     }
-                } else {
+                }
+
+                if (penguin == selectedPenguin) {
                     if ((scene.keyboardState['w'] || scene.keyboardState['W'] || scene.keyboardState['ArrowUp']) && speed < 0.8) {
                         speed += 0.001;
                         penguinVelocity.setLength(speed);
@@ -366,7 +372,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 let p = getRandomVertex();
 
-                while (penguins.some(pp => pp.position.distanceTo(p) < 0.3 || balls.some(pp => pp.position.distanceTo(p) < 0.3))) {
+                while (penguins.some(pp => pp.position.distanceTo(p) < 0.3) || balls.some(pp => pp.position.distanceTo(p) < 0.3) || bollards.some(pp => pp.position.distanceTo(p) < 0.3)) {
                     p = getRandomVertex();
                 }
 
@@ -418,11 +424,73 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
         return ball;
     }
-    
+
+
+
+    function createBollard(params = {}) {
+        let radius = params.radius ?? 0.05;
+        let seed = Math.random() * 2.0 * Math.PI;
+        let speed = 0.5 + 2 * Math.random();
+
+        const bollardPosition = new THREE.Vector3(1000, 1000, 1000);
+        const bollardCenterPosition = new THREE.Vector3(1000, 1000, 1000);
+        const bollardNormal = new THREE.Vector3();
+
+        let bollard = {
+            path: 'assets/Geodesic/bollard.ply',
+            prepareGeometry: g => {
+                g.scale(radius, radius, radius);
+            },
+            prepareMesh: m => {
+                m.castShadow = true;
+            },
+            setupMaterial: m => {
+                m.color = 0x808080;
+                m.vertexColors = false;
+                m.roughness = 0.3;
+                m.metalness = 0.8;
+
+            },
+            meshesLoaded: () => {
+
+                let p = getRandomVertex();
+
+                while (penguins.some(pp => pp.position.distanceTo(p) < 0.3) || balls.some(pp => pp.position.distanceTo(p) < 0.3) || bollards.some(pp => pp.position.distanceTo(p) < 0.3)) {
+                    p = getRandomVertex();
+                }
+
+                bollardPosition.copy(p);
+
+                geodesicSolver.gradient(
+                    impFunc,
+                    bollardPosition,
+                    bollardNormal
+                );
+
+                bollardCenterPosition.copy(bollardPosition).addScaledVector(bollardNormal, radius);
+            },
+            animate: (m, t, delta, animationSpeed, pivot, camera, controls, isUserOrbiting) => {
+                updateFigureTransform(m, bollardPosition, null, bollardNormal, /*0.9* radius*/ /*radius * (1.5 * Math.sin(seed + speed * t) - 0.5)*/ 0.9 * radius * Math.sin(seed + speed * t));
+            },
+
+            position: bollardPosition,
+            radius: radius,
+            velocity: new THREE.Vector3(0, 0, 0),
+            centerPosition: bollardCenterPosition,
+            normal: bollardNormal,
+
+        }
+
+        return bollard;
+    }
+
+
+
+
     let scene = {
         reset: () => {
             if (scene.used) {
-                return createGeoPenguinScene(name, model, impF, pcount, shadow, scale, speedFactor, vertexColors, bcount, friction, gravity, gravField);
+                return createGeoPenguinScene(name, model, impF, pcount, shadow, scale, speedFactor, vertexColors, bcount, friction, gravity, gravField, bocount);
             } else {
                 return scene;
             }
@@ -567,15 +635,60 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                         }
                     }
                 }
+
+                for (let j = 0; j < bocount; j++) {
+                    const b = balls[i];
+                    const bo = bollards[j];
+
+                    let pos1 = b.centerPosition;
+                    let pos2 = bo.centerPosition;
+
+                    // Spočítáme vzdálenost středů
+                    let distance = pos1.distanceTo(pos2);
+                    const minDistance = b.radius + bo.radius; // Součet poloměrů 
+
+                    if (distance <= minDistance) {
+                        // Vytvoříme směrový vektor z pos2 do pos1
+                        const normal = new THREE.Vector3().subVectors(pos1, pos2);
+                        normal.normalize(); // Převod na jednotkový vektor
+
+                        // Spuštění fyzikálního výpočtu, který přímo upraví .velocity objekty
+                        if (resolveElasticCollision3D(
+                            b.velocity,
+                            bo.velocity,
+                            b.radius ** 3,
+                            500000 /** bo.radius ** 3*/,
+                            normal,
+                            true
+                        )) {
+                            const v = b.velocity.length();
+                            b.velocity.projectOnPlane(b.normal).setLength(v);
+
+                            b.afterCollision = true;
+
+                            let counter = 0;
+
+                            while (distance <= 0.9 * minDistance && counter < 100) {
+
+                                b.animate(b.mesh, null, null, 0.02);
+
+                                pos1 = b.centerPosition;
+                                distance = pos1.distanceTo(pos2);
+
+                                counter++;
+                            }
+                        }
+                    }
+                }
             }
         },
         subSteps: 5,
         hideGrid: true,
-        gameMode: {
+        /*gameMode: {
             audio: "assets/OnSphere/magellano-penguins.wav",
             title: "Penguins & Balloons",
             description: "No goals. No scores. No danger. Just enjoy playing with balloons alongside the other penguins. Click on a penguin to become them and join the fun! <br/><br/> <b>Controls:</b> Use the arrow keys to move your penguin. <b>Left/Right</b> to steer, <b>Up</b> to accelerate, <b>Down</b> to slow down. Use the mouse to rotate and explore the world."
-        },
+        },*/
         autoRotate: false,
         sceneBackgroundTexture: "assets/OnSphere/milky_way_penguin.png",
         shadowMapType: shadow ? THREE.VSMShadowMap : null, 
@@ -634,6 +747,20 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         balls.push(ball);
     }
 
+    for (let i = 0; i < bocount; i++) {
+        let bollard = createBollard({
+            radius: 0.05
+        });
+
+        scene.models.push(bollard);
+        bollards.push(bollard);
+    }
+
+
+    bollardsPositions = bollards.map(b => b.position);
+    bollardsNormals = bollards.map(b => b.normal);
+
+
     return scene;
 }
 
@@ -658,7 +785,7 @@ function getOrthogonalVector(v) {
 
 function updateFigureTransform(figure, pos, vel, newZ, shift) {
 
-    if (vel.x == 0 && vel.y == 0 & vel.z == 0) {
+    if (vel == null || vel.x == 0 && vel.y == 0 & vel.z == 0) {
         vel = getOrthogonalVector(newZ)
     }
 
