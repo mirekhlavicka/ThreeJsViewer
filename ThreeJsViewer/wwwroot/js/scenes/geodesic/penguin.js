@@ -684,11 +684,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         },
         subSteps: 5,
         hideGrid: true,
-        /*gameMode: {
+        gameMode: {
             audio: "assets/OnSphere/magellano-penguins.wav",
             title: "Penguins & Balloons",
             description: "No goals. No scores. No danger. Just enjoy playing with balloons alongside the other penguins. Click on a penguin to become them and join the fun! <br/><br/> <b>Controls:</b> Use the arrow keys to move your penguin. <b>Left/Right</b> to steer, <b>Up</b> to accelerate, <b>Down</b> to slow down. Use the mouse to rotate and explore the world."
-        },*/
+        },
         autoRotate: false,
         sceneBackgroundTexture: "assets/OnSphere/milky_way_penguin.png",
         shadowMapType: shadow ? THREE.VSMShadowMap : null, 
