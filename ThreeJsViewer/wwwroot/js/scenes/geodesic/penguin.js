@@ -8,6 +8,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
     let bollards = [];
     let bollardsPositions = [];
     let bollardsNormals = [];
+    let bollardsWeights = [];
 
     let selectedPenguin = null;
 
@@ -65,6 +66,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
         let otherPos = [];
         let otherNormals = [];
+        let otherWeights = [];
 
         let stepTime = 0;
 
@@ -131,6 +133,10 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 otherPos.push(...bollardsPositions);
                 otherNormals = penguins.filter(pp => pp != penguin).map(pp => pp.normal);
                 otherNormals.push(...bollardsNormals);
+
+                otherWeights = penguins.filter(pp => pp != penguin).map(pp => () => 1.0);
+                otherWeights.push(...bollards.map(b => () => 1.0 - b.shift / (3.0 * b.radius)));
+
             },
             animate: (m, t, delta, animationSpeed, pivot, camera, controls, isUserOrbiting) => {
 
@@ -190,7 +196,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     }
                 }
 
-                let f = calculateRepulsiveForce(penguinPosition, penguin == selectedPenguin ? bollardsPositions : otherPos, penguinNormal, penguin == selectedPenguin ? bollardsNormals : otherNormals, 0.068, selectedPenguin?.position);
+                let f = calculateRepulsiveForce(penguinPosition, penguin == selectedPenguin ? bollardsPositions : otherPos, penguinNormal, penguin == selectedPenguin ? bollardsNormals : otherNormals, 0.068, selectedPenguin?.position, penguin == selectedPenguin ? bollardsWeights : otherWeights);
 
                 f.addScaledVector(ballForce, 0.5);
 
@@ -470,7 +476,10 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 bollardCenterPosition.copy(bollardPosition).addScaledVector(bollardNormal, radius);
             },
             animate: (m, t, delta, animationSpeed, pivot, camera, controls, isUserOrbiting) => {
-                updateFigureTransform(m, bollardPosition, null, bollardNormal, /*0.9* radius*/ /*radius * (1.5 * Math.sin(seed + speed * t) - 0.5)*/ 0.9 * radius * Math.sin(seed + speed * t));
+
+                bollard.shift = /*2.5*radius;*/radius * 1.5 * (Math.sin(seed + speed * t) + 1.0);
+                bollardCenterPosition.copy(bollardPosition).addScaledVector(bollardNormal, radius - (bollard.shift > radius ? bollard.shift - radius : 0));
+                updateFigureTransform(m, bollardPosition, null, bollardNormal, -bollard.shift + radius/*0.9* radius*/ /*radius * (1.5 * Math.sin(seed + speed * t) - 0.5)*/ /*0.9 * radius * Math.sin(seed + speed * t)*/);
             },
 
             position: bollardPosition,
@@ -478,6 +487,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             velocity: new THREE.Vector3(0, 0, 0),
             centerPosition: bollardCenterPosition,
             normal: bollardNormal,
+            shift: 0
 
         }
 
@@ -759,7 +769,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
     bollardsPositions = bollards.map(b => b.position);
     bollardsNormals = bollards.map(b => b.normal);
-
+    bollardsWeights = bollards.map(b => () => 1.0 - b.shift / (3.0 * b.radius));
 
     return scene;
 }
