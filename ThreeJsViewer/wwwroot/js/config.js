@@ -11,7 +11,7 @@ import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.02';
 import { createPenguinPrintScene } from './scenes/penguin/penguinPrint.js?v=1.02';
 
 import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.11';
-import { tetraFunc, balls, ballMinusBalls, ballPlusMinusBalls, torusPlusMinusBalls, geodesicSphere, dodecaMinusBalls, dodecaFunc, dice, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.11';
+import { tetraFunc, balls, ballMinusBalls, ballPlusMinusBalls, torusPlusMinusBalls, geodesicSphere, dodecaMinusBalls, dodecaFunc, getDicePips, dice, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.11';
 
 export const sceneConfigurations = [
 
@@ -246,11 +246,11 @@ export const sceneConfigurations = [
 
     //********* GeoPenguin ********
 
-    createGeoPenguinScene("Ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1,       10, true, 0.7, 0.8, false, 10, 0.999, 0, null, 20),
+    createGeoPenguinScene("Ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1, 10, true, 0.7, 0.8, false, 10, 0.999, 0, null, 0, [new THREE.Vector3(0.7, 0, 0), new THREE.Vector3(-0.7, 0, 0), new THREE.Vector3(0, 0.7, 0), new THREE.Vector3(0, -0.7, 0), new THREE.Vector3(0, 0, 0.7), new THREE.Vector3(0, 0, -0.7)]),
 
     createGeoPenguinScene("4-ball", "ball4", (x, y, z) => (x ** 4 + y ** 4 + z ** 4) - 1, 10, true, 0.6, 1.0, false, 5),
 
-    createGeoPenguinScene("8-ball", "ball8", (x, y, z) => (x ** 8 + y ** 8 + z ** 8) - 1, 10, true, 0.7, 0.8, false, 20, 0.999, 0, null, 20),
+    createGeoPenguinScene("8-ball", "ball8", (x, y, z) => (x ** 8 + y ** 8 + z ** 8) - 1, 10, true, 0.9, 0.8, false, 20, 0.999, 0, null, 0, getDicePips(0.9).map(p => new THREE.Vector3(p[0], p[1], p[2]) ) ),
 
     createGeoPenguinScene("6-ball", "ball6minuscylinder",
         ANDFuncs(
@@ -350,7 +350,20 @@ export const sceneConfigurations = [
             r.normalize();
 
             return r;
-        }),
+    }),
+
+    createGeoPenguinScene("Dice bollards", "dice",
+        dice()
+        , 8, true, 1.0, 0.8, true, 16, 0.9995, 0.008, p => {
+            let r = p.clone();
+            r.x = - 8 * r.x ** 7;
+            r.y = - 8 * r.y ** 7;
+            r.z = - 8 * r.z ** 7;
+            r.normalize();
+
+            return r;
+        }, 0, getDicePips(0.9).map(p => new THREE.Vector3(p[0], p[1], p[2]))),
+
 
     createGeoPenguinScene("Tetra", "tetra", tetraFunc, 10, true, 0.3, 1.0, false, 10, 0.999, 0, null, 20),
 

@@ -1,7 +1,7 @@
 ﻿import * as THREE from 'three';
 import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.10';
 
-export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0, friction = 0.999, gravity = 0.01, gravField = null, bocount = 0 ) {
+export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0, friction = 0.999, gravity = 0.01, gravField = null, bocount = 0, bopos = null) {
 
     let penguins = [];
     let balls = [];
@@ -438,7 +438,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         let seed = Math.random() * 2.0 * Math.PI;
         let speed = 0.5 + 2 * Math.random();
 
-        const bollardPosition = new THREE.Vector3(1000, 1000, 1000);
+        const bollardPosition = params.position ?? new THREE.Vector3(1000, 1000, 1000);
         const bollardCenterPosition = new THREE.Vector3(1000, 1000, 1000);
         const bollardNormal = new THREE.Vector3();
 
@@ -459,13 +459,15 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             },
             meshesLoaded: () => {
 
-                let p = getRandomVertex();
+                if (bollardPosition.x == 1000 && bollardPosition.y == 1000 && bollardPosition.z == 1000) {
+                    let p = getRandomVertex();
 
-                while (penguins.some(pp => pp.position.distanceTo(p) < 0.3) || balls.some(pp => pp.position.distanceTo(p) < 0.3) || bollards.some(pp => pp.position.distanceTo(p) < 0.3)) {
-                    p = getRandomVertex();
+                    while (penguins.some(pp => pp.position.distanceTo(p) < 0.3) || balls.some(pp => pp.position.distanceTo(p) < 0.3) || bollards.some(pp => pp.position.distanceTo(p) < 0.3)) {
+                        p = getRandomVertex();
+                    }
+
+                    bollardPosition.copy(p);
                 }
-
-                bollardPosition.copy(p);
 
                 geodesicSolver.gradient(
                     impFunc,
@@ -500,7 +502,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
     let scene = {
         reset: () => {
             if (scene.used) {
-                return createGeoPenguinScene(name, model, impF, pcount, shadow, scale, speedFactor, vertexColors, bcount, friction, gravity, gravField, bocount);
+                return createGeoPenguinScene(name, model, impF, pcount, shadow, scale, speedFactor, vertexColors, bcount, friction, gravity, gravField, bocount, bopos);
             } else {
                 return scene;
             }
@@ -757,9 +759,12 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         balls.push(ball);
     }
 
+    bocount = bopos ? bopos.length : bocount;     
+
     for (let i = 0; i < bocount; i++) {
         let bollard = createBollard({
-            radius: 0.05
+            radius: 0.05,
+            position: bopos != null ? bopos[i] : null
         });
 
         scene.models.push(bollard);

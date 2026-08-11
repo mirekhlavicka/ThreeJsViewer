@@ -241,11 +241,8 @@ export const dodecaFunc = (function (eps = 0.02) {
     return res;
 })();
 
-export function dice(eps = 0.02) {
-    // Total of 21 points mapped to the 6 faces of a [-d, d] 3D cube.
-    // Arranged sequentially from Face 1 to Face 6.
-    const d = 1.15;
-    const dicePips = [
+export function getDicePips(d) {
+    return [
         // --- Side 1 (1 point) on Z = 1 (Front) ---
         [0.0, 0.0, d],
 
@@ -279,6 +276,46 @@ export function dice(eps = 0.02) {
         [0.5, 0.0, -d],
         [0.5, 0.5, -d]
     ];
+}
+
+export function dice(eps = 0.02) {
+    // Total of 21 points mapped to the 6 faces of a [-d, d] 3D cube.
+    // Arranged sequentially from Face 1 to Face 6.
+    const d = 1.15;
+    const dicePips = getDicePips(d);/*[
+        // --- Side 1 (1 point) on Z = 1 (Front) ---
+        [0.0, 0.0, d],
+
+        // --- Side 2 (2 points) on X = -1 (Left) ---
+        [-d, -0.5, -0.5],
+        [-d, 0.5, 0.5],
+
+        // --- Side 3 (3 points) on Y = -1 (Bottom) ---
+        [-0.5, -d, -0.5],
+        [0.0, -d, 0.0],
+        [0.5, -d, 0.5],
+
+        // --- Side 4 (4 points) on Y = 1 (Top) ---
+        [-0.5, d, -0.5],
+        [-0.5, d, 0.5],
+        [0.5, d, -0.5],
+        [0.5, d, 0.5],
+
+        // --- Side 5 (5 points) on X = 1 (Right) ---
+        [d, -0.5, -0.5],
+        [d, -0.5, 0.5],
+        [d, 0.0, 0.0],
+        [d, 0.5, -0.5],
+        [d, 0.5, 0.5],
+
+        // --- Side 6 (6 points) on Z = -1 (Back) ---
+        [-0.5, -0.5, -d],
+        [-0.5, 0.0, -d],
+        [-0.5, 0.5, -d],
+        [0.5, -0.5, -d],
+        [0.5, 0.0, -d],
+        [0.5, 0.5, -d]
+    ];*/
 
     let res = (x, y, z) => (x ** 8 + y ** 8 + z ** 8) ** (1.0 / 8.0) - 1.000;
     let pips = null;
