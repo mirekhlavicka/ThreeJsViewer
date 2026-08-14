@@ -241,6 +241,10 @@ export const dodecaFunc = (function (eps = 0.02) {
     return res;
 })();
 
+export function dodecaCenterPoints(s) {
+    return dodecaPlanes.map(p => new THREE.Vector3(p.c.x, p.c.y, p.c.z).multiplyScalar(s));
+}
+
 export function getDicePips(d) {
     return [
         // --- Side 1 (1 point) on Z = 1 (Front) ---

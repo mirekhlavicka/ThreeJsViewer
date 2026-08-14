@@ -440,6 +440,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
         const bollardPosition = params.position ?? new THREE.Vector3(1000, 1000, 1000);
         const bollardCenterPosition = new THREE.Vector3(1000, 1000, 1000);
+        const bollardCenterPositionPrev = new THREE.Vector3(1000, 1000, 1000);
         const bollardNormal = new THREE.Vector3();
 
         let bollard = {
@@ -476,12 +477,17 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 );
 
                 bollardCenterPosition.copy(bollardPosition).addScaledVector(bollardNormal, radius);
+                bollardCenterPositionPrev.copy(bollardCenterPosition);
             },
             animate: (m, t, delta, animationSpeed, pivot, camera, controls, isUserOrbiting) => {
 
-                bollard.shift = /*2.5*radius;*/radius * 1.5 * (Math.sin(seed + speed * t) + 1.0);
+                bollard.shift = radius * 1.5 * (Math.sin(seed + speed * t) + 1.0);
+                bollardCenterPositionPrev.copy(bollardCenterPosition);
                 bollardCenterPosition.copy(bollardPosition).addScaledVector(bollardNormal, radius - (bollard.shift > radius ? bollard.shift - radius : 0));
-                updateFigureTransform(m, bollardPosition, null, bollardNormal, -bollard.shift + radius/*0.9* radius*/ /*radius * (1.5 * Math.sin(seed + speed * t) - 0.5)*/ /*0.9 * radius * Math.sin(seed + speed * t)*/);
+
+                bollard.velocity.subVectors(bollardCenterPosition, bollardCenterPositionPrev).multiplyScalar(75);
+
+                updateFigureTransform(m, bollardPosition, null, bollardNormal, -bollard.shift + radius);
             },
 
             position: bollardPosition,
