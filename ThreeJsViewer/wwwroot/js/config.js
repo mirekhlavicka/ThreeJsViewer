@@ -11,7 +11,7 @@ import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.02';
 import { createPenguinPrintScene } from './scenes/penguin/penguinPrint.js?v=1.02';
 
 import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.11';
-import { tetraFunc, balls, ballMinusBalls, ballPlusMinusBalls, torusPlusMinusBalls, geodesicSphere, dodecaMinusBalls, dodecaCenterPoints, dodecaFunc, getDicePips, dice, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.11';
+import { tetraFunc, balls, ballMinusBalls, ballPlusMinusBalls, torusPlusMinusBalls, torusPoints, geodesicSphere, dodecaMinusBalls, dodecaCenterPoints, dodecaFunc, getDicePips, dice, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.11';
 
 export const sceneConfigurations = [
 
@@ -329,7 +329,7 @@ export const sceneConfigurations = [
     }, 0, dodecaCenterPoints(0.78)),
 
 
-    createGeoPenguinScene("Torus", "torus", (x, y, z) => (x ** 2 + y ** 2 + z ** 2 + (0.7) ** 2 - (0.3) ** 2) ** 2 - 4 * (0.7) ** 2 * (x ** 2 + y ** 2), 10, true, 1.0, 0.8, false, 10, 0.999, 0),
+    createGeoPenguinScene("Torus", "torus", (x, y, z) => (x ** 2 + y ** 2 + z ** 2 + (0.7) ** 2 - (0.3) ** 2) ** 2 - 4 * (0.7) ** 2 * (x ** 2 + y ** 2), 10, true, 1.0, 0.8, false, 10, 0.999, 0, 0, null, torusPoints()),
 
     createGeoPenguinScene("Torus with balls", "torusballs",
         ORFuncs(
@@ -355,7 +355,7 @@ export const sceneConfigurations = [
             r.sub(p).normalize();
 
             return r;
-        }),
+    }, 0, torusPoints(8, 4, 1.2 * 0.7, 0.75 * 0.3, 2)),
 
     createGeoPenguinScene("Dice", "dice",
         dice()

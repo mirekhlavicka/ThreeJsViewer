@@ -182,6 +182,29 @@ export function torusPlusMinusBalls(count1 = 8, count2 = 4, R = 0.7, r = 0.3, ep
     return res;
 }
 
+export function torusPoints(count1 = 8, count2 = 4, R = 0.7, r = 0.3, chess = 3) {
+
+    const res = [];
+
+    for (let i = 0; i < count1; i++)
+        for (let j = 0; j < count2; j++) {
+            let fi = i * 2 * Math.PI / count1;
+            let psi = j * 2 * Math.PI / count2;
+            let x0 = (R + r * Math.cos(psi)) * Math.cos(fi);
+            let y0 = (R + r * Math.cos(psi)) * Math.sin(fi);
+            let z0 = r * Math.sin(psi);
+
+            if (((i + j) % 2 == 0 && ((chess & 1) != 0)) || ((i + j) % 2 != 0 && ((chess & 2) != 0))) {
+
+                res.push(new THREE.Vector3(x0, y0, z0))
+            }
+
+        }
+
+    return res;
+}
+
+
 
 export function geodesicSphere(eps = 0.004) {
     let res = null;
