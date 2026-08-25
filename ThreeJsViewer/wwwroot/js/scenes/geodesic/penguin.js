@@ -1,5 +1,5 @@
 ﻿import * as THREE from 'three';
-import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.10';
+import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.11';
 
 export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0, friction = 0.999, gravity = 0.01, gravField = null, bocount = 0, bopos = null) {
 
@@ -431,12 +431,10 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         return ball;
     }
 
-
-
     function createBollard(params = {}) {
         let radius = params.radius ?? 0.05;
-        let seed = Math.random() * 2.0 * Math.PI;
-        let speed = 0.5 + 2 * Math.random();
+        let seed = 0;// Math.random() * 2.0 * Math.PI;
+        let speed = 0.5 + 1.0;//+ 2 * Math.random();
 
         const bollardPosition = params.position ?? new THREE.Vector3(1000, 1000, 1000);
         const bollardCenterPosition = new THREE.Vector3(1000, 1000, 1000);
@@ -501,9 +499,6 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
         return bollard;
     }
-
-
-
 
     let scene = {
         reset: () => {
@@ -735,6 +730,18 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         ]
     };
 
+    bocount = bopos ? bopos.length : bocount;
+
+    for (let i = 0; i < bocount; i++) {
+        let bollard = createBollard({
+            radius: 0.05,
+            position: bopos != null ? bopos[i] : null
+        });
+
+        scene.models.push(bollard);
+        bollards.push(bollard);
+    }
+
     for (let i = 0; i < pcount; i++) {
 
         let clrspeed = (pcount == 1 ? 1 : i / (pcount - 1));
@@ -744,7 +751,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
         let penguin = createPenguin({
             color: grayColor,
-            speed: speedFactor * (0.2 + 0.2 * clrspeed)
+            speed: speedFactor * (0.2 + 0.15 * clrspeed)
         });
 
         scene.models.push(penguin);
@@ -764,19 +771,6 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         scene.models.push(ball);
         balls.push(ball);
     }
-
-    bocount = bopos ? bopos.length : bocount;     
-
-    for (let i = 0; i < bocount; i++) {
-        let bollard = createBollard({
-            radius: 0.05,
-            position: bopos != null ? bopos[i] : null
-        });
-
-        scene.models.push(bollard);
-        bollards.push(bollard);
-    }
-
 
     bollardsPositions = bollards.map(b => b.position);
     bollardsNormals = bollards.map(b => b.normal);

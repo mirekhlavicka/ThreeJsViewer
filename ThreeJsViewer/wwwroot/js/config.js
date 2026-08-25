@@ -10,8 +10,8 @@ import { createBottleLidScene } from './scenes/bottle.js?v=1.01';
 import { createPenguinScene } from './scenes/penguin/penguin.js?v=1.02';
 import { createPenguinPrintScene } from './scenes/penguin/penguinPrint.js?v=1.02';
 
-import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.11';
-import { tetraFunc, balls, ballMinusBalls, ballPlusMinusBalls, torusPlusMinusBalls, torusPoints, geodesicSphere, dodecaMinusBalls, dodecaCenterPoints, dodecaFunc, getDicePips, dice, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.11';
+import { createGeoPenguinScene } from './scenes/geodesic/penguin.js?v=1.12';
+import { tetraFunc, balls, ballMinusBalls, ballPlusMinusBalls, ballMinusBallsPoints, torusPlusMinusBalls, torusPoints, geodesicSphere, dodecaMinusBalls, dodecaCenterPoints, dodecaFunc, getDicePips, dice, ORFuncs, ORManyFuncs, ANDFuncs, ANDManyFuncs } from './scenes/geodesic/implicitLib.js?v=1.12';
 
 export const sceneConfigurations = [
 
@@ -287,7 +287,7 @@ export const sceneConfigurations = [
 
     createGeoPenguinScene("Ball plus-minus balls", "ballplusminusballs",
         ballPlusMinusBalls()
-        , 10, true, 1.3, 0.8, true, 30, 0.9995, 0.008),
+        , 10, true, 1.3, 0.8, true, 30, 0.9995, 0.008, null, 0, ballMinusBallsPoints()),
 
 
     createGeoPenguinScene("Geodesic sphere", "geodesicsphere",

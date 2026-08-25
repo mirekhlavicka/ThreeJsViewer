@@ -137,6 +137,22 @@ export function ballPlusMinusBalls(r = 0.3, eps = 0.04) {
     return res;
 }
 
+export function ballMinusBallsPoints(r = 0.3, eps = 0.04) {
+
+    const res = [];
+
+    for (let i = 0; i < geosphereVertices.length; i++) {
+        const v = geosphereVertices[i];
+
+        if (v.tag != 0) {
+            res.push(new THREE.Vector3(1.17 * v.x, 1.17 * v.y, 1.17 * v.z));
+        }
+    }
+
+    return res;
+}
+
+
 export function torusPlusMinusBalls(count1 = 8, count2 = 4, R = 0.7, r = 0.3, eps = 0.02) {
     let res = (x, y, z) => (Math.sqrt(x * x + y * y) - R) ** 2 + z * z - (r /*+ 0.005*/) ** 2;
 
