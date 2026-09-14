@@ -1,6 +1,13 @@
 ﻿import * as THREE from 'three';
 import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.11';
 
+import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
+
+// Extend Three.js geometry capabilities
+THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
+THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
+THREE.Mesh.prototype.raycast = acceleratedRaycast;
+
 export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0, friction = 0.999, gravity = 0.01, gravField = null, bocount = 0, bopos = null) {
 
     let penguins = [];
@@ -14,9 +21,20 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
     let surfaceMesh = null;
 
+    let sdf = false;
+    if (impF == null) {
+        const queryPoint = new THREE.Vector3(0, 0, 0);
+        sdf = true;
+
+        impF = (x, y, z) => {            
+            queryPoint.set(x, y, z);
+            return evaluateMeshSDF(surfaceMesh, queryPoint)/* + 0.01*/;
+        };
+    }
+
     let impFunc = impF;
 
-    if (scale != 1.0) {
+    if (!sdf && scale != 1.0) {
         impFunc = (x, y, z) => impF(x / scale, y / scale, z / scale);
     }
 
@@ -50,7 +68,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         const penguinCenterPosition = new THREE.Vector3(1000, 1000, 1000);
         const penguinVelocity = new THREE.Vector3();
         const penguinNormal = new THREE.Vector3();
-        //const penguinNormalPrev = new THREE.Vector3();
+        const penguinNormalPrev = new THREE.Vector3();
         const penguinForce = new THREE.Vector3(0, 0, 0);
 
         const penguinPositionGeo = new THREE.Vector3(1000, 1000, 1000);
@@ -140,15 +158,20 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             },
             animate: (m, t, delta, animationSpeed, pivot, camera, controls, isUserOrbiting) => {
 
-                //penguinNormalPrev.copy(penguinNormal);
-
                 geodesicSolver.step(
                     impFunc,
                     penguinPosition,
                     penguinVelocity,
                     penguinNormal,
                     animationSpeed * 0.02,
-                );                
+                );
+
+
+                if (penguinNormalPrev.length() > 0) {
+                    penguinNormal.lerp(penguinNormalPrev, 0.9);
+                }
+
+                penguinNormalPrev.copy(penguinNormal);
 
                 geodesicSolver.step(
                     impFunc,
@@ -302,9 +325,6 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                         camera.lookAt(currentLookTarget);
 
                     }
-
-                    /*deltaRotation.setFromUnitVectors(penguinNormal, penguinNormalPrev);
-                    pivot.quaternion.multiply(deltaRotation);*/
                 }
 
                 //speed = penguinVelocity.length();
@@ -340,6 +360,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         const ballCenterPositionPrev = new THREE.Vector3(1000, 1000, 1000);
         const ballVelocity = new THREE.Vector3();
         const ballNormal = new THREE.Vector3();
+        const ballNormalPrev = new THREE.Vector3();
 
         let ball = {
             path: radius < 0.05 ? 'assets/Geodesic/dodecahedron.ply' : (radius < 0.06 ? 'assets/Geodesic/icosahedron.ply' : 'assets/Geodesic/geoball.ply'),
@@ -412,6 +433,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     ballCenterPosition.copy(ballPosition).addScaledVector(ballNormal, radius);
                     counter++;
                 }
+
+                if (ballNormalPrev.length() > 0) {
+                    ballNormal.lerp(ballNormalPrev, 0.9);
+                }
+                ballNormalPrev.copy(ballNormal);
 
                 ballCenterPositionPrev.copy(ballCenterPosition);
 
@@ -503,7 +529,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
     let scene = {
         reset: () => {
             if (scene.used) {
-                return createGeoPenguinScene(name, model, impF, pcount, shadow, scale, speedFactor, vertexColors, bcount, friction, gravity, gravField, bocount, bopos);
+                return createGeoPenguinScene(name, model, sdf ? null : impF, pcount, shadow, scale, speedFactor, vertexColors, bcount, friction, gravity, gravField, bocount, bopos);
             } else {
                 return scene;
             }
@@ -1154,4 +1180,65 @@ function penguinColors(geometry, color) {
     geometry.setAttribute('color', new THREE.BufferAttribute(newColors, 3));
     geometry.setAttribute('aPartId', new THREE.BufferAttribute(partIds, 1));
     geometry.attributes.color.needsUpdate = true;
+}
+
+// Static variables allocated once to prevent Garbage Collection (GC) pressure
+const _target = {};
+const _vA = new THREE.Vector3();
+const _vB = new THREE.Vector3();
+const _vC = new THREE.Vector3();
+const _edge1 = new THREE.Vector3();
+const _edge2 = new THREE.Vector3();
+const _normal = new THREE.Vector3();
+const _dirToPoint = new THREE.Vector3();
+const _scale = new THREE.Vector3();
+const _inverseMatrix = new THREE.Matrix4();
+const _localPoint = new THREE.Vector3();
+
+function evaluateMeshSDF(mesh, worldPoint) {
+    if (!mesh.geometry.boundsTree) {
+        mesh.geometry.computeBoundsTree();
+    }
+
+    // If worldPoint is in world space, uncomment the lines below:
+    // _inverseMatrix.copy(mesh.matrixWorld).invert();
+    // _localPoint.copy(worldPoint).applyMatrix4(_inverseMatrix);
+    // const localPoint = _localPoint;
+
+    // If worldPoint is already in mesh local space:
+    const localPoint = worldPoint;
+
+    const bvh = mesh.geometry.boundsTree;
+
+    // Reuse the static _target object
+    const hit = bvh.closestPointToPoint(localPoint, _target);
+
+    if (!hit) return Infinity;
+
+    const distance = hit.distance;
+
+    const posAttr = mesh.geometry.attributes.position;
+    const indexAttr = mesh.geometry.index;
+    const faceIndex = hit.faceIndex;
+
+    // Load vertex positions into reusable static vectors
+    _vA.fromBufferAttribute(posAttr, indexAttr.getX(faceIndex * 3));
+    _vB.fromBufferAttribute(posAttr, indexAttr.getX(faceIndex * 3 + 1));
+    _vC.fromBufferAttribute(posAttr, indexAttr.getX(faceIndex * 3 + 2));
+
+    // Calculate normal using static vectors
+    _edge1.subVectors(_vB, _vA);
+    _edge2.subVectors(_vC, _vA);
+    _normal.crossVectors(_edge1, _edge2).normalize();
+
+    // Calculate direction vector using static vector
+    _dirToPoint.subVectors(localPoint, hit.point);
+
+    const isInside = _dirToPoint.dot(_normal) < 0;
+
+    // Pass static vector target to avoid internal allocation
+    mesh.getWorldScale(_scale);
+    const scale = _scale.x;
+
+    return isInside ? -distance * scale : distance * scale;
 }
