@@ -1,5 +1,5 @@
 ﻿import * as THREE from 'three';
-import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.11';
+import { ImplicitGeodesicPro, calculateRepulsiveForce } from './implicitGeodesic.js?v=1.12';
 
 import { computeBoundsTree, disposeBoundsTree, acceleratedRaycast, MeshBVH } from 'three-mesh-bvh';
 
@@ -122,6 +122,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         let penguin = {
             path: 'assets/OnSphere/penguinEgg.ply',
             createMaterial: () => createTwistMaterial(color),
+            disableWire: true,
             prepareGeometry: g => {
                 penguinColors(g, color)
                 g.rotateZ(Math.PI);
@@ -168,7 +169,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
 
                 if (penguinNormalPrev.length() > 0) {
-                    penguinNormal.lerp(penguinNormalPrev, 0.9);
+                    penguinNormal.lerp(penguinNormalPrev, 0.95);
                 }
 
                 penguinNormalPrev.copy(penguinNormal);
@@ -228,7 +229,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 f.sub(pf).setLength(nf);
 
                 penguinForce.projectOnPlane(penguinNormal);
-                penguinForce.lerp(f, 0.1); //multiplyScalar(0.6).addScaledVector(f, 0.4);
+                penguinForce.lerp(f, 0.05); //multiplyScalar(0.6).addScaledVector(f, 0.4);
                 penguinVelocity.normalize().addScaledVector(penguinForce, 1.5 * speed *  animationSpeed).setLength(speed);
 
 
@@ -395,6 +396,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 //m.metalness = 0.5;
 
             },
+            disableWire: true,
             meshesLoaded: () => {
 
                 let p = getRandomVertex();
@@ -435,7 +437,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 }
 
                 if (ballNormalPrev.length() > 0) {
-                    ballNormal.lerp(ballNormalPrev, 0.9);
+                    ballNormal.lerp(ballNormalPrev, 0.95);
                 }
                 ballNormalPrev.copy(ballNormal);
 
@@ -482,6 +484,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 m.metalness = 0.8;
 
             },
+            disableWire: true,
             meshesLoaded: () => {
 
                 if (bollardPosition.x == 1000 && bollardPosition.y == 1000 && bollardPosition.z == 1000) {
@@ -723,11 +726,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         },
         subSteps: 5,
         hideGrid: true,
-        gameMode: {
+        /*gameMode: {
             audio: "assets/OnSphere/magellano-penguins.wav",
             title: "Penguins & Balloons",
             description: "No goals. No scores. No danger. Just enjoy playing with balloons alongside the other penguins. Click on a penguin to become them and join the fun! <br/><br/> <b>Controls:</b> Use the arrow keys to move your penguin. <b>Left/Right</b> to steer, <b>Up</b> to accelerate, <b>Down</b> to slow down. Use the mouse to rotate and explore the world."
-        },
+        },*/
         autoRotate: false,
         sceneBackgroundTexture: "assets/OnSphere/milky_way_penguin.png",
         shadowMapType: shadow ? THREE.VSMShadowMap : null, 

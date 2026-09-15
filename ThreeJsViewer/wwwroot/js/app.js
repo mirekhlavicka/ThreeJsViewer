@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 //import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { sceneConfigurations } from './config.js?v=1.26';
+import { sceneConfigurations } from './config.js?v=1.27';
 
 // --- State Variables ---
 let config;
@@ -164,9 +164,9 @@ function loadScene(reset = true, runGameWithoutDialog = false) {
                     roughness: materialRoughness,
                     metalness: materialMetalness,
 
-                    polygonOffset: showWire,
-                    polygonOffsetFactor: showWire ? 1 : 0,
-                    polygonOffsetUnits: showWire ? 1 : 0,
+                    polygonOffset: showWire && !modelData.disableWire,
+                    polygonOffsetFactor: showWire && !modelData.disableWire ? 1 : 0,
+                    polygonOffsetUnits: showWire && !modelData.disableWire ? 1 : 0,
 
                     side: doubleSide ? THREE.DoubleSide : THREE.FrontSide,
                 };
@@ -191,7 +191,7 @@ function loadScene(reset = true, runGameWithoutDialog = false) {
             }
 
 
-            if (showWire) {
+            if (showWire && !modelData.disableWire) {
                 const wireframe = new THREE.LineSegments(
                     new THREE.WireframeGeometry(geometry),
                     new THREE.LineBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.15 })
