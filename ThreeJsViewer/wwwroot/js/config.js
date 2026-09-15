@@ -249,7 +249,7 @@ export const sceneConfigurations = [
     createGeoPenguinScene("Cat", "cat",         null, 10, true, 1.00, 0.8, false, 10, 0.999, 0, null, 0),
     createGeoPenguinScene("Penguin", "penguin", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0, null, 0),
     createGeoPenguinScene("Bunny", "bunny",     null, 10, true, 1.25, 0.8, false, 10, 0.999, 0, null, 0),
-    createGeoPenguinScene("Henne", "Henne",     null, 10, true, 1.25, 0.8, false, 10, 0.999, 0, null, 0),
+    createGeoPenguinScene("Henne", "henne",     null, 10, true, 1.25, 0.8, false, 10, 0.999, 0, null, 0),
     createGeoPenguinScene("Pumpkin", "pumpkin", null, 10, true, 1.00, 0.8, true, 10, 0.999, 0, null, 0),
     createGeoPenguinScene("Dodecahedron Balls", "Dodecahedron Balls", null, 10, true, 1.25, 0.8, true, 10, 0.999, 0, null, 0),
     createGeoPenguinScene("Prism Torus", "PrismTorus", null, 5, true, 1.25, 0.8, true, 15, 0.999, 0.01, p => {
