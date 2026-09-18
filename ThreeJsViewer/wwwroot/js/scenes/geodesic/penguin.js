@@ -8,7 +8,7 @@ THREE.BufferGeometry.prototype.computeBoundsTree = computeBoundsTree;
 THREE.BufferGeometry.prototype.disposeBoundsTree = disposeBoundsTree;
 THREE.Mesh.prototype.raycast = acceleratedRaycast;
 
-export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0, friction = 0.999, gravity = 0.01, gravField = null, bocount = 0, bopos = null) {
+export function createGeoPenguinScene(name, model, impF, pcount, shadow = false, scale = 1.0, speedFactor = 1.0, vertexColors = false, bcount = 0, friction = 0.999, gravity = 0.01, gravField = null, bocount = 0, bopos = null, modelColor = null) {
 
     let penguins = [];
     let balls = [];
@@ -739,7 +739,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             {
                 path: `assets/Geodesic/${model}.ply`,
                 setupMaterial: m => {
-                    m.color = 0xffffff;
+                    m.color = modelColor ?? 0xffffff;
                     m.vertexColors = vertexColors;
                     m.roughness = 0.05;
                     m.metalness = 0.5;
