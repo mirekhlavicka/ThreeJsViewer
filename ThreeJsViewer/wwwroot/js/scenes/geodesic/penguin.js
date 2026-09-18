@@ -532,7 +532,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
     let scene = {
         reset: () => {
             if (scene.used) {
-                return createGeoPenguinScene(name, model, sdf ? null : impF, pcount, shadow, scale, speedFactor, vertexColors, bcount, friction, gravity, gravField, bocount, bopos);
+                return createGeoPenguinScene(name, model, sdf ? null : impF, pcount, shadow, scale, speedFactor, vertexColors, bcount, friction, gravity, gravField, bocount, bopos, modelColor);
             } else {
                 return scene;
             }
