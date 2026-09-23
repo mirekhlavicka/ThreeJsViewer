@@ -734,7 +734,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         autoRotate: false,
         sceneBackgroundTexture: "assets/OnSphere/milky_way_penguin.png",
         shadowMapType: shadow ? THREE.VSMShadowMap : null, 
-        name: "Geodesic/" + name,
+        name: (sdf ? "SDF " : "") + "Geodesic/" + name,
         models: [
             {
                 path: `assets/Geodesic/${model}.ply`,
