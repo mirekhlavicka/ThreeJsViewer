@@ -248,8 +248,9 @@ export const sceneConfigurations = [
 
     createGeoPenguinScene("Cat", "cat",         null, 10, true, 1.00, 0.8, false, 10, 0.999, 0, null, 0),
     createGeoPenguinScene("Penguin", "penguin", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0, null, 0),
-    createGeoPenguinScene("Bunny", "bunny",     null, 10, true, 1.25, 0.8, false, 10, 0.999, 0, null, 0),
+    createGeoPenguinScene("Bunny", "bunny", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0, null, 0),
     createGeoPenguinScene("Henne", "henne", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0, null, 0),
+    createGeoPenguinScene("Beer glass", "beer_glass", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0, null, 0),
     createGeoPenguinScene("Shrek", "shrek", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0.008, null, 0, [new THREE.Vector3(0, 0, 0.75), new THREE.Vector3(0, 0.8, 0), new THREE.Vector3(0, -0.8, 0), new THREE.Vector3(-0.95, 0, -0.2)], 0xB0C400),
     createGeoPenguinScene("Pumpkin", "pumpkin", null, 10, true, 1.00, 0.8, true, 10, 0.999, 0.008, null, 0),
     createGeoPenguinScene("Shrek Pumpkin", "shrek_pumpkin", null, 5, true, 1.00, 0.8, true, 15, 0.999, 0.008, null, 0),
