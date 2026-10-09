@@ -20,10 +20,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
     let selectedPenguin = null;
 
     let surfaceMesh = null;
+    let surfaceMeshRadius = 0;
+    const queryPoint = new THREE.Vector3(0, 0, 0);
 
     let sdf = false;
     if (impF == null) {
-        const queryPoint = new THREE.Vector3(0, 0, 0);
         sdf = true;
 
         impF = (x, y, z) => {            
@@ -459,6 +460,155 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         return ball;
     }
 
+
+
+
+    //!!!!!!!!!!!!!!!!!
+    function createFreeBall(params = {}) {
+        let speed = params.speed;
+        let radius = params.radius ?? 0.05;
+
+        const ballPosition = new THREE.Vector3(1000, 1000, 1000);
+        const ballVelocity = new THREE.Vector3();
+        const hitPoint = new THREE.Vector3();
+        const dirToHitPoint = new THREE.Vector3();
+
+        const rollAxis = new THREE.Vector3();
+        let deltaAngle = 0.02 * Math.random();
+
+        function randomRoll() {
+            rollAxis.set(
+                Math.random() - 0.5,
+                Math.random() - 0.5,
+                Math.random() - 0.5
+            ).normalize();
+
+            deltaAngle = ballVelocity.length() * 0.05 * Math.random();
+        }
+
+        let ball = {
+            path: radius < 0.05 ? 'assets/Geodesic/dodecahedron.ply' : (radius < 0.06 ? 'assets/Geodesic/icosahedron.ply' : 'assets/Geodesic/geoball.ply'),
+            prepareGeometry: g => {
+
+                const positionAttribute = g.attributes.position;
+                const vertex = new THREE.Vector3();
+
+                for (let i = 0; i < positionAttribute.count; i++) {
+                    // Read x, y, z into the vector
+                    vertex.fromBufferAttribute(positionAttribute, i);
+
+                    // Normalizes the vector (sets length/norm to 1)
+                    vertex.normalize();
+
+                    // Write the normalized values back
+                    positionAttribute.setXYZ(i, vertex.x, vertex.y, vertex.z);
+                }
+
+                // Tell Three.js to send the updated data to the GPU
+                positionAttribute.needsUpdate = true;
+
+                g.scale(radius, radius, radius);
+            },
+            prepareMesh: m => {
+                m.castShadow = true;
+            },
+            setupMaterial: m => {
+                m.color = 0xffffff;
+                m.vertexColors = true;
+                //m.roughness = 0.05;
+                //m.metalness = 0.5;
+
+            },
+            disableWire: true,
+            meshesLoaded: () => {
+
+                let p = new THREE.Vector3();
+                p.set(
+                    1.8 * surfaceMeshRadius * (Math.random() - 0.5),
+                    1.8 * surfaceMeshRadius * (Math.random() - 0.5),
+                    1.8 * surfaceMeshRadius * (Math.random() - 0.5)
+                )
+
+                while (penguins.some(pp => pp.position.distanceTo(p) < 0.3) || balls.some(pp => pp.position.distanceTo(p) < 0.3) || bollards.some(pp => pp.position.distanceTo(p) < 0.3) || evaluateMeshSDF(surfaceMesh, p) < radius) {
+                    p.set(
+                        1.8 * surfaceMeshRadius * (Math.random() - 0.5),
+                        1.8 * surfaceMeshRadius * (Math.random() - 0.5),
+                        1.8 * surfaceMeshRadius * (Math.random() - 0.5)
+                    )
+                }
+
+                ballPosition.copy(p);
+
+                ballVelocity.set(
+                    Math.random() - 0.5,
+                    Math.random() - 0.5,
+                    Math.random() - 0.5
+                ).normalize().multiplyScalar(speed);
+
+                randomRoll();
+
+            },
+            animate: (m, t, delta, animationSpeed, pivot, camera, controls, isUserOrbiting) => {
+
+                if (!ball.afterCollision) {
+                    if (gravity > 0) {
+                        let gravForce = (gravField != null ? gravField(ballPosition) : ballPosition.clone().normalize().multiplyScalar(-1));
+                        ballVelocity.addScaledVector(gravForce, gravity * animationSpeed);
+                    }
+
+                    ballVelocity.multiplyScalar(friction);
+                }
+
+                ballPosition.addScaledVector(ballVelocity, animationSpeed * 0.02);
+
+                queryPoint.set(ballPosition.x, ballPosition.y, ballPosition.z);
+                let dist = evaluateMeshSDF(surfaceMesh, queryPoint, hitPoint);
+
+
+                if (dist < radius) {
+                    dirToHitPoint.subVectors(queryPoint, hitPoint).normalize();
+
+                    let d = ballVelocity.dot(dirToHitPoint);
+
+                    if (d < 0) {
+                        ballVelocity.addScaledVector(dirToHitPoint, -2 * d);
+                        ballPosition.addScaledVector(ballVelocity, animationSpeed * 0.02);
+
+                        //ballVelocity.multiplyScalar(0.9);
+
+                        randomRoll();
+
+                    }
+                }
+
+                m.position.set(
+                    ballPosition.x,
+                    ballPosition.y,
+                    ballPosition.z
+                );
+
+                const deltaQuat = new THREE.Quaternion().setFromAxisAngle(rollAxis, deltaAngle);
+                m.quaternion.premultiply(deltaQuat);
+                m.quaternion.normalize();
+
+            },
+
+            position: ballPosition,
+            radius: radius,
+            centerPosition: ballPosition,
+            velocity: ballVelocity,
+            afterCollision: false,
+            free: true,
+            randomRoll
+        }
+
+        return ball;
+    }
+
+    //!!!!!!!!!!!!!!!!!
+
+
+
     function createBollard(params = {}) {
         let radius = params.radius ?? 0.05;
         let seed = 0;// Math.random() * 2.0 * Math.PI;
@@ -592,8 +742,17 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                             const v1 = b1.velocity.length();
                             const v2 = b2.velocity.length();
 
-                            b1.velocity.projectOnPlane(b1.normal).setLength(v1).multiplyScalar(0.95);
-                            b2.velocity.projectOnPlane(b2.normal).setLength(v2).multiplyScalar(0.95);
+                            if (!b1.free) {
+                                b1.velocity.projectOnPlane(b1.normal).setLength(v1).multiplyScalar(0.95);
+                            } else {
+                                b1.randomRoll();
+                            }
+
+                            if (!b2.free) {
+                                b2.velocity.projectOnPlane(b2.normal).setLength(v2).multiplyScalar(0.95);
+                            } else {
+                                b2.randomRoll();
+                            }
 
                             b1.afterCollision = true;
                             b2.afterCollision = true;
@@ -648,7 +807,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                             true
                         )) {
                             const v = b.velocity.length();
-                            b.velocity.projectOnPlane(b.normal).setLength(v);
+                            if (!b.free) {
+                                b.velocity.projectOnPlane(b.normal).setLength(v);
+                            } else {
+                                b.randomRoll();
+                            }
 
                             b.afterCollision = true;
 
@@ -754,6 +917,20 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     m.receiveShadow = true;
                     m.castShadow = false;
                     surfaceMesh = m;
+
+                    // 1. Calculate the bounding sphere on the local geometry
+                    surfaceMesh.geometry.computeBoundingSphere();
+
+                    // 2. Update world matrix to account for scale, rotation, and position
+                    surfaceMesh.updateMatrixWorld(true);
+
+                    // 3. Clone and apply the world matrix to scale the sphere correctly
+                    const worldSphere = surfaceMesh.geometry.boundingSphere.clone();
+                    worldSphere.applyMatrix4(surfaceMesh.matrixWorld);
+
+                    // 4. Extract the radius in world units
+                    surfaceMeshRadius = worldSphere.radius;
+                    //console.log(surfaceMeshRadius);
                 }
             }
         ]
@@ -792,10 +969,15 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         let speed = (bcount == 1 ? 1 : i / (bcount - 1));
 
 
-        let ball = createBall({
+        let ball = /*Math.random()*/speed < 0.5 && gravity > 0 ?
+            createFreeBall({
             speed: speedFactor * (0.2 + 0.2 /** speed*/ * 0.5),
             radius: 0.04 + 0.03 * (/*1.0 - */speed) // Math.random()
-        });
+            }) :
+            createBall({
+                speed: speedFactor * (0.2 + 0.2 /** speed*/ * 0.5),
+                radius: 0.04 + 0.03 * (/*1.0 - */speed) // Math.random()
+            });
 
         scene.models.push(ball);
         balls.push(ball);
@@ -1198,7 +1380,7 @@ const _scale = new THREE.Vector3();
 const _inverseMatrix = new THREE.Matrix4();
 const _localPoint = new THREE.Vector3();
 
-function evaluateMeshSDF(mesh, worldPoint) {
+function evaluateMeshSDF(mesh, worldPoint, hitPoint) {
     if (!mesh.geometry.boundsTree) {
         mesh.geometry.computeBoundsTree();
     }
@@ -1242,6 +1424,10 @@ function evaluateMeshSDF(mesh, worldPoint) {
     // Pass static vector target to avoid internal allocation
     mesh.getWorldScale(_scale);
     const scale = _scale.x;
+
+    if (hitPoint) {
+        hitPoint.copy(hit.point);
+    }
 
     return isInside ? -distance * scale : distance * scale;
 }

@@ -269,8 +269,8 @@ export const sceneConfigurations = [
 
 
 
-
-    createGeoPenguinScene("Ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1, 10, true, 0.7, 0.8, false, 10, 0.999, 0, null, 0, [new THREE.Vector3(0.7, 0, 0), new THREE.Vector3(-0.7, 0, 0), new THREE.Vector3(0, 0.7, 0), new THREE.Vector3(0, -0.7, 0), new THREE.Vector3(0, 0, 0.7), new THREE.Vector3(0, 0, -0.7)]),
+    //createGeoPenguinScene("Ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1, 10, true, 0.7, 0.8, false, 10, 0.999, 0, null, 0, [new THREE.Vector3(0.7, 0, 0), new THREE.Vector3(-0.7, 0, 0), new THREE.Vector3(0, 0.7, 0), new THREE.Vector3(0, -0.7, 0), new THREE.Vector3(0, 0, 0.7), new THREE.Vector3(0, 0, -0.7)]),
+    createGeoPenguinScene("Ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1, 0, true, 0.7, 1.0, false, 30, 1.00, 0.006/*, null, 0, [new THREE.Vector3(0.7, 0, 0), new THREE.Vector3(-0.7, 0, 0), new THREE.Vector3(0, 0.7, 0), new THREE.Vector3(0, -0.7, 0), new THREE.Vector3(0, 0, 0.7), new THREE.Vector3(0, 0, -0.7)]*/),
 
     createGeoPenguinScene("4-ball", "ball4", (x, y, z) => (x ** 4 + y ** 4 + z ** 4) - 1, 10, true, 0.6, 1.0, false, 5),
 
