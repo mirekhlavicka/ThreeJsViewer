@@ -483,14 +483,14 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 Math.random() - 0.5
             ).normalize();
 
-            deltaAngle = ballVelocity.length() * 0.05 * Math.random();
+            deltaAngle = ballVelocity.length() * 0.05 * (0.5 + 0.5 * Math.random());
         }
 
         let ball = {
-            path: radius < 0.05 ? 'assets/Geodesic/dodecahedron.ply' : (radius < 0.06 ? 'assets/Geodesic/icosahedron.ply' : 'assets/Geodesic/geoball.ply'),
+            path: 'assets/Geodesic/balloon.ply', //radius < 0.05 ? 'assets/Geodesic/dodecahedron.ply' : (radius < 0.06 ? 'assets/Geodesic/icosahedron.ply' : 'assets/Geodesic/geoball.ply'),
             prepareGeometry: g => {
 
-                const positionAttribute = g.attributes.position;
+                /*const positionAttribute = g.attributes.position;
                 const vertex = new THREE.Vector3();
 
                 for (let i = 0; i < positionAttribute.count; i++) {
@@ -505,7 +505,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 }
 
                 // Tell Three.js to send the updated data to the GPU
-                positionAttribute.needsUpdate = true;
+                positionAttribute.needsUpdate = true;*/
 
                 g.scale(radius, radius, radius);
             },
@@ -552,7 +552,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 if (!ball.afterCollision) {
                     if (gravity > 0) {
-                        let gravForce = (gravField != null ? gravField(ballPosition) : ballPosition.clone().normalize().multiplyScalar(-1));
+                        let gravForce = (gravField != null ? gravField(ballPosition) : /*ballPosition.clone().normalize().multiplyScalar(-1)*/ dirToHitPoint.multiplyScalar(-1));
                         ballVelocity.addScaledVector(gravForce, gravity * animationSpeed);
                     }
 
@@ -563,10 +563,10 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 queryPoint.set(ballPosition.x, ballPosition.y, ballPosition.z);
                 let dist = evaluateMeshSDF(surfaceMesh, queryPoint, hitPoint);
-
+                dirToHitPoint.subVectors(queryPoint, hitPoint).normalize();
 
                 if (dist < radius) {
-                    dirToHitPoint.subVectors(queryPoint, hitPoint).normalize();
+                    
 
                     let d = ballVelocity.dot(dirToHitPoint);
 
@@ -867,7 +867,12 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                             true
                         )) {
                             const v = b.velocity.length();
-                            b.velocity.projectOnPlane(b.normal).setLength(v);
+
+                            if (!b.free) {
+                                b.velocity.projectOnPlane(b.normal).setLength(v);
+                            } else {
+                                b.randomRoll();
+                            }
 
                             b.afterCollision = true;
 
