@@ -475,6 +475,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
         const rollAxis = new THREE.Vector3();
         let deltaAngle = 0.02 * Math.random();
+        let doRandomRoll = true;
 
         function randomRoll() {
             rollAxis.set(
@@ -564,33 +565,29 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                 queryPoint.set(ballPosition.x, ballPosition.y, ballPosition.z);
                 let dist = evaluateMeshSDF(surfaceMesh, queryPoint, hitPoint);
                 dirToHitPoint.subVectors(queryPoint, hitPoint).normalize();
+                let d = ballVelocity.dot(dirToHitPoint);
 
-                if (dist < radius) {
-                    
-
-                    let d = ballVelocity.dot(dirToHitPoint);
-
+                if (dist < radius) {                   
                     if (d < 0) {
                         ballVelocity.addScaledVector(dirToHitPoint, -2 * d);
                         ballPosition.addScaledVector(ballVelocity, animationSpeed * 0.02);
-
                         //ballVelocity.multiplyScalar(0.9);
-
                         randomRoll();
-
-                    }
+                        doRandomRoll = (Math.abs(d) > 0.5 * ballVelocity.length()) && ballVelocity.length() > 0.3 * speed;                    }                    
                 }
 
-                m.position.set(
-                    ballPosition.x,
-                    ballPosition.y,
-                    ballPosition.z
-                );
-
-                const deltaQuat = new THREE.Quaternion().setFromAxisAngle(rollAxis, deltaAngle);
-                m.quaternion.premultiply(deltaQuat);
-                m.quaternion.normalize();
-
+                if (!doRandomRoll) {
+                    updateBallTransform(m, ballPosition, ballVelocity, animationSpeed * 0.02, dirToHitPoint, radius, true);
+                } else {
+                    m.position.set(
+                        ballPosition.x,
+                        ballPosition.y,
+                        ballPosition.z
+                    );
+                    const deltaQuat = new THREE.Quaternion().setFromAxisAngle(rollAxis, deltaAngle);
+                    m.quaternion.premultiply(deltaQuat);
+                    m.quaternion.normalize();
+                }              
             },
 
             position: ballPosition,
@@ -1112,14 +1109,22 @@ function updateBallTransform1(figure, pos, vel, stepSize, newZ, r) {
  * @param {number} r - Radius of the ball
  * @param {number} deltaTime - Time passed since last frame (seconds)
  */
-function updateBallTransform(figure, pos, vel, stepSize, newZ, r) {
+function updateBallTransform(figure, pos, vel, stepSize, newZ, r, noshift) {
 
     // 1. Always set the correct position on the sphere surface first
-    figure.position.set(
-        pos.x + (newZ.x * r),
-        pos.y + (newZ.y * r),
-        pos.z + (newZ.z * r)
-    );
+    if (noshift) {
+        figure.position.set(
+            pos.x,
+            pos.y,
+            pos.z
+        );
+    } else {
+        figure.position.set(
+            pos.x + (newZ.x * r),
+            pos.y + (newZ.y * r),
+            pos.z + (newZ.z * r)
+        );
+    }
 
     // 2. Calculate current speed
     const speed = vel.length();
