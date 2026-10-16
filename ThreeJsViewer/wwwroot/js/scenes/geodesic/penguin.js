@@ -487,6 +487,10 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             deltaAngle = ballVelocity.length() * 0.05 * (0.5 + 0.5 * Math.random());
         }
 
+        function kick() {
+            ballVelocity.addScaledVector(dirToHitPoint, 0.2);
+        }
+
         let ball = {
             path: 'assets/Geodesic/balloon.ply', //radius < 0.05 ? 'assets/Geodesic/dodecahedron.ply' : (radius < 0.06 ? 'assets/Geodesic/icosahedron.ply' : 'assets/Geodesic/geoball.ply'),
             prepareGeometry: g => {
@@ -571,7 +575,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     if (d < 0) {
                         ballVelocity.addScaledVector(dirToHitPoint, -2 * d);
                         ballPosition.addScaledVector(ballVelocity, animationSpeed * 0.02);
-                        //ballVelocity.multiplyScalar(0.9);
+                        ballVelocity.multiplyScalar(0.95);
                         randomRoll();
                         doRandomRoll = (Math.abs(d) > 0.5 * ballVelocity.length()) && ballVelocity.length() > 0.3 * speed;                    }                    
                 }
@@ -596,7 +600,8 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             velocity: ballVelocity,
             afterCollision: false,
             free: true,
-            randomRoll
+            randomRoll,
+            kick
         }
 
         return ball;
@@ -808,6 +813,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                                 b.velocity.projectOnPlane(b.normal).setLength(v);
                             } else {
                                 b.randomRoll();
+                                b.kick();
                             }
 
                             b.afterCollision = true;
