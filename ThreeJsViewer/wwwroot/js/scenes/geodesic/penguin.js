@@ -424,7 +424,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 let counter = 0;
 
-                while (ballVelocity.length() > 0.000001 && counter < 20 && ballCenterPositionPrev.distanceTo(ballCenterPosition) < ballVelocity.length() * animationSpeed * 0.019)
+                while (ballVelocity.length() > 0.000001 && counter < 10 && ballCenterPositionPrev.distanceTo(ballCenterPosition) < ballVelocity.length() * animationSpeed * 0.019)
                 {
                     geodesicSolver.step(
                         impFunc,
@@ -488,7 +488,8 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         }
 
         function kick() {
-            ballVelocity.addScaledVector(dirToHitPoint, 0.2);
+            let l = ballVelocity.length();
+            ballVelocity.addScaledVector(dirToHitPoint, 0.01).setLength(l);
         }
 
         let ball = {
@@ -820,7 +821,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                             let counter = 0;
 
-                            while (distance <= 0.9 * minDistance && counter < 100) {
+                            while (distance <= 0.9 * minDistance && counter < 10) {
 
                                 b.animate(b.mesh, null, null, 0.02);
 
@@ -881,7 +882,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                             let counter = 0;
 
-                            while (distance <= 0.9 * minDistance && counter < 100) {
+                            while (distance <= 0.9 * minDistance && counter < 10) {
 
                                 b.animate(b.mesh, null, null, 0.02);
 
@@ -977,7 +978,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         let speed = (bcount == 1 ? 1 : i / (bcount - 1));
 
 
-        let ball = /*Math.random()*/speed < 0.5 && gravity > 0 ?
+        let ball = i % 2 == 0 && gravity > 0 ?
             createFreeBall({
             speed: speedFactor * (0.2 + 0.2 /** speed*/ * 0.5),
             radius: 0.04 + 0.03 * (/*1.0 - */speed) // Math.random()
