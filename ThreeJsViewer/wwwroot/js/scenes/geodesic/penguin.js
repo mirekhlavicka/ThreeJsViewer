@@ -488,8 +488,8 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         }
 
         function kick() {
-            let l = ballVelocity.length();
-            ballVelocity.addScaledVector(dirToHitPoint, 0.01).setLength(l);
+            //let l = ballVelocity.length();
+            ballVelocity.addScaledVector(dirToHitPoint, 0.05);//.setLength(l);
         }
 
         let ball = {
@@ -557,10 +557,10 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
             animate: (m, t, delta, animationSpeed, pivot, camera, controls, isUserOrbiting) => {
 
                 if (!ball.afterCollision) {
-                    if (gravity > 0) {
-                        let gravForce = (gravField != null ? gravField(ballPosition) : /*ballPosition.clone().normalize().multiplyScalar(-1)*/ dirToHitPoint.multiplyScalar(-1));
-                        ballVelocity.addScaledVector(gravForce, gravity * animationSpeed);
-                    }
+                    //if (gravity > 0) {
+                    let gravForce = (gravField != null ? gravField(ballPosition) : /*ballPosition.clone().normalize().multiplyScalar(-1)*/ dirToHitPoint.multiplyScalar(-1));
+                    ballVelocity.addScaledVector(gravForce, /*gravity*/0.006 * animationSpeed);
+                    //}
 
                     ballVelocity.multiplyScalar(friction);
                 }
@@ -569,6 +569,9 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
                 queryPoint.set(ballPosition.x, ballPosition.y, ballPosition.z);
                 let dist = evaluateMeshSDF(surfaceMesh, queryPoint, hitPoint);
+                if (dist < 0) {
+                    dist = -dist; //!!! fix of invalid inside test
+                }
                 dirToHitPoint.subVectors(queryPoint, hitPoint).normalize();
                 let d = ballVelocity.dot(dirToHitPoint);
 
@@ -805,7 +808,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                             b.velocity,
                             p.velocity,
                             b.radius ** 3,
-                            0.5 * 0.07 ** 3,
+                            b.free ? 1.5 * 0.07 ** 3 : 0.5 * 0.07 ** 3,
                             normal,
                             true
                         )) {
@@ -978,7 +981,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
         let speed = (bcount == 1 ? 1 : i / (bcount - 1));
 
 
-        let ball = i % 2 == 0 && gravity > 0 ?
+        let ball = i % 2 == 0 /*&& gravity > 0 */  ?
             createFreeBall({
             speed: speedFactor * (0.2 + 0.2 /** speed*/ * 0.5),
             radius: 0.04 + 0.03 * (/*1.0 - */speed) // Math.random()

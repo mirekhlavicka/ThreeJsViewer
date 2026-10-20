@@ -246,16 +246,16 @@ export const sceneConfigurations = [
 
     //********* GeoPenguin ********
 
-    createGeoPenguinScene("Cat", "cat",         null, 10, true, 1.00, 0.8, false, 10, 0.999, 0.008, null, 0),
-    createGeoPenguinScene("Penguin", "penguin", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0.008, null, 0),
-    createGeoPenguinScene("Bunny", "bunny", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0.008, null, 0),
-    createGeoPenguinScene("Henne", "henne", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0.008, null, 0),
-    createGeoPenguinScene("Muse", "muse", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0.008, null, 0),
-    createGeoPenguinScene("Beer glass", "beer_glass", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0.01, null, 0),
-    createGeoPenguinScene("Shrek", "shrek", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0.008, null, 0, [new THREE.Vector3(0, 0, 0.75), new THREE.Vector3(0, 0.8, 0), new THREE.Vector3(0, -0.8, 0), new THREE.Vector3(-0.95, 0, -0.2)], 0xB0C400),
+    createGeoPenguinScene("Cat", "cat",         null, 10, true, 1.00, 0.8, false, 10, 0.999, 0.0, null, 0),
+    createGeoPenguinScene("Penguin", "penguin", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0.0, null, 0),
+    createGeoPenguinScene("Bunny", "bunny", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0.0, null, 0),
+    createGeoPenguinScene("Henne", "henne", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0.0, null, 0),
+    createGeoPenguinScene("Muse", "muse", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0.0, null, 0),
+    createGeoPenguinScene("Beer glass", "beer_glass", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0.0, null, 0),
+    createGeoPenguinScene("Shrek", "shrek", null, 10, true, 1.25, 0.8, false, 10, 0.999, 0.0, null, 0, [new THREE.Vector3(0, 0, 0.75), new THREE.Vector3(0, 0.8, 0), new THREE.Vector3(0, -0.8, 0), new THREE.Vector3(-0.95, 0, -0.2)], 0xB0C400),
     createGeoPenguinScene("Pumpkin", "pumpkin", null, 10, true, 1.00, 0.8, true, 10, 0.999, 0.008, null, 0),
     createGeoPenguinScene("Shrek Pumpkin", "shrek_pumpkin", null, 5, true, 1.00, 0.8, true, 15, 0.999, 0.008, null, 0),
-    createGeoPenguinScene("Dodecahedron Balls", "Dodecahedron Balls", null, 10, true, 1.25, 0.8, true, 10, 0.999, 0.008, null, 0),
+    createGeoPenguinScene("Dodecahedron Balls", "Dodecahedron Balls", null, 10, true, 1.25, 0.8, true, 10, 0.999, 0.0, null, 0),
     createGeoPenguinScene("Prism Torus", "PrismTorus", null, 5, true, 1.25, 0.8, true, 15, 0.999, 0.01, p => {
         let r = p.clone();
         r.z = 0;
@@ -264,14 +264,14 @@ export const sceneConfigurations = [
 
         return r;
     }, 0),
-    createGeoPenguinScene("Dodeca - Icosa", "dodecaicosa", null, 10, true, 0.7, 0.8, false, 10, 0.9995, 0.01, null, 0),
-    createGeoPenguinScene("Icosa - Dodeca", "icosadodeca", null, 10, true, 0.7, 0.8, false, 10, 0.9995, 0.01, null, 0),
+    createGeoPenguinScene("Dodeca - Icosa", "dodecaicosa", null, 10, true, 0.7, 0.8, false, 10, 0.9995, 0, null, 0),
+    createGeoPenguinScene("Icosa - Dodeca", "icosadodeca", null, 10, true, 0.7, 0.8, false, 10, 0.9995, 0, null, 0),
 
 
 
 
     //createGeoPenguinScene("Ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1, 10, true, 0.7, 0.8, false, 10, 0.999, 0, null, 0, [new THREE.Vector3(0.7, 0, 0), new THREE.Vector3(-0.7, 0, 0), new THREE.Vector3(0, 0.7, 0), new THREE.Vector3(0, -0.7, 0), new THREE.Vector3(0, 0, 0.7), new THREE.Vector3(0, 0, -0.7)]),
-    createGeoPenguinScene("Ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1, 0, true, 0.7, 1.0, false, 30, 0.999, 0.006/*, null, 0, [new THREE.Vector3(0.7, 0, 0), new THREE.Vector3(-0.7, 0, 0), new THREE.Vector3(0, 0.7, 0), new THREE.Vector3(0, -0.7, 0), new THREE.Vector3(0, 0, 0.7), new THREE.Vector3(0, 0, -0.7)]*/),
+    createGeoPenguinScene("Ball", "ball", (x, y, z) => (x * x + y * y + z * z) - 1, 5, true, 0.7, 1.0, false, 20, 0.999, 0/*, null, 0, [new THREE.Vector3(0.7, 0, 0), new THREE.Vector3(-0.7, 0, 0), new THREE.Vector3(0, 0.7, 0), new THREE.Vector3(0, -0.7, 0), new THREE.Vector3(0, 0, 0.7), new THREE.Vector3(0, 0, -0.7)]*/),
 
     createGeoPenguinScene("4-ball", "ball4", (x, y, z) => (x ** 4 + y ** 4 + z ** 4) - 1, 10, true, 0.6, 1.0, false, 5),
 
@@ -308,11 +308,11 @@ export const sceneConfigurations = [
 
     createGeoPenguinScene("Ball minus balls", "ballminusballs1",
         ballMinusBalls()
-        , 10, true, 1.3, 0.8, true, 30, 0.999, 0.01),
+        , 10, true, 1.3, 0.8, true, 30, 0.999, 0.01, p => p.clone().normalize().multiplyScalar(-1)),
 
     createGeoPenguinScene("Ball plus-minus balls", "ballplusminusballs",
         ballPlusMinusBalls()
-        , 10, true, 1.3, 0.8, true, 30, 0.9995, 0.008, null, 0, ballMinusBallsPoints()),
+        , 10, true, 1.3, 0.8, true, 30, 0.9995, 0.008, p => p.clone().normalize().multiplyScalar(-1), 0, ballMinusBallsPoints()),
 
 
     createGeoPenguinScene("Geodesic sphere", "geodesicsphere",
@@ -354,7 +354,7 @@ export const sceneConfigurations = [
     }, 0, dodecaCenterPoints(0.78)),
 
 
-    createGeoPenguinScene("Torus", "torus", (x, y, z) => (x ** 2 + y ** 2 + z ** 2 + (0.7) ** 2 - (0.3) ** 2) ** 2 - 4 * (0.7) ** 2 * (x ** 2 + y ** 2), 10, true, 1.0, 0.8, false, 10, 0.999, 0, 0, null, torusPoints()),
+    createGeoPenguinScene("Torus", "torus", (x, y, z) => (x ** 2 + y ** 2 + z ** 2 + (0.7) ** 2 - (0.3) ** 2) ** 2 - 4 * (0.7) ** 2 * (x ** 2 + y ** 2), 10, true, 1.0, 0.8, false, 10, 0.999, 0, null, null, torusPoints()),
 
     createGeoPenguinScene("Torus with balls", "torusballs",
         ORFuncs(
