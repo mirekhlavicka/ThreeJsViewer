@@ -23,6 +23,8 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
     let surfaceMeshRadius = 0;
     const queryPoint = new THREE.Vector3(0, 0, 0);
 
+    const tmpPoint = new THREE.Vector3(0, 0, 0);
+
     let sdf = false;
     if (impF == null) {
         sdf = true;
@@ -489,7 +491,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
 
         function kick() {
             //let l = ballVelocity.length();
-            ballVelocity.addScaledVector(dirToHitPoint, 0.05);//.setLength(l);
+            ballVelocity.addScaledVector(dirToHitPoint, 0.01);//.setLength(l);
         }
 
         let ball = {
@@ -792,7 +794,11 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     const p = penguins[j];
 
                     let pos1 = b.centerPosition;
-                    let pos2 = p.centerPosition;
+                    let pos2 = tmpPoint;
+                    pos2.copy(p.centerPosition)
+                    if (b.free) {
+                        pos2.addScaledVector(p.normal, 0.06);
+                    }
 
                     // Spočítáme vzdálenost středů
                     let distance = pos1.distanceTo(pos2);
