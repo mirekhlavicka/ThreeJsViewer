@@ -793,63 +793,56 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                     const b = balls[i];
                     const p = penguins[j];
 
-                    let pos1 = b.centerPosition;
-                    let pos2 = tmpPoint;
-                    pos2.copy(p.centerPosition)
-                    if (b.free) {
-                        pos2.addScaledVector(p.normal, 0.06);
-                    }
+                    for (let pinball = 0; pinball < (b.free ? 3: 1); pinball++) {
 
-                    // Spočítáme vzdálenost středů
-                    let distance = pos1.distanceTo(pos2);
-                    const minDistance = b.radius + 0.05; // Součet poloměrů 
+                        let pos1 = b.centerPosition;
+                        let pos2 = tmpPoint;
+                        pos2.copy(p.centerPosition)
+                        if (b.free) {
+                            pos2.addScaledVector(p.normal, pinball  * 0.045);
+                        }
 
-                    if (distance <= minDistance) {
-                        // Vytvoříme směrový vektor z pos2 do pos1
-                        const normal = new THREE.Vector3().subVectors(pos1, pos2);
-                        normal.normalize(); // Převod na jednotkový vektor
+                        // Spočítáme vzdálenost středů
+                        let distance = pos1.distanceTo(pos2);
+                        const minDistance = b.radius + 0.05; // Součet poloměrů 
 
-                        // Spuštění fyzikálního výpočtu, který přímo upraví .velocity objekty
-                        if (resolveElasticCollision3D(
-                            b.velocity,
-                            p.velocity,
-                            b.radius ** 3,
-                            b.free ? 1.5 * 0.07 ** 3 : 0.5 * 0.07 ** 3,
-                            normal,
-                            true
-                        )) {
-                            const v = b.velocity.length();
-                            if (!b.free) {
-                                b.velocity.projectOnPlane(b.normal).setLength(v);
-                            } else {
-                                b.randomRoll();
-                                b.kick();
-                            }
+                        if (distance <= minDistance) {
+                            // Vytvoříme směrový vektor z pos2 do pos1
+                            const normal = new THREE.Vector3().subVectors(pos1, pos2);
+                            normal.normalize(); // Převod na jednotkový vektor
 
-                            b.afterCollision = true;
+                            // Spuštění fyzikálního výpočtu, který přímo upraví .velocity objekty
+                            if (resolveElasticCollision3D(
+                                b.velocity,
+                                p.velocity,
+                                b.radius ** 3,
+                                b.free ? 1.5 * 0.07 ** 3 : 0.5 * 0.07 ** 3,
+                                normal,
+                                true
+                            )) {
+                                const v = b.velocity.length();
+                                if (!b.free) {
+                                    b.velocity.projectOnPlane(b.normal).setLength(v);
+                                } else {
+                                    b.randomRoll();
+                                    b.kick();
+                                }
 
-                            let counter = 0;
+                                b.afterCollision = true;
 
-                            while (distance <= 0.9 * minDistance && counter < 10) {
+                                let counter = 0;
 
-                                b.animate(b.mesh, null, null, 0.02);
+                                while (distance <= 0.9 * minDistance && counter < 10) {
 
-                                pos1 = b.centerPosition;
-                                distance = pos1.distanceTo(pos2);
+                                    b.animate(b.mesh, null, null, 0.02);
 
-                                counter++;
-                            }
+                                    pos1 = b.centerPosition;
+                                    distance = pos1.distanceTo(pos2);
 
-                            /*if (counter > 20) {
-                                console.log(counter);
-                            }*/
-
-                            //b.afterCollision = false;
-
-                            /*if (counter > 20) {
-                                console.log(counter);
-                            }*/
-
+                                    counter++;
+                                }
+                                break;
+                            }                            
                         }
                     }
                 }
