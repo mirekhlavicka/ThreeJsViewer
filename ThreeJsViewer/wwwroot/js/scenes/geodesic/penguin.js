@@ -799,7 +799,7 @@ export function createGeoPenguinScene(name, model, impF, pcount, shadow = false,
                         let pos2 = tmpPoint;
                         pos2.copy(p.centerPosition)
                         if (b.free) {
-                            pos2.addScaledVector(p.normal, pinball  * 0.045);
+                            pos2.addScaledVector(p.normal, pinball  * 0.03);
                         }
 
                         // Spočítáme vzdálenost středů
